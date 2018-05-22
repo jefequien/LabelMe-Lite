@@ -1,0 +1,20 @@
+
+.toolbar {
+    margin: 0 auto;
+}
+
+.toolbar table {
+}
+.toolbar td {
+    background-color: black;
+    height: 50px;
+    width: 50px;
+    text-align: center;
+    transition: all 0.3s ease;
+    color: white;
+    font-size: 18px;
+}
+
+.toolbar td:hover {
+    background-color: gray; /* Add a hover color */
+}
