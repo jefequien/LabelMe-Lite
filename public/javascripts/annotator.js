@@ -4,54 +4,40 @@
 var canvas = document.getElementById('canvas0');
 
 var current_project = paper.project;
-var imageToCanvas;
-var showPoints = false;
 
-//
-// Load Background
-//
-var image = get_image();
-image.onload = function() {
-  // Set image as background with fixed height
-  var height = 500;
-  var background = new Raster(image);
-  background.scale(height/image.height);
-  background.position = new Point(canvas.width/2-80, canvas.height/2-80);
+var image_url = get_image_url();
+var background = new Background(image_url);
 
-  imageToCanvas = new ImageToCanvas(canvas, image, background);
-  console.log(project);
+function Background(image_url){
+  HEIGHT = 500;
+  CENTER = new Point(canvas.width/2-80, canvas.height/2-80);
+  image = new Raster(image_url, CENTER);
+  image.onLoad = function() {
+    image.scale(HEIGHT/image.height);
+    loadAnnotations();
+  }
 
-  selectTool.switch();
-
-  // Download annotations
-  loadAnnotations();
+  this.default_height = HEIGHT;
+  this.default_center = CENTER;
+  this.image = image;
 }
-
-
-function ImageToCanvas(canvas, image, background){
-   this.canvas = canvas;
-   this.image = image;
-   this.background = background;
-   this.default_center = background.position;
-   this.default_ratio = background.bounds.height/image.height;
-
-   this.resolution = 20;
-}
-ImageToCanvas.prototype.transform = function(annotation) {
-  var ratio = this.background.bounds.height/this.image.height;
-  var _x = this.background.position._x;
-  var _y = this.background.position._y;
-  var dx = _x - this.background.bounds.width/2
-  var dy = _y - this.background.bounds.height/2
+Background.prototype.transform = function(annotation) {
+  var bbox = this.image.bounds;
+  var ratio = bbox.height/this.image.height;
+  var x = this.image.position.x;
+  var y = this.image.position.y;
+  var dx = x - bbox.width/2
+  var dy = y - bbox.height/2
   annotation.scale(ratio, new Point(0,0));
   annotation.translate(new Point(dx, dy));
 }
-ImageToCanvas.prototype.itransform = function(annotation) {
-  var ratio = this.image.height/this.background.bounds.height;
-  var _x = this.background.position._x;
-  var _y = this.background.position._y;
-  var dx = _x - this.background.bounds.width/2
-  var dy = _y - this.background.bounds.height/2
+Background.prototype.itransform = function(annotation) {
+  var bbox = this.image.bounds;
+  var ratio = this.image.height/bbox.height;
+  var x = this.image.position.x;
+  var y = this.image.position.y;
+  var dx = x - bbox.width/2
+  var dy = y - bbox.height/2
 
   annotation.translate(new Point(-dx, -dy));
   annotation.scale(ratio, new Point(0,0));
@@ -61,112 +47,117 @@ ImageToCanvas.prototype.itransform = function(annotation) {
     annotation.segments[i].point = annotation.segments[i].point.round();
   }
 }
-ImageToCanvas.prototype.moveBackground = function(delta) {
-  objects = current_project._activeLayer._children;
+Background.prototype.move = function(delta) {
+  objects = paper.project.activeLayer.children;
   for (var i = 0; i < objects.length; i++){
     objects[i].translate(delta);
   }
 }
-ImageToCanvas.prototype.scaleBackground = function(ratio) {
-  objects = current_project._activeLayer._children;
+Background.prototype.scale = function(ratio) {
+  objects = paper.project.activeLayer.children;
   for (var i = 0; i < objects.length; i++){
     if (objects[i] != paper.tool.curser) {
       objects[i].scale(ratio, this.default_center);
     }
   }
-  this.resolution = this.resolution * ratio;
 }
-ImageToCanvas.prototype.setCenter = function(point) {
-    var _x = this.default_center._x;
-    var _y = this.default_center._y;
-    var dx = _x - point._x;
-    var dy = _y - point._y;
-    this.moveBackground(new Point(dx,dy));
+Background.prototype.center = function(point) {
+    var x = this.default_center.x;
+    var y = this.default_center.y;
+    var dx = x - point.x;
+    var dy = y - point.y;
+    this.move(new Point(dx,dy));
 }
-ImageToCanvas.prototype.setRatio = function(ratio) {
-  var r = this.background.bounds.height/this.image.height;
-  this.scaleBackground(ratio/r);
-}
-ImageToCanvas.prototype.focus = function(annotation) {
-  this.setRatio(this.default_ratio);
+Background.prototype.focus = function(annotation) {
+  this.scale(this.default_height/this.image.bounds.height);
+  this.center(this.image.position);
   if (annotation) {
+    var bbox = getBoundingBox(annotation);
     var ideal_height = 400;
     var ideal_width = 600;
-    var ratio = Math.min(ideal_width/annotation.bounds.width, ideal_height/annotation.bounds.height)
-    this.scaleBackground(Math.max(ratio, 1));
-    this.setCenter(annotation.bounds.center);
-  } else {
-    this.setCenter(this.background.position);
+    var ratio = Math.min(ideal_width/bbox.width, ideal_height/bbox.height)
+    this.center(bbox.center);
+    this.scale(Math.max(ratio, 1));
   }
 }
-ImageToCanvas.prototype.bound = function(annotation) {
-  this.itransform(annotation);
-  var segments = annotation.segments;
-  for (var i=0; i < segments.length; i++) {
-    point = segments[i].point;
-    point.x = Math.max(0, Math.min(point.x, this.image.width));
-    point.y = Math.max(0, Math.min(point.y, this.image.height));
-  }
-  this.transform(annotation);
-}
-ImageToCanvas.prototype.refine = function(annotation) {
-  this.bound(annotation);
-  this.toPolygon(annotation);
-}
-ImageToCanvas.prototype.toPolygon = function(annotation) {
-  annotation.flatten(1);
-  var polygon = [];
-  var changes = 0;
-  var n = annotation.segments.length
-  for (var i=0; i < n; i++) {
-    var prior = i-1;
-    if (prior == -1) {
-      prior = n-1;
-    }
-    var next = i+1;
-    if (next == n) {
-      next = 0;
-    }
-    var p_prior = annotation.segments[prior].point;
-    var p = annotation.segments[i].point;
-    var p_next = annotation.segments[next].point;
+Background.prototype.getBlankAnnotation = function() {
+  ann_height = 500;
+  bbox = this.image.bounds;
+  ratio = ann_height/bbox.height
+  ann_width = ratio * bbox.width;
 
-    var v1 = p - p_prior;
-    var v2 = p_next - p;
-    if (v1.length + v2.length < this.resolution) {
-      i += 1;
-      polygon.push(p_next);
-      changes += 1;
-    } else if (v1.length > this.resolution) {
-      polygon.push(p_prior + v1/2);
-      polygon.push(p);
-      changes += 1;
-    } else if (p_prior.getDistance(p_next) < this.resolution/2) {
-      changes += 1;
-    } else {
-      polygon.push(p)
+  var blank = new Raster({
+      size: {
+          width: ann_width,
+          height: ann_height
+      }
+  });
+  blank.scale(1/ratio);
+  blank.position = this.image.position;
+  return blank;
+}
+
+function getBoundingBox(annotation) {
+  var x1 = annotation.width;
+  var y1 = annotation.height;
+  var x2 = 0;
+  var y2 = 0;
+  for (var i = 0; i < annotation.width; i++) {
+    for (var j = 0; j < annotation.height; j++) {
+      color = annotation.getPixel(i, j);
+      if (color.alpha != 0) {
+        if (i < x1) {
+          x1 = i;
+        }
+        if (i > x2) {
+          x2 = i;
+        }
+        if (j < y1) {
+          y1 = j;
+        }
+        if (j > y2) {
+          y2 = j;
+        }
+      }
     }
   }
-  annotation.segments = polygon;
-  if (changes > 0) {
-    this.toPolygon(annotation);
-  }
+  var pixel1 = new Point(x1, y1);
+  var pixel2 = new Point(x2, y2);
+
+  console.log(pixel1);
+  console.log(pixel2);
+  var point1 = pixelToPoint(pixel1, annotation);
+  var point2 = pixelToPoint(pixel2, annotation);
+  return new Rectangle(point1.x, point1.y, point2.x-point1.x, point2.y-point1.y);
 }
 
 //
 // Tools
 //
 var selectTool = new Tool();
+selectTool.curser = new Shape.Circle(new Point(0, 0), 0);
 selectTool.onMouseMove = function(event) {
-  try {
-    this.curser.position = event.point;
-  } catch (err) {
-    // This tool is the default so the curser may not have initialized.
+  this.curser.position = event.point;
+
+  var annotations = getAnnotations();
+  var topAnn = getTopMostAnnotation(event.point, annotations);
+  for (var i = 0; i < annotations.length; i++) {
+    if (annotations[i] == topAnn) {
+      highlight(annotations[i]);
+    } else {
+      unhighlight(annotations[i]);
+    }
+  }
+}
+selectTool.onDoubleClick = function(event) {
+  var annotations = getAnnotations();
+  var topAnn = getTopMostAnnotation(event.point, annotations);
+  if (topAnn) {
+    editTool.switch(topAnn);
   }
 }
 selectTool.onMouseDrag = function(event) {
-
-  imageToCanvas.moveBackground(event.delta);
+  background.move(event.delta);
 }
 selectTool.onKeyDown = function(event) {
   if (event.key == 'n') {
@@ -174,33 +165,51 @@ selectTool.onKeyDown = function(event) {
     return false;
   }
   if (event.key == '9') {
-    imageToCanvas.scaleBackground(0.8);
+    background.scale(0.8);
     return false;
   }
   if (event.key == '0') {
-    imageToCanvas.scaleBackground(1.25);
+    background.scale(1.25);
     return false;
   }
   if (event.key == 'f' || event.key == 'escape') {
-    imageToCanvas.focus();
+    background.focus();
     return false;
   }
 }
 selectTool.switch = function() {
   console.log("Switching to selectTool");
   unhighlightAll();
-  selectTool.loadCurser();
 
-  selectTool.activate()
+  this.curser = paper.tool.curser;
+  this.curser.remove();
+  this.activate()
 }
-selectTool.loadCurser = function() {
-  if (paper.tool.curser) {
-    paper.tool.curser.remove();
-    this.curser = paper.tool.curser;
-  } else {
-    this.curser = new Shape.Circle(new Point(0, 0), 20);
-    this.curser.remove();
+function getTopMostAnnotation(point, annotations) {
+  for (var i = annotations.length - 1; i >= 0; i--) {
+    var ann = annotations[i];
+    var pixel = pointToPixel(point, ann)
+    color = ann.getPixel(pixel.x, pixel.y);
+    // Highlight if mouse is over annotation
+    if (color.alpha != 0) {
+      return ann;
+    }
   }
+  return null;
+}
+function pointToPixel(point, annotation) {
+    var bbox = annotation.bounds;
+    var ratio = bbox.height / annotation.height
+    var pixelX = (point.x - bbox.x) / ratio;
+    var pixelY = (point.y - bbox.y) / ratio;
+    return new Point(pixelX, pixelY)
+}
+function pixelToPoint(pixel, annotation) {
+    var bbox = annotation.bounds;
+    var ratio = bbox.height / annotation.height
+    var pointX = pixel.x * ratio + bbox.x;
+    var pointY = pixel.y * ratio + bbox.y;
+    return new Point(pointX, pointY)
 }
 
 
@@ -235,18 +244,14 @@ newTool.onMouseDown = function(event) {
 }
 newTool.onMouseUp = function(event) {
   if (this.annotation.closed) {
-    // Prompt for object name.
-    var name = requestName();
-    if (name != null && name != "") {
-      createNewAnnotation(name, this.annotation);
-      this.removePoints();
-      imageToCanvas.refine(this.annotation);
-      editTool.switch(this.annotation);
-    } else {
-      this.annotation.closed = false;
-    }
+    annotation = createNewAnnotation(this.name, this.annotation);
+    this.removePoints();
+    // imageToCanvas.refine(this.annotation);
+    // editTool.switch(this.annotation);
+    selectTool.switch();
   }
 }
+
 newTool.deletePoint = function() {
   if (this.points.length > 0) {
     this.annotation.removeSegment(this.points.length);
@@ -270,14 +275,21 @@ newTool.switch = function () {
   console.log("Switching to newTool");
   unhighlightAll();
 
-  this.annotation = new Path();
-  this.annotation.strokeWidth = 3;
-  this.annotation.strokeColor = 'blue';
-  this.points = [];
+  // Prompt for object name.
+  this.name = requestName();
+  if (this.name == null || this.name == "") {
+    selectTool.switch();
+  } else {
+    this.annotation = new Path();
+    this.annotation.strokeWidth = 3;
+    this.annotation.strokeColor = 'blue';
+    this.points = [];
 
-  this.loadCurser();
-  this.activate();
+    this.loadCurser();
+    this.activate();
+  }
 }
+
 newTool.loadCurser = function() {
   paper.tool.curser.remove();
   this.curser = new Shape.Circle({
@@ -295,23 +307,27 @@ newTool.removePoints = function() {
 
 var editTool = new Tool();
 editTool.onMouseMove = function(event) {
-
   this.curser.position = event.point;
 }
+
+editTool.onMouseDown = function(event) {
+  var pixel = pointToPixel(event.point, this.annotation)
+  this.color = this.annotation.getPixel(pixel.x, pixel.y);
+}
+
 editTool.onMouseDrag = function(event) {
   this.onMouseMove(event);
+  var ratio = this.annotation.bounds.height / this.annotation.height
+  var r = this.curser.radius / ratio;
 
-  for (var i=0; i < this.annotation.segments.length; i++) {
-    if (this.curser.contains(this.annotation.segments[i].point)) {
-      var v = this.annotation.segments[i].point - event.point;
-      this.annotation.segments[i].point += v.normalize() * event.delta.length;
+  var pixel = pointToPixel(event.point, this.annotation)
+  for (var i = -r; i < r; i++) {
+    for (var j = -r; j < r; j++) {
+      if (i*i + j*j <= r*r) {
+        this.annotation.setPixel(pixel.x+i,pixel.y+j, this.color);
+      }
     }
   }
-  imageToCanvas.toPolygon(this.annotation);
-}
-editTool.onMouseUp = function(event) {
-
-  imageToCanvas.refine(this.annotation);
 }
 editTool.onKeyDown = function(event) {
   // Quit annotate tool
@@ -336,7 +352,7 @@ editTool.onKeyDown = function(event) {
     return false;
   }
   if (event.key == 'f') {
-    imageToCanvas.focus(this.annotation);
+    background.focus(this.annotation);
     return false;
   }
   if (event.key == 'r') {
@@ -369,7 +385,8 @@ editTool.loadCurser = function() {
 
 
 function createNewAnnotation(name, annotation) {
-  tree.addAnnotation(annotation, name);
+  // Prep annotation to get rasterized
+  annotation.strokeWidth = 0;
   annotation.fillColor = {
     red: Math.random(),
     green: Math.random(),
@@ -377,28 +394,40 @@ function createNewAnnotation(name, annotation) {
     alpha: 1.0
   };
 
+  var raster = annotation.rasterize();
+  var new_annotation = background.getBlankAnnotation();
+
+  for (var i = 0; i < raster.width; i++) {
+    for (var j = 0; j < raster.height; j++) {
+      var pixel = new Point(i,j);
+      var point = pixelToPoint(pixel, raster);
+      var pixel = pointToPixel(point, new_annotation);
+      var color = raster.getPixel(i, j);
+      new_annotation.setPixel(pixel.x, pixel.y, color);
+    }
+  }
+  tree.addAnnotation(new_annotation, name);
+
+  annotation.remove();
+  raster.remove();
+  unhighlight(new_annotation);
+
   // Insert annotation sorted by area
-  objects = current_project._activeLayer._children;
-  for (var i = 0; i < objects.length; i++) {
-    if (Math.abs(objects[i].area) < Math.abs(annotation.area)) {
-      annotation.insertBelow(objects[i]);
+  var anns = getAnnotations();
+  for (var i = 0; i < anns.length; i++) {
+    if (Math.abs(anns[i].size) < Math.abs(new_annotation.size)) {
+      new_annotation.insertBelow(anns[i]);
       break;
     }
   }
 
-  annotation.onMouseEnter = function() {
+  // HACK: tool can't watch for double click so I'm getting the items to do it
+  new_annotation.onDoubleClick = function(event) {
     if (paper.tool == selectTool) {
-      highlight(this);
+      selectTool.onDoubleClick(event);
     }
   }
-  annotation.onMouseLeave = function() {
-    if ( paper.tool != editTool) {
-      unhighlight(this);
-    }
-  }
-  annotation.onDoubleClick = function(event) {
-    editTool.switch(this);
-  }
+  return new_annotation;
 }
 
 function deleteAnnotation(annotation) {
@@ -410,26 +439,36 @@ function deleteAnnotation(annotation) {
 }
 
 function highlight(annotation) {
-  console.log(tree.getName(annotation));
+  if (annotation.unhighlighted) {
+    console.log(tree.getName(annotation));
 
-  annotation.fillColor.alpha = 0.7;
-  annotation.strokeColor = "black";
-  annotation.strokeColor.alpha = 1;
-  annotation.strokeWidth = 2;
+    annotation.opacity = 0.9;
+    annotation.strokeColor = "black";
+    annotation.strokeColor.alpha = 1;
+    annotation.strokeWidth = 2;
 
-  annotation.fullySelected = showPoints;
-  tree.setActive(annotation, true);
+    tree.setActive(annotation, true);
+    annotation.unhighlighted = false;
+  }
 }
 function unhighlight(annotation) {
-  annotation.fillColor.alpha = 0.4;
-  annotation.strokeWidth = 0;
-  annotation.selected = false;
-  tree.setActive(annotation, false);
+  if ( ! annotation.unhighlighted) {
+    annotation.opacity = 0.6;
+    annotation.strokeWidth = 0;
+
+    tree.setActive(annotation, false);
+    annotation.unhighlighted = true;
+  }
 }
 function unhighlightAll() {
   var annotations = getAnnotations();
   for (var i = 0; i < annotations.length; i++) {
     unhighlight(annotations[i]);
+  }
+}
+function setRasterBoundary(raster, color) {
+  for (var i = 0; i < annotations.length; i++) {
+
   }
 }
 
@@ -441,7 +480,7 @@ function changeToolSize(change) {
 
 function getAnnotations() {
   var annotations = [];
-  objects = current_project._activeLayer._children;
+  objects = paper.project.activeLayer.children;
   for (var i = 0; i < objects.length; i++){
     object = objects[i];
     if (tree.containsAnnotation(object)) {
@@ -474,7 +513,7 @@ function save() {
   var annotations = getAnnotations();
   for (var i = 0; i < annotations.length; i++){
     var annotation = annotations[i];
-    imageToCanvas.itransform(annotation);
+    background.itransform(annotation);
 
     var polygon = [];
     for (var j=0; j < annotation.segments.length; j++) {
@@ -496,7 +535,7 @@ function save() {
 
     objects.push(obj);
 
-    imageToCanvas.transform(annotation);
+    background.transform(annotation);
   }
 
   var json = {};
@@ -517,18 +556,6 @@ function loadAnnotations() {
     }
     console.log(json);
 
-    // for (var i=0; i < json.length; i++) {
-    //   var ann = json[i];
-    //   console.log(ann);
-    //   var raster = new Raster();
-    //   raster.size = new Size(672, 512);
-    //   for (var x=0; x < ann.length; x++) {
-    //     for (var y=0; y < ann[0].length; y++) {
-    //       raster.setPixel(x, y, 'green')
-    //     }
-    //   }
-    // }
-
     var objects = json["objects"];
     if (objects) {
       var num = objects.length;
@@ -536,6 +563,7 @@ function loadAnnotations() {
 
       var idMap = {};
       for (var i=0; i < num; i++) {
+        console.log(i)
         var obj = objects[i];
         idMap[obj["id"]] = loadAnnotation(obj);
       }
@@ -544,18 +572,56 @@ function loadAnnotations() {
   }
   get_polygons(callback);
 }
+
+// function loadAnnotation(obj) {
+//   console.log(obj);
+//   var name = obj["category_id"];
+//   var objId = obj["id"];
+//   var segmentation = obj["segmentation"];
+
+//   var height = segmentation.length;
+//   var width = segmentation[0].length;
+
+//   var annotation = new Raster({
+//       size: {
+//           width: width,
+//           height: height
+//       }
+//   });
+
+//   color = {
+//     red: Math.random(),
+//     green: Math.random(),
+//     blue: Math.random(),
+//     alpha: 1.0
+//   };
+
+//   for (var i = 0; i < annotation.height; i++) {
+//     for (var j = 0; j < annotation.width; j++) {
+//       console.log(segmentation[i][j]);
+//       if (segmentation[i][j] == 1) {
+//         console.log("set");
+//         annotation.setPixel(i, j, color);
+//       }
+//     }
+//   }
+
+//   background.transform(annotation);
+//   annotation = createNewAnnotation(name, annotation);
+//   return annotation;
+// }
+
 function loadAnnotation(obj) {
   var name = obj["name"];
   var objId = obj["id"];
-  var polygon = obj["polygon"]
+  var polygon = obj["polygon"];
 
   var annotation = new Path({
       segments: polygon,
       closed: true
   });
-  imageToCanvas.transform(annotation);
-  createNewAnnotation(name, annotation);
-  unhighlight(annotation);
+  background.transform(annotation);
+  annotation = createNewAnnotation(name, annotation);
   return annotation;
 }
 function loadTree(objects, idMap) {
@@ -677,7 +743,7 @@ $("#tree").fancytree({
             node.setTitle(name);
           }
         }
-        imageToCanvas.focus(annotation);
+        background.focus(annotation);
         editTool.switch(annotation);
         return false;
       }

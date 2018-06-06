@@ -28,6 +28,10 @@ function get_image() {
     image.src = base_url + "/images?" + query;
     return image;
 }
+function get_image_url() {
+  var image_url = base_url + "/images?" + query;
+  return image_url;
+}
 function next_image() {
     var endpoint = base_url + "/images/next?" + query;
     var callback = function(data) {

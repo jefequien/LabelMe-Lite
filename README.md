@@ -1,5 +1,7 @@
 # LabelMe-Lite
 
+Startup as well as several other operations are very slow because annotations are painted pixel by pixel. This could be made faster be directly writing to the canvas data. TODO!!!
+
 A barebones Node.js app using [Express 4](http://expressjs.com/).
 Extensively uses [Paper.js](http://paperjs.org/)
 

@@ -1,10 +1,91 @@
 var express = require('express');
 var path = require('path');
 var fs = require('fs');
+var PythonShell = require('python-shell');
 var router = express.Router();
 
 var json = fs.readFileSync(path.join(__dirname, "../data_config.json"));
 var data_config = JSON.parse(json);
+
+
+/* Get mask. */
+router.get('/masks', function(req, res) {
+    project_name = req.query.project;
+    image_id = 63
+    file_path = "../ade20k_train_0.1_A.json"
+    if (! path.isAbsolute(file_path)) {
+        file_path = path.join(__dirname, file_path)
+    }
+
+    try {
+        var data = fs.readFileSync(file_path);
+        json = JSON.parse(data);
+
+        var imgs = json['images'];
+        var anns = json['annotations'];
+        var cats = json['categories'];
+
+        var img_anns = [];
+        for (var i = 0; i < anns.length; i++){
+            ann = anns[i];
+            if (ann['image_id'] == image_id){
+                var segm = ann["segmentation"];
+                img_anns.push(ann);
+            }
+        }
+
+        // // Send to Python to decode!
+        var options = {
+          mode: 'text',
+          args: [JSON.stringify(img_anns)]
+        };
+
+        PythonShell.run('routes/annotation.py', options, function (err, results) {
+            if (err) throw err;
+            // results is an array consisting of messages collected during execution
+            result = JSON.parse(results[0]);
+
+            done = {};
+            done["objects"] = result;
+            res.json(done);
+        });
+
+    } catch (err) {
+        console.log(err)
+        res.status(404).send('Not found');
+    }
+});
+
+// function rleDecode(segm) {
+//     console.log(segm);
+//     var str = segm["counts"];
+//     var cnts = new Array;
+//     // var v = 0;
+//     var p = 0;
+//     var m = 0;
+//     while( str[p] ) {
+//         console.log("#######");
+//         x=0; k=0; more=1;
+//         while( more ) {
+//           var c = str.charCodeAt(p) - 48;
+//           console.log(c);
+//           x |= (c & 0x1f) << 5*k;
+//           more = c & 0x20;
+//           p++;
+//           k++;
+//           if (!more && (c & 0x10)) {
+//             x |= -1 << 5*k;
+//           }
+//         }
+//         if(m>2) {
+//             x += cnts[m-2];
+//             cnts[m++] = x;
+//         }
+//     }
+//     console.log(cnts);
+//     console.log(segm);
+//     return segm;
+// }
 
 
 /* Get polygon. */
