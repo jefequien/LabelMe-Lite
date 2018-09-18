@@ -514,7 +514,7 @@ editTool.onMouseMove = function(event) {
 
     var intersections = this.annotation.boundary.getIntersections(this.segment);
     for (var i = 0; i < intersections.length; i++) {
-      if (intersections[i].point == this.boundaryPoint1.position) {
+      if (intersections[i].point == this.segment.firstSegment.point) {
         continue;
       }
 
@@ -532,14 +532,16 @@ editTool.onMouseMove = function(event) {
         }
       }
     }
+  }
 
-    // Do not allow to cross
-    if (this.path.getIntersections(this.segment).length > 1) {
-      this.segment.strokeColor = "red";
-    }
+  // Do not allow to cross
+  if (this.path.getIntersections(this.segment).length > 1) {
+    this.segment.strokeColor = "red";
   }
 }
 editTool.onMouseDown = function(event) {
+  this.onMouseMove(event);
+
   if ( ! this.boundaryPoint1.fixed) {
     this.boundaryPoint1.fixed = true;
     this.boundaryPoint1.position = this.annotation.boundary.getNearestPoint(this.curser.position);
@@ -609,7 +611,7 @@ editTool.getPathUsingBoundary = function(point0, point1) {
       if ( ! other) {
         // p0 and p1 were the same point
         boundary.remove();
-        return new Path.Line([point0, point1]);
+        return new Path.Line(point0, point1);
       }
 
       // Return the shorter path
