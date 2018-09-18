@@ -7,7 +7,7 @@ router.get('/labelme', function(req, res, next) {
 });
 
 router.get('/', function(req, res, next) {
-  res.redirect('labelme?folder=examples&image=1.jpg');
+  res.redirect('labelme?task_id=00000000');
   // res.render('index', { title: 'Express' });
 });
 

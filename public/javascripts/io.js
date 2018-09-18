@@ -1,20 +1,21 @@
-var href = window.location.href;
-var href_split = href.split('?');
-var base_url = href_split[0].split("/labelme")[0];
-var query = href_split[1];
 
-var query_split = query.split("&");
-var params = {}
-for (var i in query_split) {
-  split = query_split[i].split("=");
-  key = split[0];
-  value = split[1];
-  params[key] = value;
-}
+
+var base_url = parseBaseURL();
+var query = parseQuery();
+var params = parseParams(query);
 
 //
 // Get Requests
 //
+function get_task(callback) {
+    var endpoint = base_url + "/tasks?" + query;
+    var parse = function(data) {
+      task = JSON.parse(data);
+      callback(task);
+    }
+
+    get_async(endpoint, parse);
+}
 function get_polygons(callback) {
     var endpoint = base_url + "/annotations/polygons?" + query;
     get_async(endpoint, callback);
@@ -101,4 +102,33 @@ function post(url, json) {
   }
   var data = JSON.stringify(json);
   xhr.send(data);
+}
+
+//
+// Parse URL functions
+//
+function parseBaseURL() {
+  var href = window.location.href;
+  var href_split = href.split('?');
+  var base_url = href_split[0].split("/labelme")[0];
+  return base_url
+}
+
+function parseQuery() {
+  var href = window.location.href;
+  var href_split = href.split('?');
+  var query = href_split[1];
+  return query;
+}
+
+function parseParams(query) {
+  var query_split = query.split("&");
+  var params = {}
+  for (var i in query_split) {
+    split = query_split[i].split("=");
+    key = split[0];
+    value = split[1];
+    params[key] = value;
+  }
+  return params;
 }
