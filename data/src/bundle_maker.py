@@ -1,6 +1,7 @@
 import os
 import uuid
 import json
+import random
 import numpy as np
 
 from pycocotools import mask as COCOmask
@@ -60,6 +61,7 @@ coco = COCO(ann_fn)
 for cat in coco.cats:
     category = coco.loadCats(cat)[0]["name"]
     annIds = coco.getAnnIds(catIds=[cat])
+    random.shuffle(annIds)
     while len(annIds) > 0:
         make_bundle(coco, category, annIds[:bundle_size])
         annIds = annIds[bundle_size:]

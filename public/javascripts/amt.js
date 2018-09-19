@@ -15,7 +15,7 @@ function setUp(bundle) {
 }
 
 function next() {
-    if (current_num < all_tasks.length - 1) {
+    if (current_num < all_tasks.length) {
         current_num += 1;
         current_task = all_tasks[current_num];
         $('#categoryDiv span').text(current_task["category"]);
@@ -27,7 +27,7 @@ function next() {
 }
 
 function updateSubmitButton() {
-    var images_left = all_tasks.length - current_num;
+    var images_left = all_tasks.length - current_num - 1;
     $("#submitButton").attr('value', "Submit (" + images_left + " images left)"); 
     $("#submitButton").prop('disabled', true); 
 

@@ -6,8 +6,8 @@
 window.setUpTool = function(task) {
   var image_url = task["image_url"];
   background.image = new Raster(image_url);
+  background.image.visible = false;
   background.image.onLoad = function() {
-    background.focus();
     loadAnnotations(task);
   }
 }
@@ -43,11 +43,11 @@ function loadAnnotation(segmentation, name) {
     var mask = nj.images.read(image);
     var annotation = new Annotation(mask, name);
 
-    background.max_height = 200;
-    background.max_width = 200;
+    background.max_height = 300;
+    background.max_width = 600;
     background.focus(annotation);
     background.fixed = true;
-    editTool.switch(annotation);
+    background.image.visible = true;
   }
 }
 
@@ -127,9 +127,7 @@ Background.prototype.getBlank = function() {
   return blank;
 }
 Background.prototype.getPixel = function(point) {
-  if ( ! this.image) {
-    return null;
-  }
+  if ( ! this.image) { return null; }
   var bounds = this.image.bounds;
   var ratio = bounds.height / this.image.height;
   var pixelX = Math.round((point.x - bounds.x) / ratio);
@@ -137,14 +135,18 @@ Background.prototype.getPixel = function(point) {
   return new Point(pixelX, pixelY);
 }
 Background.prototype.getPoint = function(pixel) {
-  if ( ! this.image) {
-    return null;
-  }
+  if ( ! this.image) { return null; }
   var bounds = this.image.bounds;
   var ratio = bounds.height / this.image.height;
   var pointX = pixel.x * ratio + bounds.x;
   var pointY = pixel.y * ratio + bounds.y;
   return new Point(pointX, pointY);
+}
+Background.prototype.toPointSpace = function(shape) {
+  if ( ! this.image) { return null; }
+  var ratio = this.image.bounds.height / this.image.height;
+  shape.translate(this.image.bounds.topLeft);
+  shape.scale(ratio, this.image.bounds.topLeft);
 }
 
 function Annotation(shapeOrMask, name){
@@ -219,8 +221,8 @@ Annotation.prototype.scale = function(scale, center) {
 Annotation.prototype.highlight = function() {
   if ( ! this.highlighted) {
     this.highlighted = true;
-    this.raster.opacity = 0.3;
-    this.boundary.strokeColor = "black";
+    this.raster.opacity = 0;
+    this.boundary.strokeColor = this.color;
     this.boundary.strokeWidth = 2;
     // this.boundary.selected = true;
     console.log(this.name);
@@ -264,20 +266,17 @@ Annotation.prototype.subtract = function(shape) {
 function editRaster(raster, shape, rule, color) {
   var other = shape.clone();
   other.fillColor = "black";
-  // Hack!!! Overestimate. Need to adjust pixels later.
-  if (rule == "subtract") {
-    other.strokeWidth = 5;
-    other.strokeColor = "black";
-  }
+  other.strokeWidth = 0;
+
   var otherRaster = other.rasterize(raster.resolution.height);
   if (otherRaster.height == 0 || otherRaster.width == 0) {
     other.remove();
     otherRaster.remove();
     return;
   }
+  var topLeft = background.getPixel(otherRaster.bounds.point);
   var imageData0 = raster.getImageData();
   var imageData1 = otherRaster.getImageData();
-  var topLeft = background.getPixel(otherRaster.bounds.point);
   for (var x = 0; x < imageData1.width; x++) {
     for (var y = 0; y < imageData1.height; y++) {
       var pixel1 = new Point(x,y);
@@ -353,21 +352,36 @@ function makeBoundary(imageData) {
   var boundaries = findBoundariesOpenCV(imageData);
   var paths = [];
   for (var i = 0; i < boundaries.length; i++) {
-    var points = [];
+    var path = [];
     for (var j = 0; j < boundaries[i].length; j++) {
-      var pixel = new Point(boundaries[i][j]);
-      var point = background.getPoint(pixel);
-      points.push(point);
+      path.push(new Point(boundaries[i][j]));
     }
     paths.push(new Path({
-      segments: points,
+      segments: path,
       closed: true
     }));
   }
-  var shape = new CompoundPath({
+  var compoundPath = new CompoundPath({
     children: paths
   });
-  return shape;
+
+  // Correct bottom right of boundary
+  for (var i = 0; i < compoundPath.children.length; i++) {
+    var path = compoundPath.children[i];
+    for (var j = 0; j < path.segments.length; j++) {
+      var point = path.segments[j].point;
+      var right = new Point(point.x + 0.5, point.y);
+      var down = new Point(point.x, point.y + 0.5);
+      if ( ! compoundPath.contains(right)) {
+        point.x += 0.95; // Prevents two points from becoming one point
+      }
+      if (! compoundPath.contains(down)) {
+        point.y += 0.95;
+      }
+    }
+  }
+  background.toPointSpace(compoundPath);
+  return compoundPath;
 }
 
 function findBoundariesOpenCV(imageData) {
@@ -383,11 +397,13 @@ function findBoundariesOpenCV(imageData) {
   var boundaries = [];
   for (var i = 0; i < contours.size(); i++) {
     var cnt = contours.get(i);
-    var bnd = [];
-    for (var j = 0; j < cnt.rows; j++) {
-      bnd.push([cnt.data32S[j*2], cnt.data32S[j*2+1]])
+    if (cv.contourArea(cnt) > 10) {
+      var bnd = [];
+      for (var j = 0; j < cnt.rows; j++) {
+        bnd.push([cnt.data32S[j*2], cnt.data32S[j*2+1]])
+      }
+      boundaries.push(bnd);
     }
-    boundaries.push(bnd);
     cnt.delete();
   }
   src.delete();
@@ -459,14 +475,7 @@ selectTool.switch = function() {
 var editTool = new Tool();
 editTool.onMouseMove = function(event) {
   this.curser.position = event.point;
-
-  if (this.mode == "unite") {
-    this.curser.fillColor = "#00FF00";
-  } else {
-    this.curser.fillColor = "red";
-  }
-
-  // Snap curser to things
+  // Snap curser position to things
   if ( ! background.image.contains(this.curser.position)) {
     var edge = new Shape.Rectangle(background.image.bounds);
     var edgePath = edge.toPath();
@@ -487,12 +496,19 @@ editTool.onMouseMove = function(event) {
     this.curser.position = this.annotation.boundary.getNearestPoint(event.point);
   }
 
-  // Set boundaryPoint1
+  // Set curser color
+  if (this.mode == "unite") {
+    this.curser.fillColor = "#00FF00";
+  } else {
+    this.curser.fillColor = "red";
+  }
+
+  // Set this.boundaryPoint1
   if ( ! this.boundaryPoint1.fixed) {
     this.boundaryPoint1.position = this.annotation.boundary.getNearestPoint(this.curser.position);
   }
 
-  // Set segment
+  // Set this.segment
   this.segment.remove();
   if (this.points.length == 0) {
     this.segment = new Path.Line(this.boundaryPoint1.position, this.curser.position);
@@ -572,10 +588,10 @@ editTool.onMouseDown = function(event) {
         this.editAnnotation();
 
         // Persist
-        var persist = this.boundaryPoint2.position;
+        // var persist = this.boundaryPoint2.position;
         editTool.switch(this.annotation);
-        editTool.boundaryPoint1.fixed = true;
-        editTool.boundaryPoint1.position = this.annotation.boundary.getNearestPoint(persist);
+        // editTool.boundaryPoint1.fixed = true;
+        // editTool.boundaryPoint1.position = this.annotation.boundary.getNearestPoint(persist);
 
       } else if (this.curser.intersects(this.points[0])) {
         // Path is closed
