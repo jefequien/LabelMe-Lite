@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Amazon Mechnical Turk Interface">
+    <meta name="author" content="Jeffrey Hu">
+
+    <title>LabelMeLite</title>
+
+    <link href="stylesheets/amt.css" rel="stylesheet">
+    <link href="stylesheets/tool_simple.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+    <div id="questionDiv">
+        <button onclick="toggleClarification(); " type="button">Instruction</button>
+        <span> Please label the following category. </span>
+        <input type="submit" id="submitButton" value="Submit (? images left)" disabled onclick="return confirmSubmit()">
+    </div>
+
+    <div id="clarificationDiv">
+        <dl>
+            <dt>Do these things: </dt>
+                <dd>- this thing. </dd>
+                <dd>- another thing. </dd>
+                <dd>- last thing.</dd>
+        </ul>
+        
+        <p><i><b>Note: </b> These annotations are computer generated. </i></p>
+        <p> Fix up the boundary. </p>
+    </div>
+
+    <div id="categoryDiv">
+        <b>Category: </b><span>None</span>
+        <button onclick="next(); " type="button">Next</button>
+    </div>
+
+
+    <div class="container">
+        <canvas id="toolCanvas"></canvas>
+    </div>
+
+    <!-- jQuery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+
+    <!-- Bootstrap Core JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+    <!-- Custom Javascript -->
+    <script type="text/javascript" src="components/numjs/dist/numjs.min.js"></script>
+    <script type="text/javascript" src="javascripts/opencv.js"></script>
+    <script type="text/javascript" src="javascripts/endpoints.js"></script>
+    <script type="text/javascript" src="components/paper/dist/paper-full.js"></script>
+    <!-- Note: You can only have 1 paperscript! -->
+    <script type="text/paperscript" src="javascripts/tool_simple.js" canvas="toolCanvas"></script>
+
+    <script type="text/javascript" src="javascripts/amt.js"></script>
+
+
+</body>
+
+</html>

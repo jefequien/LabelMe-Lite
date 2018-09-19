@@ -7,7 +7,6 @@ var router = express.Router();
 router.get('/', function(req, res) {
     var example_dir = path.join(__dirname, "../examples");
     var filename = req.query.filename;
-    console.log(filename);
 
     file_path = path.join(example_dir, filename);
     res.sendFile(file_path);

@@ -1,0 +1,26 @@
+[
+    {
+        "image_url": "http://localhost:3000/examples?filename=images/2.jpg", 
+        "annotations": [
+            {
+                "category": "person", 
+                "segmentation": "http://localhost:3000/examples?filename=masks/13.png"
+            }, 
+            {
+                "category": "wall", 
+                "segmentation": "http://localhost:3000/examples?filename=masks/1.png"
+            }
+        ], 
+        "task_id": "00000000"
+    }, 
+    {
+        "segmentation": "http://localhost:3000/examples?filename=masks/13.png", 
+        "image_url": "http://localhost:3000/examples?filename=images/1.jpg", 
+        "task_id": "00000001"
+    }, 
+    {
+        "segmentation_url": "", 
+        "image_url": "https://www.agardenforthehouse.com/wp-content/uploads/2018/04/gardendesign4englishroseum.jpg", 
+        "task_id": "00000002"
+    }
+]

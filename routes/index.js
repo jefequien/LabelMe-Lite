@@ -2,12 +2,20 @@ var express = require('express');
 var router = express.Router();
 
 /* GET home page. */
-router.get('/labelme', function(req, res, next) {
-  res.render('annotator', { title: 'Express' });
+router.get('/tool', function(req, res, next) {
+  res.render('tool', { title: 'Express' });
+});
+
+router.get('/tool_simple', function(req, res, next) {
+  res.render('tool_simple', { title: 'Express' });
+});
+
+router.get('/amt', function(req, res, next) {
+  res.render('amt', { title: 'Express' });
 });
 
 router.get('/', function(req, res, next) {
-  res.redirect('labelme?task_id=00000000');
+  res.redirect('tool?id=00000000');
   // res.render('index', { title: 'Express' });
 });
 

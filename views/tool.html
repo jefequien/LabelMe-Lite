@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Pixel level segmentation application">
+    <meta name="author" content="Jeffrey Hu">
+
+    <title>LabelMeLite</title>
+
+    <!-- Bootstrap Core CSS -->
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom Fonts -->
+    <link href="vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet" type="text/css">
+
+    <!-- FancyTree CSS -->
+    <!-- <link href="vendor/fancytree/skin-win8/ui.fancytree.min.css" rel="stylesheet"> -->
+    <link href="vendor/fancytree/skin-bootstrap/ui.fancytree.css" rel="stylesheet"
+    class="skinswitcher">
+
+    <!-- Theme CSS -->
+    <link href="stylesheets/toolbar.css" rel="stylesheet">
+    <link href="stylesheets/tool.css" rel="stylesheet">
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+</head>
+
+<body>
+    <div id="work-area">
+        <!-- Toolbar -->
+
+        <table class="toolbar">
+          <tbody>
+            <tr>
+              <td> <i id="previous" class="fa fa-arrow-left"> </td>
+              <td> <i id="next" class="fa fa-arrow-right"> </td>
+            </tr>
+            <tr>
+              <td> <i id="zoomin" class="fa fa-search-plus"></i> </td>
+              <td> <i id="zoomout" class="fa fa-search-minus"></i> </td>
+            </tr>
+            <tr>
+              <td> <i id="new" class="fa fa-plus"></i> </td>
+              <td> <i id="delete" class="fa fa-trash"></i></td>
+            </tr>
+            <tr>
+              <td> <i id="save" class="fa fa-floppy-o"></i> </td>
+              <td> <i id="toggle_points" class="fa fa-ellipsis-h"></i> </td>
+            </tr>
+            <tr>
+              <td> <i id="sort" class="fa fa-sort"></i> </td>
+              <td> <i id="edges" class="fa fa-picture-o" data-toggle="modal" data-target="#"></i> </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Canvas -->
+        <canvas id="toolCanvas"></canvas>
+
+        <!-- Annotations Table --> 
+        <div id="annotationPanel" class="panel panel-default">
+            <div id="annotationHeader" class="panel-heading">
+              <b>Annotations</b>
+            </div>
+            <div id="tree" class="panel-body fancytree-fade-expander"></div>
+        </div>
+    </div>
+
+    <!-- jQuery -->
+    <script src="components/jquery/dist/jquery.min.js"></script>
+    <script src="//code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
+
+    <!-- Bootstrap Core JavaScript -->
+    <script src="vendor/bootstrap/js/bootstrap.min.js"></script>
+
+    <!-- Plugin JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.3/jquery.easing.min.js"></script>
+
+    <!-- FancyTree Javascript -->
+    <script src="vendor/fancytree/jquery.fancytree-all.min.js"></script>
+
+    <!-- Custom Javascript -->
+    <script type="text/javascript" src="components/numjs/dist/numjs.min.js"></script>
+    <script type="text/javascript" src="javascripts/opencv.js"></script>
+    <script type="text/javascript" src="javascripts/endpoints.js"></script>
+    <script type="text/javascript" src="components/paper/dist/paper-full.js"></script>
+    <!-- Note: You can only have 1 paperscript! -->
+    <script type="text/paperscript" src="javascripts/tool.js" canvas="toolCanvas"></script>
+
+    <script type="text/javascript" src="javascripts/main.js"></script>
+
+    
+</body>
+
+</html>

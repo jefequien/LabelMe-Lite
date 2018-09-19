@@ -16,3 +16,5 @@ build
 
 node_modules
 public/components
+data/bundles
+examples/temp
