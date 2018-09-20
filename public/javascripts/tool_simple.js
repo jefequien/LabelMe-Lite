@@ -41,6 +41,9 @@ function loadAnnotations(task) {
   background.max_height = 250;
   background.max_width = 500;
   background.focus(annotation);
+  background.max_height = 500;
+  background.max_width = 700;
+  
   background.fixed = true;
   background.image.visible = true;
   editTool.switch(annotation);
@@ -136,29 +139,17 @@ Background.prototype.toPointSpace = function(shape) {
   shape.scale(ratio, this.image.bounds.topLeft);
 }
 
-function Annotation(shapeOrMask, name){
+
+function Annotation(mask, name){
   this.name = name;
   this.color = new Color(Math.random(), Math.random(), Math.random(), 1);
 
-  if (shapeOrMask.shape) {
-    this.raster = this.createFromMask(shapeOrMask);
-  } else{
-    this.raster = this.createFromShape(shapeOrMask);
-  }
+  this.raster = background.getBlank();
+  this.raster.setImageData(maskToImageData(mask, this.color), new Point(0, 0));
   this.id = this.raster.id;
   this.updateBoundary();
 
-  // Insert annotation sorted from smallest to largest.
-  for (var i = 0; i < annotations.length; i++) {
-    if (this.boundary.area > annotations[i].boundary.area) {
-      this.raster.insertAbove(annotations[i].raster);
-      annotations.splice(i, 0, this);
-      break;
-    }
-  }
-  if ( ! annotations.includes(this)) {
-    annotations.push(this);
-  }
+  annotations.push(this);
 
   this.highlight();
   this.unhighlight();
@@ -171,34 +162,8 @@ function Annotation(shapeOrMask, name){
   }
 }
 
-Annotation.prototype.createFromMask = function(mask) {
-  if (nj.max(mask) <= 1) {
-    mask = mask.multiply(255);
-  }
-
-  // Mask to raster
-  var r = nj.multiply(mask, this.color.red);
-  var g = nj.multiply(mask, this.color.green);
-  var b = nj.multiply(mask, this.color.blue);
-  var a = mask;
-  var color_mask = nj.stack([r, g, b, a], -1);
-
-  imageData = arrayToImageData(color_mask);
-  var raster = background.getBlank();
-  raster.setImageData(imageData, new Point(0, 0));
-  return raster;
-}
-Annotation.prototype.createFromShape = function(shape) {
-    this.raster = background.getBlank();
-    this.unite(shape);
-    shape.remove();
-    return this.raster;
-}
 Annotation.prototype.toMask = function() {
-  var imageData = this.raster.getImageData();
-  var array = imageDataToArray(imageData);
-  var mask = array.slice(null,null,3);
-  return mask;
+  return imageDataToMask(this.raster.getImageData());
 }
 
 Annotation.prototype.translate = function(delta) {
@@ -212,10 +177,10 @@ Annotation.prototype.scale = function(scale, center) {
 Annotation.prototype.highlight = function() {
   if ( ! this.highlighted) {
     this.highlighted = true;
-    this.raster.opacity = 0;
+    this.raster.opacity = 0.2;
     this.boundary.strokeColor = this.color;
     this.boundary.strokeWidth = 2;
-    // this.boundary.selected = true;
+
     console.log(this.name);
   }
 }
@@ -223,7 +188,7 @@ Annotation.prototype.unhighlight = function() {
   if (this.highlighted) {
     this.highlighted = false;
     this.raster.opacity = 0.7;
-    this.boundary.strokeColor = new Color(0,0,0,0);
+    this.boundary.strokeWidth = 0;
   }
 }
 Annotation.prototype.updateBoundary = function() {
@@ -237,6 +202,15 @@ Annotation.prototype.updateBoundary = function() {
     newBoundary.strokeWidth = 5;
     this.boundary = newBoundary;
   }
+
+  // Sory annotation from smallest to largest.
+  // for (var i = 0; i < annotations.length; i++) {
+  //   if (this.boundary.area > annotations[i].boundary.area) {
+  //     this.raster.insertAbove(annotations[i].raster);
+  //     annotations.splice(i, 0, this);
+  //     break;
+  //   }
+  // }
 }
 Annotation.prototype.delete = function() {
   annotations.splice(annotations.indexOf(this), 1 );
@@ -387,12 +361,20 @@ selectTool.onMouseDrag = function(event) {
   background.move(event.delta);
 }
 selectTool.onKeyDown = function(event) {
+  if (event.key == 'n') {
+    newTool.switch();
+    return false;
+  }
   if (event.key == '-') {
     background.scale(0.8);
     return false;
   }
   if (event.key == '=') {
     background.scale(1.25);
+    return false;
+  }
+  if (event.key == 'f' || event.key == 'escape') {
+    background.focus();
     return false;
   }
 }
@@ -461,7 +443,6 @@ editTool.onMouseMove = function(event) {
   } else {
     this.curser.fillColor = "red";
   }
-  this.annotation.boundary.strokeColor = "gold";
   if (this.annotation.boundary.contains(this.curser.position)) {
     this.annotation.raster.opacity = 0.3
   } else {
@@ -559,6 +540,10 @@ editTool.editAnnotation = function() {
   }
   this.path.remove();
   this.annotation.updateBoundary();
+  if (this.annotation.boundary.area == 0) {
+    this.annotation.delete();
+    selectTool.switch();
+  }
 }
 editTool.getPathUsingBoundary = function(point0, point1) {
   for (var i = 0; i < this.annotation.boundary.children.length; i++) {
@@ -640,6 +625,7 @@ editTool.switch = function(annotation) {
   this.segment = new Path();
 
   this.curser.fillColor = "#00FF00";
+  this.annotation.boundary.strokeColor = "gold";
   this.boundaryPoint1.fillColor = "gold";
   this.boundaryPoint2.fillColor = "gold";
   this.path.strokeColor = "black";
@@ -658,8 +644,8 @@ editTool.onKeyDown = function(event) {
     return false;
   }
   if (event.key == 'backspace') {
-    var success = this.undo();
-    if ( ! success) {
+    var undoed = this.undo();
+    if ( ! undoed) {
       this.annotation.delete();
       selectTool.switch();
     }
@@ -683,7 +669,10 @@ editTool.onKeyDown = function(event) {
       return false;
     }
   }
-  console.log(event.key);
+  if (event.key == 'f') {
+    background.focus(this.annotation);
+    return false;
+  }
 }
 
 var brushTool = new Tool();
@@ -707,9 +696,14 @@ brushTool.onMouseDrag = function(event) {
 }
 brushTool.onMouseUp = function(event) {
   this.annotation.updateBoundary();
-
-  editTool.switch(this.annotation);
-  editTool.onMouseMove(event);
+  console.log(this.annotation.boundary.area);
+  if (this.annotation.boundary.area == 0) {
+    this.annotation.delete();
+    selectTool.switch();
+  } else {
+    editTool.switch(this.annotation);
+    editTool.onMouseMove(event);
+  }
 }
 brushTool.deactivate = function() {
   this.brush.remove();
@@ -735,6 +729,94 @@ brushTool.onKeyDown = function(event) {
   }
   if (event.key == '=') {
     background.scale(1.25);
+    return false;
+  }
+}
+
+var newTool = new Tool();
+newTool.onMouseMove = function(event) {
+  this.curser.position = event.point;
+
+  if (this.points.length != 0) {
+    this.path.removeSegment(this.points.length);
+    this.path.add(this.curser.position);
+  }
+}
+newTool.onMouseDown = function(event) {
+  this.curser.position = event.point;
+  
+  this.points.push(this.curser.clone());
+  this.path.add(this.curser.position);
+
+  if (this.points.length > 1) {
+    if (this.points[0].position.getDistance(this.curser.position) < 10) {
+      this.path.closed = true;
+      this.createAnnotation();
+    }
+  }
+}
+newTool.createAnnotation = function() {
+  var mask = nj.zeros([background.image.height, background.image.width]);
+  var annotation = new Annotation(mask, this.name);
+  annotation.unite(this.path);
+  annotation.updateBoundary();
+  if (annotation.boundary.area == 0) {
+    annotation.delete();
+    selectTool.switch();
+  }
+
+  this.path.remove();
+  selectTool.switch();
+}
+
+newTool.undo = function() {
+  if (this.points.length > 0) {
+    this.path.removeSegment(this.points.length);
+    this.path.removeSegment(this.points.length-1);
+    this.points.pop().remove();
+  }
+}
+newTool.requestName = function() {
+    var name = prompt("Please enter object name.", "");
+    return name;
+}
+newTool.deactivate = function() {
+  for (var i=0; i < this.points.length; i++) {
+    this.points[i].remove();
+  }
+
+  this.curser.remove();
+}
+newTool.switch = function () {
+  paper.tool.deactivate();
+  console.log("Switching to newTool");
+
+  // Prompt for object name.
+  this.name = this.requestName();
+  if (this.name == null || this.name == "") {
+    selectTool.switch();
+  } else {
+    this.points = [];
+    this.path = new Path();
+    this.path.strokeWidth = 3;
+    this.path.strokeColor = 'blue';
+
+    this.curser = new Shape.Circle({
+      radius: 5,
+      strokeColor: 'red',
+      strokeWidth: 3
+    });
+
+    this.activate();
+  }
+}
+newTool.onKeyDown = function(event) {
+  if (event.key == 'escape') {
+    selectTool.switch();
+    return false;
+  }
+  if (event.key == 'backspace') {
+    this.undo();
     return false;
   }
 }

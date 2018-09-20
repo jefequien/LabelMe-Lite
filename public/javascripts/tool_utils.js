@@ -4,23 +4,50 @@ function maskToRLE(mask) {
 }
 
 function rleToMask(rle) {
-    var height = rle["height"];
-    var width = rle["width"];
-    var counts = rle["counts"];
-    var mask = [];
-    var b = 0;
-    for (var i = 0; i < counts.length; i++) {
-        for (var j = 0; j < counts[i]; j++) {
-            mask.push(b);
-        }
-        if (b == 0) {
-            b = 1;
-        } else {
-            b = 0;
-        }
-    }
-    var mask = nj.array(mask).reshape(height, width);
-    return mask;
+  var height = rle["height"];
+  var width = rle["width"];
+  var counts = rle["counts"];
+  var mask = [];
+  var b = 0;
+  for (var i = 0; i < counts.length; i++) {
+      for (var j = 0; j < counts[i]; j++) {
+          mask.push(b);
+      }
+      if (b == 0) {
+          b = 1;
+      } else {
+          b = 0;
+      }
+  }
+  var mask = nj.array(mask).reshape(height, width);
+  return mask;
+}
+
+function maskToImageData(mask, color) {
+  if (nj.max(mask) <= 1) {
+    mask = mask.multiply(255);
+  }
+  // Mask to raster
+  var r = nj.multiply(mask, color.red);
+  var g = nj.multiply(mask, color.green);
+  var b = nj.multiply(mask, color.blue);
+  var a = mask;
+  var color_mask = nj.stack([r, g, b, a], -1);
+
+  imageData = arrayToImageData(color_mask);
+  return imageData;
+}
+
+function imageDataToMask(imageData) {
+  var h = imageData.height;
+  var w = imageData.width;
+  var array = nj.array(Array.from(imageData.data));
+  var array = array.reshape([h,w,4]);
+  var mask = array.slice(null,null,3);
+  if (nj.max(mask) > 1) {
+    mask = mask.divide(nj.max(mask));
+  }
+  return mask;
 }
 
 function arrayToImageData(array) {
@@ -31,14 +58,6 @@ function arrayToImageData(array) {
   nj.images.save(array, cv);
   image_data = ctx.getImageData(0,0,array.shape[1], array.shape[0]);
   return image_data;
-}
-
-function imageDataToArray(imageData) {
-  var h = imageData.height;
-  var w = imageData.width;
-  var array = nj.array(Array.from(imageData.data));
-  var array = array.reshape([h,w,4]);
-  return array;
 }
 
 function findBoundariesOpenCV(imageData) {
