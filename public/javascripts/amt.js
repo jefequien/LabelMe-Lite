@@ -1,33 +1,32 @@
 
-window.onload = function() {
-    getBundle(setUp);
-}
 
-var current_num = 0;
-var current_task = null;
-var all_tasks = null;
+var bundle;
 var answers = [];
+var current_num = -1;
 
-function setUp(bundle) {
-    all_tasks = bundle;
-    current_num = -1;
-    next();
+window.onload = function() {
+    getBundle(function(res) {
+        bundle = res;
+        next();
+    });
 }
 
 function next() {
-    if (current_num < all_tasks.length) {
+    if (current_num < bundle.length - 1) {
         current_num += 1;
-        current_task = all_tasks[current_num];
-        $('#categoryDiv span').text(current_task["category"]);
+        var task = bundle[current_num];
+        var annotation = task["annotations"][0];
+
+        $('#categoryDiv span').text(annotation["category"]);
         updateSubmitButton();
 
         clearTool();
-        setUpTool(current_task);
+        setUpTool(task);
     }
 }
 
 function updateSubmitButton() {
-    var images_left = all_tasks.length - current_num - 1;
+    var images_left = bundle.length - current_num - 1;
     $("#submitButton").attr('value', "Submit (" + images_left + " images left)"); 
     $("#submitButton").prop('disabled', true); 
 

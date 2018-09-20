@@ -37,8 +37,4 @@ function read_tasks() {
     return tasks;
 }
 
-function load_bundles() {
-
-}
-
 module.exports = router;

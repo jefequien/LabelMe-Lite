@@ -17,7 +17,6 @@ function getTask(callback) {
 }
 function getBundle(callback) {
     var endpoint = base_url + "/data/bundles?" + query;
-    console.log(endpoint);
     var parse = function(data) {
       task = JSON.parse(data);
       callback(task);
@@ -58,7 +57,6 @@ function previous_image() {
       params["image"] = data;
       query = build_query_string(params);
       var next_href = base_url + "/labelme?" + query;
-      console.log(next_href);
       window.location.href = next_href;
     }
     get_async(endpoint, callback);
