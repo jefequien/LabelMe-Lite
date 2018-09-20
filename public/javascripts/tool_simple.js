@@ -1,17 +1,26 @@
-/**
- * Annotation tool powered by PaperJS.
- * This tool has many features removed.
- */
 
+function customizeAMT() {
+  var annotation = annotations[0];
+
+  background.max_height = 250;
+  background.max_width = 500;
+  background.focus(annotation);
+  background.max_height = 500;
+  background.max_width = 700;
+
+  background.fixed = true;
+  editTool.switch(annotation);
+  annotation.boundary.strokeColor = new Color(0,0,0,0);
+  annotation.raster.opacity = 0.7;
+}
 window.setUpTool = function(task) {
   var image_url = task["image_url"];
   background.image = new Raster(image_url);
-  background.image.visible = false;
   background.image.onLoad = function() {
     loadAnnotations(task);
+    customizeAMT();
   }
 }
-
 window.clearTool = function() {
   if (background.image) {
     background.image.remove();
@@ -22,9 +31,13 @@ window.clearTool = function() {
   background = new Background();
   annotations = [];
 }
-
 window.saveAnnotations = saveAnnotations;
 
+
+/**
+ * Annotation tool powered by PaperJS.
+ * This tool has many features removed.
+ */
 
 var background = new Background();
 var annotations = [];
@@ -37,17 +50,6 @@ function loadAnnotations(task) {
     var mask = rleToMask(rle);
     var annotation = new Annotation(mask, category);
   }
-
-  background.max_height = 250;
-  background.max_width = 500;
-  background.focus(annotation);
-  background.max_height = 500;
-  background.max_width = 700;
-  
-  background.fixed = true;
-  background.image.visible = true;
-  editTool.switch(annotation);
-  annotation.raster.opacity = 0.7;
 }
 
 function saveAnnotations() {
@@ -161,11 +163,9 @@ function Annotation(mask, name){
     }
   }
 }
-
 Annotation.prototype.toMask = function() {
   return imageDataToMask(this.raster.getImageData());
 }
-
 Annotation.prototype.translate = function(delta) {
   this.raster.translate(delta);
   this.boundary.translate(delta);
@@ -203,7 +203,7 @@ Annotation.prototype.updateBoundary = function() {
     this.boundary = newBoundary;
   }
 
-  // Sory annotation from smallest to largest.
+  // Sort annotation from smallest to largest.
   // for (var i = 0; i < annotations.length; i++) {
   //   if (this.boundary.area > annotations[i].boundary.area) {
   //     this.raster.insertAbove(annotations[i].raster);

@@ -1,24 +1,24 @@
-/**
- * Annotation tool powered by PaperJS.
- */
+
 
 getTask(setUpTool);
-
-var background = new Background();
-var annotations = [];
-
-// Export this function
-window.setUpTool = setUpTool;
 function setUpTool(task) {
   var image_url = task["image_url"];
   background.image = new Raster(image_url);
   background.image.onLoad = function() {
     background.focus();
-    console.time("s");
+    console.time("Load time");
     loadAnnotations(task); 
-    console.timeEnd("s");
+    console.timeEnd("Load time");
   }
 }
+
+
+/**
+ * Annotation tool powered by PaperJS.
+ */
+
+var background = new Background();
+var annotations = [];
 
 function loadAnnotations(task) {
   var data = task["annotations"];
@@ -142,11 +142,16 @@ function Annotation(mask, name){
     }
   }
 }
-
 Annotation.prototype.toMask = function() {
   return imageDataToMask(this.raster.getImageData());
 }
-
+Annotation.prototype.delete = function() {
+  annotations.splice(annotations.indexOf(this), 1 );
+  tree.deleteAnnotation(this);
+  this.raster.remove();
+  this.boundary.remove();
+  console.log("Deleted annotation.");
+}
 Annotation.prototype.translate = function(delta) {
   this.raster.translate(delta);
   this.boundary.translate(delta);
@@ -161,7 +166,6 @@ Annotation.prototype.highlight = function() {
     this.raster.opacity = 0.2;
     this.boundary.strokeColor = this.color;
     this.boundary.strokeWidth = 2;
-
     // tree.setActive(this, true);
     console.log(this.name);
   }
@@ -171,8 +175,7 @@ Annotation.prototype.unhighlight = function() {
     this.highlighted = false;
     this.raster.opacity = 0.7;
     this.boundary.strokeWidth = 0;
-
-    tree.setActive(this, false);
+    // tree.setActive(this, false);
   }
 }
 Annotation.prototype.updateBoundary = function() {
@@ -187,7 +190,7 @@ Annotation.prototype.updateBoundary = function() {
     this.boundary = newBoundary;
   }
 
-  // Sory annotation from smallest to largest.
+  // Sort annotation from smallest to largest.
   // for (var i = 0; i < annotations.length; i++) {
   //   if (this.boundary.area > annotations[i].boundary.area) {
   //     this.raster.insertAbove(annotations[i].raster);
@@ -195,13 +198,6 @@ Annotation.prototype.updateBoundary = function() {
   //     break;
   //   }
   // }
-}
-Annotation.prototype.delete = function() {
-  annotations.splice(annotations.indexOf(this), 1 );
-  tree.deleteAnnotation(this);
-  this.raster.remove();
-  this.boundary.remove();
-  console.log("Deleted annotation.");
 }
 
 Annotation.prototype.unite = function(shape) {
@@ -251,7 +247,6 @@ function editRaster(raster, shape, rule, color) {
   other.remove();
   otherRaster.remove();
 }
-
 function getColor(imageData, pixel) {
   var p = (pixel.y * imageData.width + pixel.x) * 4;
   var color = new Color();
@@ -261,7 +256,6 @@ function getColor(imageData, pixel) {
   color.alpha = imageData.data[p+3];
   return color;
 }
-
 function editColor(imageData, pixel, color) {
   if (pixel.x < 0 || pixel.y < 0
     || pixel.x >= imageData.width || pixel.y >= imageData.height) {
