@@ -15,7 +15,7 @@ router.get('/amt', function(req, res, next) {
 });
 
 router.get('/', function(req, res, next) {
-  res.redirect('tool?id=00000000');
+  res.redirect('tool?project=ade20k_val&file_name=ADE_val_00000003.jpg');
   // res.render('index', { title: 'Express' });
 });
 

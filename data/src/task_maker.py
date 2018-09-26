@@ -2,29 +2,10 @@ import os
 import json
 import numpy as np
 
+from changeRLE import maskToRLE
+
 from pycocotools import mask as COCOmask
 from pycocotools.coco import COCO
-
-def maskToRLE(mask):
-    h, w = mask.shape
-    flattened = mask.flatten()
-
-    padded = np.hstack([[0], flattened, [0]])
-    difs = np.diff(padded)
-    starts = np.where(difs == 1)[0]
-    ends = np.where(difs == -1)[0]
-
-    zipped = np.array(zip(starts, ends)).flatten()
-    padded = np.hstack([[0], zipped, flattened.shape[0]])
-    counts = np.diff(padded)
-    if counts[-1] == 0:
-        counts = counts[:-1]
-
-    rle = {}
-    rle["height"] = mask.shape[0]
-    rle["width"] = mask.shape[1]
-    rle["counts"] = counts.tolist()
-    return rle
 
 def make_task(img_url, anns, coco):
     annotations = []
@@ -62,5 +43,6 @@ if __name__ == "__main__":
 
         tasks.append(task)
         
+    json_repr = json.dumps(tasks, cls=MyEncoder, sort_keys=True, indent=2)
     with open('../tasks/tasks.json', 'w') as outfile:
-        json.dump(tasks, outfile, indent=4)
+        outfile.write(json_repr)

@@ -1,0 +1,22 @@
+{
+    "ade20k_train": {
+      "im_dir": "ade20k/images/training/", 
+      "ann_fn": "annotations/ade20k/ade20k_train_annotations_#.json",
+      "load": false
+    },
+    "ade20k_val": {
+      "im_dir": "ade20k/images/validation/", 
+      "ann_fn": "annotations/ade20k/ade20k_val_annotations_#.json",
+      "load": true
+    },
+    "coco_2017_train": {
+      "im_dir": "coco/images/train2017/", 
+      "ann_fn": "annotations/coco/instances_train2017_#.json",
+      "load": false
+    },
+    "coco_2017_val": {
+      "im_dir": "coco/images/val2017/", 
+      "ann_fn": "annotations/coco/instances_val2017_#.json",
+      "load": true
+    }
+}

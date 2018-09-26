@@ -7,11 +7,28 @@ import numpy as np
 from pycocotools import mask as COCOmask
 from pycocotools.coco import COCO
 
-from task_maker import *
+from changeRLE import maskToRLE
 
 BUNDLES_DIR = "../bundles"
 if not os.path.isdir(BUNDLES_DIR):
     os.makedirs(BUNDLES_DIR)
+
+def make_task(img_url, anns, coco):
+    annotations = []
+    for ann in anns:
+        rle = ann['segmentation']
+        mask = COCOmask.decode(rle)
+        custom_rle = maskToRLE(mask)
+
+        a = {}
+        a["category"] = coco.cats[ann['category_id']]['name']
+        a["segmentation"] = custom_rle
+        annotations.append(a)
+
+    task = {}
+    task["image_url"] = img_url
+    task["annotations"] = annotations
+    return task
 
 def make_bundle(im_dir, cat, coco, bundle_size=50):
     category = coco.cats[cat]["name"]
@@ -44,10 +61,10 @@ if __name__ == "__main__":
     IMAGES_URL = "http://places.csail.mit.edu/scaleplaces/datasets/"
     if project == "ade20k_train":
         im_dir = os.path.join(IMAGES_URL, "ade20k/images/training")
-        ann_fn = "ade20k_train_annotations.json"
+        ann_fn = "../annotations/ade20k_train_annotations.json"
     elif project == "ade20k_val":
         im_dir = os.path.join(IMAGES_URL, "ade20k/images/validation")
-        ann_fn = "ade20k_val_annotations.json"
+        ann_fn = "../annotations/ade20k_val_annotations.json"
 
     coco = COCO(ann_fn)
     for cat in coco.cats:

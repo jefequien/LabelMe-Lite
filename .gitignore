@@ -8,6 +8,7 @@ lib-cov
 *.out
 *.pid
 *.gz
+*.pyc
 
 pids
 logs
@@ -17,4 +18,4 @@ build
 node_modules
 public/components
 data/bundles
-examples/temp
+data/annotations/

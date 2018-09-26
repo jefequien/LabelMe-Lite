@@ -6,7 +6,7 @@ function maskToRLE(mask) {
 function rleToMask(rle) {
   var height = rle["height"];
   var width = rle["width"];
-  var counts = rle["counts"];
+  var counts = rle["counts"].split("#");
   var mask = [];
   var b = 0;
   for (var i = 0; i < counts.length; i++) {

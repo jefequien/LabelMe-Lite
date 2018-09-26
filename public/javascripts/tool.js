@@ -1,6 +1,6 @@
 
 
-getTask(setUpTool);
+getData(setUpTool);
 function setUpTool(task) {
   var image_url = task["image_url"];
   background.image = new Raster(image_url);
@@ -27,6 +27,8 @@ function loadAnnotations(task) {
     var rle = data[i]["segmentation"];
     var mask = rleToMask(rle);
     var annotation = new Annotation(mask, category);
+    annotation.updateBoundary();
+    annotation.unhighlight();
   }
 }
 
@@ -127,13 +129,10 @@ function Annotation(mask, name){
   this.raster = background.getBlank();
   this.raster.setImageData(maskToImageData(mask, this.color), new Point(0, 0));
   this.id = this.raster.id;
-  this.updateBoundary();
+  this.highlight();
 
   annotations.push(this);
   tree.addAnnotation(this);
-
-  this.highlight();
-  this.unhighlight();
 
   // HACK: tool can't watch for double click so I'm getting the items to do it
   this.raster.onDoubleClick = function(event) {
@@ -164,8 +163,10 @@ Annotation.prototype.highlight = function() {
   if ( ! this.highlighted) {
     this.highlighted = true;
     this.raster.opacity = 0.2;
-    this.boundary.strokeColor = this.color;
-    this.boundary.strokeWidth = 2;
+    if (this.boundary) {
+      this.boundary.strokeColor = this.color;
+      this.boundary.strokeWidth = 2;
+    }
     // tree.setActive(this, true);
     console.log(this.name);
   }
@@ -174,7 +175,9 @@ Annotation.prototype.unhighlight = function() {
   if (this.highlighted) {
     this.highlighted = false;
     this.raster.opacity = 0.7;
-    this.boundary.strokeWidth = 0;
+    if (this.boundary) {
+      this.boundary.strokeWidth = 0;
+    }
     // tree.setActive(this, false);
   }
 }
@@ -188,6 +191,11 @@ Annotation.prototype.updateBoundary = function() {
     newBoundary.strokeColor = "black";
     newBoundary.strokeWidth = 5;
     this.boundary = newBoundary;
+  }
+
+  if (this.boundary.area == 0) {
+    this.delete();
+    selectTool.switch();
   }
 
   // Sort annotation from smallest to largest.
@@ -517,12 +525,8 @@ editTool.editAnnotation = function() {
   } else {
     this.annotation.unite(this.path);
   }
-  this.path.remove();
   this.annotation.updateBoundary();
-  if (this.annotation.boundary.area == 0) {
-    this.annotation.delete();
-    selectTool.switch();
-  }
+  this.path.remove();
 }
 editTool.getPathUsingBoundary = function(point0, point1) {
   for (var i = 0; i < this.annotation.boundary.children.length; i++) {
@@ -678,11 +682,8 @@ brushTool.onMouseDrag = function(event) {
 }
 brushTool.onMouseUp = function(event) {
   this.annotation.updateBoundary();
-  console.log(this.annotation.boundary.area);
-  if (this.annotation.boundary.area == 0) {
-    this.annotation.delete();
-    selectTool.switch();
-  } else {
+
+  if (this.annotation.boundary.area != 0) {
     editTool.switch(this.annotation);
     editTool.onMouseMove(event);
   }
@@ -742,10 +743,7 @@ newTool.createAnnotation = function() {
   var annotation = new Annotation(mask, this.name);
   annotation.unite(this.path);
   annotation.updateBoundary();
-  if (annotation.boundary.area == 0) {
-    annotation.delete();
-    selectTool.switch();
-  }
+  annotation.unhighlight();
 
   this.path.remove();
   selectTool.switch();

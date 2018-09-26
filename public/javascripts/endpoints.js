@@ -10,36 +10,30 @@ var params = parseParams(query);
 function getTask(callback) {
     var endpoint = base_url + "/data/tasks?" + query;
     var parse = function(data) {
-      task = JSON.parse(data);
-      callback(task);
+      json = JSON.parse(data);
+      callback(json);
     }
     get_async(endpoint, parse);
 }
 function getBundle(callback) {
     var endpoint = base_url + "/data/bundles?" + query;
     var parse = function(data) {
-      task = JSON.parse(data);
-      callback(task);
+      json = JSON.parse(data);
+      callback(json);
     }
     get_async(endpoint, parse);
 }
-
-function get_polygons(callback) {
-    var endpoint = base_url + "/annotations/polygons?" + query;
-    get_async(endpoint, callback);
+function getData(callback) {
+  var endpoint = base_url + "/data?" + query;
+    var parse = function(data) {
+      json = JSON.parse(data);
+      callback(json);
+    }
+    get_async(endpoint, parse);
 }
 function get_annotation_tree(callback) {
     var endpoint = base_url + "/annotations/trees?" + query;
     get_async(endpoint, callback);
-}
-function get_image() {
-    var image = new Image();
-    image.src = base_url + "/images?" + query;
-    return image;
-}
-function get_image_url() {
-  var image_url = base_url + "/images?" + query;
-  return image_url;
 }
 function next_image() {
     var endpoint = base_url + "/images/next?" + query;
