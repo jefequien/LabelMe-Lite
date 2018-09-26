@@ -47,7 +47,7 @@ def get_coco_dataset():
     return classes
 
 
-def get_ade20k_dataset():
+def get_ade_dataset():
     """A dummy ADE20K dataset that includes only the 'classes' field."""
     # ds = AttrDict()
     classes = [

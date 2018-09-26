@@ -1,4 +1,5 @@
-import imageio
+import os
+import json
 import numpy as np
 import cv2
 
@@ -26,14 +27,21 @@ def remove_noise(category_mask):
     return category_mask
 
 def ann_image_to_annotations(ann_image):
+    if np.ndim(ann_image) == 3:
+        ann_image = ann_image[:,:,2]
     anns = []
     for cat in np.unique(ann_image):
+        if cat == 0:
+            continue
         mask = (ann_image == cat)
-        segmentation = COCOmask.encode(mask)
+        mask = np.asfortranarray(mask)
+        mask = mask.astype(np.uint8)
+        segm = COCOmask.encode(mask)
+        segm["counts"] = segm["counts"].decode('ascii')
 
         ann = {}
-        ann["segmentation"] = segmentation
-        ann["category_id"] = cat
+        ann["segmentation"] = segm
+        ann["category_id"] = int(cat)
         anns.append(ann)
     return anns
 
@@ -43,15 +51,17 @@ def make_ann_fn(im_dir, ann_dir, im_list, cat_list):
     categories = []
     annId = 0
     for imgId,im in enumerate(im_list):
-        image = cv2.imread(os.path.join(im_dir, im))
+        im_path = os.path.join(im_dir, im)
+        image = cv2.imread(im_path)
         img = {}
         img["file_name"] = im
         img["id"] = imgId
         img["height"] = image.shape[0]
         img["width"] = image.shape[1]
         images.append(img)
+        print(img["id"], img["file_name"])
 
-        ann_path = os.path.join(ann_dir, im)
+        ann_path = os.path.join(ann_dir, im).replace('.jpg', '.png')
         ann_image = cv2.imread(ann_path)
         anns = ann_image_to_annotations(ann_image)
         for ann in anns:
@@ -72,14 +82,15 @@ def make_ann_fn(im_dir, ann_dir, im_list, cat_list):
 
 if __name__ == "__main__":
     DATASET_DIR = "/data/vision/oliva/scenedataset/scaleplaces/datasets/"
-    im_dir = os.path.join(DATASET_DIR, "ade20k/images/training")
-    ann_dir = os.path.join(DATASET_DIR, "ade20k/annotations/annotations_instance/training")
+    im_dir = os.path.join(DATASET_DIR, "ade20k/images/")
+    ann_dir = os.path.join(DATASET_DIR, "ade20k/annotations/annotations_instance/")
     im_list = os.path.join(DATASET_DIR, "ade20k/images/training.txt")
-    cat_list = get_ade_classes()
+    cat_list = get_ade_dataset()
     
     with open(im_list,'r') as f:
-        im_list = f.readLines()
-
-    make_ann_fn(im_dir, ann_dir, im_list, cat_list)
-
+        im_list = f.read().splitlines()
+    
+    ann_fn = make_ann_fn(im_dir, ann_dir, im_list, cat_list)
+    with open('output.json', 'w') as outfile:
+            json.dump(ann_fn, outfile, indent=2)
 
