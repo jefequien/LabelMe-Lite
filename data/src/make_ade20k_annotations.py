@@ -27,13 +27,14 @@ def remove_noise(category_mask):
     return category_mask
 
 def ann_image_to_annotations(ann_image):
-    if np.ndim(ann_image) == 3:
-        ann_image = ann_image[:,:,2]
+    ins_mask = ann_image[:,:,1]
+    cat_mask = ann_image[:,:,2]
     anns = []
-    for cat in np.unique(ann_image):
-        if cat == 0:
+    for ins in np.unique(ins_mask):
+        if ins == 0:
             continue
-        mask = (ann_image == cat)
+        mask = (ins_mask == ins)
+        cat = np.sum(cat_mask[mask]) / np.sum(mask)
         mask = np.asfortranarray(mask)
         mask = mask.astype(np.uint8)
         segm = COCOmask.encode(mask)
@@ -84,7 +85,7 @@ if __name__ == "__main__":
     DATASET_DIR = "/data/vision/oliva/scenedataset/scaleplaces/datasets/"
     im_dir = os.path.join(DATASET_DIR, "ade20k/images/")
     ann_dir = os.path.join(DATASET_DIR, "ade20k/annotations/annotations_instance/")
-    im_list = os.path.join(DATASET_DIR, "ade20k/images/training.txt")
+    im_list = os.path.join(DATASET_DIR, "ade20k/images/validation.txt")
     cat_list = get_ade_dataset()
     
     with open(im_list,'r') as f:
