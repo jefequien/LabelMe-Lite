@@ -43,6 +43,7 @@ def create_ann_fn(detections, category_list):
         img = {}
         img["file_name"] = os.path.basename(im)
         img["id"] = imgId
+        # img["height"] = 
         images.append(img)
         print(img["id"], img["file_name"])
 

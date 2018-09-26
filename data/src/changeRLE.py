@@ -30,7 +30,7 @@ def maskToRLE(mask):
 
 
 if __name__ == "__main__":
-    ann_fn = "../annotations/ade20k/ade20k_val_predictions.json"
+    ann_fn = "../annotations/ade20k/ade20k_train_annotations.json"
     coco = COCO(ann_fn)
     c = 0
     for annId in coco.anns:
@@ -44,5 +44,5 @@ if __name__ == "__main__":
     output["images"] = list(coco.imgs.values())
     output["annotations"] = list(coco.anns.values())
     output["categories"] = list(coco.cats.values())
-    with open('../annotations/ade20k/ade20k_val_predictions_#.json', 'w') as outfile:
+    with open('../annotations/ade20k/ade20k_train_annotations_#.json', 'w') as outfile:
         json.dump(output, outfile, indent=2)

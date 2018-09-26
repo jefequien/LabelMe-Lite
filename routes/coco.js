@@ -63,12 +63,15 @@ COCO.prototype.getAnnIds = function (imgIds=[], catIds=[]) {
     var anns = [];
     if (imgIds.length != 0) {
         for (var i = 0; i < imgIds.length; i++) {
-            anns = anns.concat(this.imgToAnns[imgIds[i]]);
+            var a = this.imgToAnns[imgIds[i]]
+            if (a) {
+                anns = anns.concat(a);
+            }
         }
     }
-    if (catIds.length != 0) {
-        anns = anns.filter(ann => catIds.indexOf(ann["category_id"]) >= 0);
-    }
+    // if (catIds.length != 0) {
+    //     anns = anns.filter(ann => catIds.indexOf(ann["category_id"]) >= 0);
+    // }
     var ids = [];
     for (var i = 0; i < anns.length; i++) {
         ids.push(anns[i]["id"]);

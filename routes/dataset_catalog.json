@@ -1,11 +1,11 @@
 {
     "ade20k_train": {
-      "im_dir": "ade20k/images/training/", 
+      "im_dir": "ade20k/images/", 
       "ann_fn": "annotations/ade20k/ade20k_train_annotations_#.json",
       "load": false
     },
     "ade20k_val": {
-      "im_dir": "ade20k/images/validation/", 
+      "im_dir": "ade20k/images/", 
       "ann_fn": "annotations/ade20k/ade20k_val_annotations_#.json",
       "load": true
     },

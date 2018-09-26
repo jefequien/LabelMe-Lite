@@ -33,7 +33,7 @@ router.get('/', function(req, res) {
     if (project in cocos) {
         var coco = cocos[project];
         var imgId = coco.fnToImgId[file_name];
-        if (imgId) {
+        if (imgId != null) {
             var annIds = coco.getAnnIds([imgId]);
             var anns = coco.loadAnns(annIds);
 
