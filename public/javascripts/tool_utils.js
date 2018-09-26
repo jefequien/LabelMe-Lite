@@ -73,7 +73,7 @@ function findBoundariesOpenCV(imageData) {
   var boundaries = [];
   for (var i = 0; i < contours.size(); i++) {
     var cnt = contours.get(i);
-    if (cv.contourArea(cnt) > 10) {
+    if (cv.contourArea(cnt) > 5) {
       var bnd = [];
       for (var j = 0; j < cnt.rows; j++) {
         bnd.push([cnt.data32S[j*2], cnt.data32S[j*2+1]])

@@ -20,8 +20,12 @@ def make_task(img_url, anns, coco):
         mask = COCOmask.decode(rle)
         custom_rle = maskToRLE(mask)
 
+        name = coco.cats[ann['category_id']]['name']
+        if "score" in ann:
+            name = name + " %.3f" % ann['score']
+
         a = {}
-        a["category"] = coco.cats[ann['category_id']]['name']
+        a["category"] = name
         a["segmentation"] = custom_rle
         annotations.append(a)
 
@@ -33,38 +37,33 @@ def make_task(img_url, anns, coco):
 def make_bundle(im_dir, cat, coco, bundle_size=50):
     category = coco.cats[cat]["name"]
     bundle_id = uuid.uuid4().hex
-    print category, bundle_id
+    print (category, bundle_id)
 
     annIds = coco.getAnnIds(catIds=[cat])
     random.shuffle(annIds)
-
-    annIds = annIds[:bundle_size]
     anns = coco.loadAnns(ids=annIds)
 
     bundle = []
     for ann in anns:
+        if "score" in ann:
+            if ann["score"] < 0.5:
+                continue
+
         img = coco.imgs[ann["image_id"]]
         img_url = os.path.join(im_dir, img['file_name'])
-
         task = make_task(img_url, [ann], coco)
         bundle.append(task)
+
+        if len(bundle) == bundle_size:
+            break
 
     with open(os.path.join(BUNDLES_DIR, bundle_id + '.json'), 'w') as outfile:
         json.dump(bundle, outfile, indent=4)
 
 if __name__ == "__main__":
-    im_dir = ""
-    ann_fn = ""
-    project = "ade20k_val"
-    bundle_size = 50
-
     IMAGES_URL = "http://places.csail.mit.edu/scaleplaces/datasets/"
-    if project == "ade20k_train":
-        im_dir = os.path.join(IMAGES_URL, "ade20k/images/training")
-        ann_fn = "../annotations/ade20k_train_annotations.json"
-    elif project == "ade20k_val":
-        im_dir = os.path.join(IMAGES_URL, "ade20k/images/validation")
-        ann_fn = "../annotations/ade20k_val_annotations.json"
+    im_dir = os.path.join(IMAGES_URL, "ade20k/images/")
+    ann_fn = "../annotations/ade20k/ade20k_train_predictions.json"
 
     coco = COCO(ann_fn)
     for cat in coco.cats:

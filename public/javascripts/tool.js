@@ -129,9 +129,8 @@ function Annotation(mask, name){
   this.raster = background.getBlank();
   this.raster.setImageData(maskToImageData(mask, this.color), new Point(0, 0));
   this.id = this.raster.id;
-  this.highlight();
 
-  annotations.push(this);
+  annotations.unshift(this); // add to front
   tree.addAnnotation(this);
 
   // HACK: tool can't watch for double click so I'm getting the items to do it
@@ -160,25 +159,27 @@ Annotation.prototype.scale = function(scale, center) {
   this.boundary.scale(scale, center);
 }
 Annotation.prototype.highlight = function() {
-  if ( ! this.highlighted) {
-    this.highlighted = true;
-    this.raster.opacity = 0.2;
-    if (this.boundary) {
-      this.boundary.strokeColor = this.color;
-      this.boundary.strokeWidth = 2;
-    }
-    // tree.setActive(this, true);
-    console.log(this.name);
+  this.highlighted = true;
+  this.raster.opacity = 0;
+  if (this.boundary) {
+    this.boundary.strokeColor = this.color;
+    this.boundary.strokeWidth = 2;
   }
+  tree.setActive(this, true);
+  console.log(this.name);
 }
 Annotation.prototype.unhighlight = function() {
-  if (this.highlighted) {
-    this.highlighted = false;
-    this.raster.opacity = 0.7;
-    if (this.boundary) {
-      this.boundary.strokeWidth = 0;
-    }
-    // tree.setActive(this, false);
+  this.highlighted = false;
+  this.raster.opacity = 0.7;
+  if (this.boundary) {
+    this.boundary.strokeWidth = 0;
+  }
+  tree.setActive(this, false);
+}
+Annotation.prototype.setInvisible = function() {
+  this.raster.opacity = 0;
+  if (this.boundary) {
+    this.boundary.strokeWidth = 0;
   }
 }
 Annotation.prototype.updateBoundary = function() {
@@ -199,13 +200,20 @@ Annotation.prototype.updateBoundary = function() {
   }
 
   // Sort annotation from smallest to largest.
-  // for (var i = 0; i < annotations.length; i++) {
-  //   if (this.boundary.area > annotations[i].boundary.area) {
-  //     this.raster.insertAbove(annotations[i].raster);
-  //     annotations.splice(i, 0, this);
-  //     break;
-  //   }
-  // }
+  var changed = true;
+  while (changed) {
+    changed = false;
+    for (var i = 0; i < annotations.length-1; i++) {
+      var ann0 = annotations[i];
+      var ann1 = annotations[i+1];
+      if (Math.abs(ann0.boundary.area) > Math.abs(ann1.boundary.area)) {
+        ann0.raster.insertBelow(ann1.raster);
+        annotations[i+1] = ann0;
+        annotations[i] = ann1;
+        changed = true;
+      }
+    }
+  }
 }
 
 Annotation.prototype.unite = function(shape) {
@@ -324,10 +332,15 @@ selectTool.onMouseMove = function(event) {
   // Highlight top annotation. Unhighlight everything else.
   var topAnn = this.getTopMostAnnotation(event)
   for (var i = 0; i < annotations.length; i++) {
-    if (annotations[i] == topAnn) {
-      annotations[i].highlight();
+    var ann = annotations[i];
+    if (ann == topAnn) {
+      if ( ! ann.highlighted) {
+        ann.highlight();
+      }
     } else {
-      annotations[i].unhighlight();
+      if (ann.highlighted) {
+        ann.unhighlight();
+      }
     }
   }
 }
@@ -368,8 +381,13 @@ selectTool.onKeyDown = function(event) {
 selectTool.deactivate = function() {
 }
 selectTool.switch = function() {
-  paper.tool.deactivate();
   console.log("Switching to selectTool");
+  paper.tool.deactivate();
+
+  for (var i = 0; i < annotations.length; i++) {
+    annotations[i].unhighlight();
+  }
+
   this.activate()
 }
 
@@ -494,13 +512,16 @@ editTool.onMouseDown = function(event) {
         this.editAnnotation();
 
         editTool.switch(this.annotation);
+        editTool.onMouseMove(event);
 
       } else if (this.curser.intersects(this.points[0])) {
         if (this.points.length != 1) {
           // Close path and edit
           this.path.closed = true;
           this.editAnnotation();
+          
           editTool.switch(this.annotation);
+          editTool.onMouseMove(event);
         }
       } else {
         // Add point
@@ -592,6 +613,12 @@ editTool.switch = function(annotation) {
   console.log("Switching to editTool");
   paper.tool.deactivate();
 
+  this.annotation = annotation;
+  for (var i = 0; i < annotations.length; i++) {
+    annotations[i].setInvisible();
+  }
+  this.annotation.highlight();
+
   this.curser = new Shape.Circle({
     center: new Point(0,0),
     radius: 4
@@ -601,8 +628,6 @@ editTool.switch = function(annotation) {
   this.boundaryLine = new Path();
   this.boundaryPointLine = new Path();
 
-  this.annotation = annotation;
-  this.annotation.highlight();
   this.points = [];
   this.path = new Path();
   this.segment = new Path();
@@ -697,7 +722,7 @@ brushTool.switch = function(annotation) {
 
   this.brush = new Shape.Circle({
       center: [0, 0],
-      radius: 10
+      radius: 15
     });
 
   this.annotation = annotation;

@@ -33,6 +33,7 @@ function updateSubmitButton() {
     if (images_left == 0) {
         $("#submitButton").attr('value', "Submit"); 
         $("#submitButton").prop('disabled', false); 
+        $("#nextButton").prop('disabled', true); 
     }
 }
 

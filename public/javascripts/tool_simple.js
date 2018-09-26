@@ -9,9 +9,9 @@ function customizeAMT() {
   background.max_width = 700;
 
   background.fixed = true;
-  editTool.switch(annotation);
-  annotation.boundary.strokeColor = new Color(0,0,0,0);
-  annotation.raster.opacity = 0.7;
+  // editTool.switch(annotation);
+  // annotation.boundary.strokeColor = new Color(0,0,0,0);
+  // annotation.raster.opacity = 0.7;
 }
 window.setUpTool = function(task) {
   var image_url = task["image_url"];
@@ -30,6 +30,7 @@ window.clearTool = function() {
   }
   background = new Background();
   annotations = [];
+  selectTool.switch();
 }
 window.saveAnnotations = saveAnnotations;
 
@@ -49,6 +50,8 @@ function loadAnnotations(task) {
     var rle = data[i]["segmentation"];
     var mask = rleToMask(rle);
     var annotation = new Annotation(mask, category);
+    annotation.updateBoundary();
+    annotation.unhighlight();
   }
 }
 
@@ -149,12 +152,8 @@ function Annotation(mask, name){
   this.raster = background.getBlank();
   this.raster.setImageData(maskToImageData(mask, this.color), new Point(0, 0));
   this.id = this.raster.id;
-  this.updateBoundary();
 
-  annotations.push(this);
-
-  this.highlight();
-  this.unhighlight();
+  annotations.unshift(this); // add to front
 
   // HACK: tool can't watch for double click so I'm getting the items to do it
   this.raster.onDoubleClick = function(event) {
@@ -166,6 +165,12 @@ function Annotation(mask, name){
 Annotation.prototype.toMask = function() {
   return imageDataToMask(this.raster.getImageData());
 }
+Annotation.prototype.delete = function() {
+  annotations.splice(annotations.indexOf(this), 1 );
+  this.raster.remove();
+  this.boundary.remove();
+  console.log("Deleted annotation.");
+}
 Annotation.prototype.translate = function(delta) {
   this.raster.translate(delta);
   this.boundary.translate(delta);
@@ -175,19 +180,24 @@ Annotation.prototype.scale = function(scale, center) {
   this.boundary.scale(scale, center);
 }
 Annotation.prototype.highlight = function() {
-  if ( ! this.highlighted) {
-    this.highlighted = true;
-    this.raster.opacity = 0.2;
+  this.highlighted = true;
+  this.raster.opacity = 0;
+  if (this.boundary) {
     this.boundary.strokeColor = this.color;
     this.boundary.strokeWidth = 2;
-
-    console.log(this.name);
   }
+  console.log(this.name);
 }
 Annotation.prototype.unhighlight = function() {
-  if (this.highlighted) {
-    this.highlighted = false;
-    this.raster.opacity = 0.7;
+  this.highlighted = false;
+  this.raster.opacity = 0.7;
+  if (this.boundary) {
+    this.boundary.strokeWidth = 0;
+  }
+}
+Annotation.prototype.setInvisible = function() {
+  this.raster.opacity = 0;
+  if (this.boundary) {
     this.boundary.strokeWidth = 0;
   }
 }
@@ -202,21 +212,28 @@ Annotation.prototype.updateBoundary = function() {
     newBoundary.strokeWidth = 5;
     this.boundary = newBoundary;
   }
+  console.log(this.boundary.area);
+
+  if (this.boundary.area == 0) {
+    this.delete();
+    selectTool.switch();
+  }
 
   // Sort annotation from smallest to largest.
-  // for (var i = 0; i < annotations.length; i++) {
-  //   if (this.boundary.area > annotations[i].boundary.area) {
-  //     this.raster.insertAbove(annotations[i].raster);
-  //     annotations.splice(i, 0, this);
-  //     break;
-  //   }
-  // }
-}
-Annotation.prototype.delete = function() {
-  annotations.splice(annotations.indexOf(this), 1 );
-  this.raster.remove();
-  this.boundary.remove();
-  console.log("Deleted annotation.");
+  var changed = true;
+  while (changed) {
+    changed = false;
+    for (var i = 0; i < annotations.length-1; i++) {
+      var ann0 = annotations[i];
+      var ann1 = annotations[i+1];
+      if (Math.abs(ann0.boundary.area) > Math.abs(ann1.boundary.area)) {
+        ann0.raster.insertBelow(ann1.raster);
+        annotations[i+1] = ann0;
+        annotations[i] = ann1;
+        changed = true;
+      }
+    }
+  }
 }
 
 Annotation.prototype.unite = function(shape) {
@@ -266,7 +283,6 @@ function editRaster(raster, shape, rule, color) {
   other.remove();
   otherRaster.remove();
 }
-
 function getColor(imageData, pixel) {
   var p = (pixel.y * imageData.width + pixel.x) * 4;
   var color = new Color();
@@ -276,7 +292,6 @@ function getColor(imageData, pixel) {
   color.alpha = imageData.data[p+3];
   return color;
 }
-
 function editColor(imageData, pixel, color) {
   if (pixel.x < 0 || pixel.y < 0
     || pixel.x >= imageData.width || pixel.y >= imageData.height) {
@@ -337,10 +352,15 @@ selectTool.onMouseMove = function(event) {
   // Highlight top annotation. Unhighlight everything else.
   var topAnn = this.getTopMostAnnotation(event)
   for (var i = 0; i < annotations.length; i++) {
-    if (annotations[i] == topAnn) {
-      annotations[i].highlight();
+    var ann = annotations[i];
+    if (ann == topAnn) {
+      if ( ! ann.highlighted) {
+        ann.highlight();
+      }
     } else {
-      annotations[i].unhighlight();
+      if (ann.highlighted) {
+        ann.unhighlight();
+      }
     }
   }
 }
@@ -383,6 +403,11 @@ selectTool.deactivate = function() {
 selectTool.switch = function() {
   paper.tool.deactivate();
   console.log("Switching to selectTool");
+
+  for (var i = 0; i < annotations.length; i++) {
+    annotations[i].unhighlight();
+  }
+
   this.activate()
 }
 
@@ -507,13 +532,16 @@ editTool.onMouseDown = function(event) {
         this.editAnnotation();
 
         editTool.switch(this.annotation);
+        editTool.onMouseMove(event);
 
       } else if (this.curser.intersects(this.points[0])) {
         if (this.points.length != 1) {
           // Close path and edit
           this.path.closed = true;
           this.editAnnotation();
+
           editTool.switch(this.annotation);
+          editTool.onMouseMove(event);
         }
       } else {
         // Add point
@@ -538,12 +566,8 @@ editTool.editAnnotation = function() {
   } else {
     this.annotation.unite(this.path);
   }
-  this.path.remove();
   this.annotation.updateBoundary();
-  if (this.annotation.boundary.area == 0) {
-    this.annotation.delete();
-    selectTool.switch();
-  }
+  this.path.remove();
 }
 editTool.getPathUsingBoundary = function(point0, point1) {
   for (var i = 0; i < this.annotation.boundary.children.length; i++) {
@@ -609,6 +633,12 @@ editTool.switch = function(annotation) {
   console.log("Switching to editTool");
   paper.tool.deactivate();
 
+  this.annotation = annotation;
+  for (var i = 0; i < annotations.length; i++) {
+    annotations[i].setInvisible();
+  }
+  this.annotation.highlight();
+
   this.curser = new Shape.Circle({
     center: new Point(0,0),
     radius: 4
@@ -618,8 +648,6 @@ editTool.switch = function(annotation) {
   this.boundaryLine = new Path();
   this.boundaryPointLine = new Path();
 
-  this.annotation = annotation;
-  this.annotation.highlight();
   this.points = [];
   this.path = new Path();
   this.segment = new Path();
@@ -670,7 +698,10 @@ editTool.onKeyDown = function(event) {
     }
   }
   if (event.key == 'f') {
-    background.focus(this.annotation);
+    if ( ! this.boundaryPoint1.fixed) {
+      background.focus(this.annotation);
+      this.onMouseMove(event);
+    }
     return false;
   }
 }
@@ -696,11 +727,8 @@ brushTool.onMouseDrag = function(event) {
 }
 brushTool.onMouseUp = function(event) {
   this.annotation.updateBoundary();
-  console.log(this.annotation.boundary.area);
-  if (this.annotation.boundary.area == 0) {
-    this.annotation.delete();
-    selectTool.switch();
-  } else {
+
+  if (this.annotation.boundary.area != 0) {
     editTool.switch(this.annotation);
     editTool.onMouseMove(event);
   }
@@ -714,7 +742,7 @@ brushTool.switch = function(annotation) {
 
   this.brush = new Shape.Circle({
       center: [0, 0],
-      radius: 10
+      radius: 15
     });
 
   this.annotation = annotation;
@@ -760,10 +788,7 @@ newTool.createAnnotation = function() {
   var annotation = new Annotation(mask, this.name);
   annotation.unite(this.path);
   annotation.updateBoundary();
-  if (annotation.boundary.area == 0) {
-    annotation.delete();
-    selectTool.switch();
-  }
+  annotation.unhighlight();
 
   this.path.remove();
   selectTool.switch();

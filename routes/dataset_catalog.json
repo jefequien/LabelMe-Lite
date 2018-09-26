@@ -18,5 +18,15 @@
       "im_dir": "coco/images/val2017/", 
       "ann_fn": "annotations/coco/instances_val2017_#.json",
       "load": true
+    },
+    "ade20k_train_predictions": {
+      "im_dir": "ade20k/images/", 
+      "ann_fn": "annotations/ade20k/ade20k_train_predictions_#.json",
+      "load": false
+    },
+    "ade20k_val_predictions": {
+      "im_dir": "ade20k/images/", 
+      "ann_fn": "annotations/ade20k/ade20k_val_predictions_#.json",
+      "load": true
     }
 }

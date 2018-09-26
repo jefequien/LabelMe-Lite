@@ -40,9 +40,20 @@ router.get('/', function(req, res) {
             var image_url = IMAGE_SERVER + DATASETS[project]["im_dir"] + file_name;
             var annotations = [];
             for (var i = 0; i < anns.length; i++) {
+                var name = coco.cats[anns[i]["category_id"]]["name"];
+                var segm = anns[i]["segmentation"];
+                var score = anns[i]["score"];
+
+                if (score != null) {
+                    if (score < 0.5) {
+                        continue;
+                    }
+                    name = name + " " + score.toFixed(3);
+                }
+
                 var ann = {};
-                ann["category"] = coco.cats[anns[i]["category_id"]]["name"];
-                ann["segmentation"] = anns[i]["segmentation"];
+                ann["category"] = name;
+                ann["segmentation"] = segm;
                 annotations.push(ann);
             }
 

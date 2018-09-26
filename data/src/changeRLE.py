@@ -1,6 +1,7 @@
 import os
 import json
 import numpy as np
+from itertools import chain, zip_longest
 
 from pycocotools.coco import COCO
 
@@ -13,8 +14,8 @@ def maskToRLE(mask):
     starts = np.where(difs == 1)[0]
     ends = np.where(difs == -1)[0]
 
-    zipped = np.array(zip(starts, ends)).flatten()
-    padded = np.hstack([[0], zipped, flattened.shape[0]])
+    zipped = [x for x in chain(*zip_longest(starts, ends)) if x is not None]
+    padded = [0] + zipped + [flattened.shape[0]]
     counts = np.diff(padded)
     if counts[-1] == 0:
         counts = counts[:-1]
@@ -30,7 +31,7 @@ def maskToRLE(mask):
 
 
 if __name__ == "__main__":
-    ann_fn = "../annotations/ade20k/ade20k_train_annotations.json"
+    ann_fn = "../annotations/ade20k/ade20k_train_predictions.json"
     coco = COCO(ann_fn)
     c = 0
     for annId in coco.anns:
@@ -44,5 +45,5 @@ if __name__ == "__main__":
     output["images"] = list(coco.imgs.values())
     output["annotations"] = list(coco.anns.values())
     output["categories"] = list(coco.cats.values())
-    with open('../annotations/ade20k/ade20k_train_annotations_#.json', 'w') as outfile:
+    with open('../annotations/ade20k/ade20k_train_predictions_#.json', 'w') as outfile:
         json.dump(output, outfile, indent=2)

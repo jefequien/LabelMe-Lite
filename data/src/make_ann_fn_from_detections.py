@@ -31,21 +31,26 @@ def convert_from_cls_format(cls_boxes, cls_segms, cls_keyps):
     return boxes, segms, keyps, classes
 
 
-def create_ann_fn(detections, category_list):
-    im_list = list(detections.keys())
-    im_list.sort()
+def make_ann_fn(images, detections, categories):
+    fileNameToImg = {}
+    for img in images:
+        fileNameToImg[img["file_name"]] = img
 
-    annId = 0
     images = []
     annotations = []
     categories = []
-    for imgId, im in enumerate(im_list):
-        img = {}
-        img["file_name"] = os.path.basename(im)
-        img["id"] = imgId
-        # img["height"] = 
+    annId = 0
+
+    im_list = list(detections.keys())
+    im_list.sort()
+    for im in im_list:
+        split = im.split('/')
+        file_name = split[-2] + '/' + split[-1]
+        print(file_name)
+        img = fileNameToImg[file_name]
+        imgId = img["id"]
         images.append(img)
-        print(img["id"], img["file_name"])
+        print(imgId, file_name)
 
         cls_boxes, cls_segms, cls_keyps = detections[im]
         boxes, segms, keypoints, classes = convert_from_cls_format(cls_boxes, cls_segms, cls_keyps)
@@ -65,7 +70,7 @@ def create_ann_fn(detections, category_list):
             ann["id"] = annId
             annotations.append(ann)
             annId += 1
-        print(ann["score"], ann["category_id"])
+            print(ann["score"], ann["category_id"])
 
     for i, name in enumerate(category_list):
         categories.append({"id": i, "name": name})
@@ -77,13 +82,17 @@ def create_ann_fn(detections, category_list):
     return ann_fn
 
 if __name__ == "__main__":
+    with open("../annotations/ade20k/ade20k_train_annotations.json", 'r') as f:
+        ann_fn = json.load(f)
+        images = ann_fn["images"]
+
     detection_fn = "/Users/hujh/Downloads/detections.pkl"
     with open(detection_fn, 'rb') as f:
         detections = pickle.load(f)
         category_list = get_coco_dataset()
-        ann_fn = create_ann_fn(detections, category_list)
+        ann_fn = make_ann_fn(images, detections, category_list)
 
-        with open('../annotations/ade20k/ade20k_val_predictions.json', 'w') as outfile:
+        with open('../annotations/ade20k/ade20k_train_predictions.json', 'w') as outfile:
             json.dump(ann_fn, outfile, indent=2)
 
 
