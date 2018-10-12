@@ -10,6 +10,10 @@ router.get('/tool_simple', function(req, res, next) {
   res.render('tool_simple', { title: 'Express' });
 });
 
+router.get('/tool_new', function(req, res, next) {
+  res.render('tool_new', { title: 'LabelMe-Lite' });
+});
+
 router.get('/amt', function(req, res, next) {
   res.render('amt', { title: 'Express' });
 });

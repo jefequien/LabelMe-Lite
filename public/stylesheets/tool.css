@@ -1,25 +1,25 @@
-body {
-    /*padding-top: 50px;
-    margin:0;*/
-  background-color: black;
-}
-
-#work-area {
-    position: absolute;
-    height: 100%;
+.navbar-default {
+    background: red;
     width: 100%;
-    background: black;
+    min-width: 640px;
+    height: 55px;
 }
 
+.navbar img {
+    float:left;
+    margin-right:0px;
+    padding-top:5px;
+    padding-left:20px;
+    width:240px;
+}
 canvas {
-    position: absolute;
-    z-index: 1;
-    top: 50%; left: 50%;
-    transform: translate(-50%,-50%);
-    height:100%;
-    width:100%;
-    background: #222;
-    /*background: url(../img/blank-layer-black.png) repeat;*/
+    position:absolute;
+    z-index:1;
+    top:70px;
+    left:58px;
+    height:550px;
+    width:900px;
+    background: #696969;
     image-rendering: pixelated;
 }
 
@@ -29,24 +29,88 @@ canvas {
     top: 10%; left: 80%;
     width: 200px;
     background-color: black;
-
-    /*background-color: transparent;*/
     border-color: transparent;
 }
 
-#questionForm {
-    position: absolute;
-    z-index: 2;
-    top: 80%; left: 10%;
-    width: 1000px;
-    padding: 10px;
+/********** BUTTONS *************/
 
-    background-color: white;
-    border-color: black;
+#label_buttons_navigation{
+    position:absolute;
+    top:8px;
+    left:270px;
+    margin-bottom:0px;
+    display:block;
+}
+#label_buttons_contrast{
+    position:absolute;
+    top:8px;
+    left:550px;
+    margin-bottom:0px;
+    display:block;
+}
+#label_buttons_drawing{
+    position:absolute;
+    top:70px;
+    left:2px;
+    margin-bottom:0px;
+    display:block;
+}
+#label_buttons_tools{
+    position:absolute;
+    top:230px;
+    left:2px;
+    margin-bottom:0px;
+    display:block;
 }
 
-.toolbar {
-    position: absolute;
-    z-index: 2;
-    top: 10%; left: 5%;
+.labelBtn-group {
+    background-color:#fff;
+    border: 2px solid #000;
+    -webkit-border-radius:20px;
+    -moz-border-radius:20px;
+    border-radius:20px;
+    padding:2px;
+    padding-left:10px;
+    padding-right:10px;
 }
+
+.labelBtn-group-vertical {
+    -webkit-border-radius:10px;
+    -moz-border-radius:10px;
+    border-radius:10px;
+    padding:2px;
+    padding-top:5px;
+    padding-bottom:5px;
+    width:53px;
+}
+
+.labelBtn {
+    background-color:#fff;
+    border:none;
+    margin-right:0px;
+    margin-top:0px;
+    cursor:pointer;
+    height:35px;
+    width:45px;
+}
+.labelBtn-vertical {
+    height:45px;
+    width:45px;
+}
+.labelBtn img {
+    height:30px;
+    width: 30px;
+}
+
+.labelBtn:hover, img.labelBtn:hover {
+    background-color:#faa;
+    cursor:pointer;
+    text-decoration:none;
+}
+
+.labelBtn[disabled], .labelBtn[disabled]:hover{
+    background-color:#666666;
+    cursor:default;
+    text-decoration:none;
+}
+

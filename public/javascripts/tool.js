@@ -1,30 +1,31 @@
-
-
-getData(setUpTool);
-function setUpTool(task) {
-  var image_url = task["image_url"];
-  background.image = new Raster(image_url);
-  background.image.onLoad = function() {
-    background.focus();
-    console.time("Load time");
-    loadAnnotations(task); 
-    console.timeEnd("Load time");
-  }
-}
-
-
 /**
  * Annotation tool powered by PaperJS.
  */
-
-var background = new Background();
 var annotations = [];
+var background = new Background();
 
-function loadAnnotations(task) {
-  var data = task["annotations"];
-  for (var i = 0; i < data.length; i++) {
-    var category = data[i]["category"];
-    var rle = data[i]["segmentation"];
+function loadImage(image_url) {
+  var image = new Raster(image_url);
+  image.onLoad = function() {
+    if (background.image) {
+      background.image.remove();
+    }
+    for (var i = 0; i < annotations.length; i++) {
+      var ann = annotations[i];
+      var scale = image.bounds.height/ ann.raster.bounds.height;
+      ann.translate(image.bounds.topLeft - ann.raster.bounds.topLeft);
+      ann.scale(scale, ann.raster.bounds.topLeft);
+    }
+
+    background.image = image;
+    background.focus();
+  }
+}
+
+function loadAnnotations(anns) {
+  for (var i = 0; i < anns.length; i++) {
+    var category = anns[i]["category"];
+    var rle = anns[i]["segmentation"];
     var mask = rleToMask(rle);
     var annotation = new Annotation(mask, category);
     annotation.updateBoundary();
@@ -46,79 +47,56 @@ function saveAnnotations() {
   return anns;
 }
 
-//
-// Background Class
-//
+
 function Background(){
   this.canvas = document.getElementById('toolCanvas');
-  this.center = new Point(this.canvas.width/2, this.canvas.height/2);
+  this.canvas_center = new Point(this.canvas.width/2, this.canvas.height/2);
   this.max_height = 500;
   this.max_width = 700;
   this.fixed = false;
 }
 Background.prototype.move = function(delta) {
   if ( ! this.fixed) {
-    this.image.translate(delta);
+    if (this.image) {
+      this.image.translate(delta);
+    }
     for (var i = 0; i < annotations.length; i++){
       annotations[i].translate(delta);
     }
   }
 }
 Background.prototype.scale = function(ratio) {
-  this.image.scale(ratio, this.center);
+  if (this.image) {
+    this.image.scale(ratio, this.canvas_center);
+  }
   for (var i = 0; i < annotations.length; i++){
-      annotations[i].scale(ratio, this.center);
+      annotations[i].scale(ratio, this.canvas_center);
   }
 }
-Background.prototype.centerPoint = function(point) {
-    var x = this.center.x;
-    var y = this.center.y;
+Background.prototype.center = function(point) {
+    var x = this.canvas_center.x;
+    var y = this.canvas_center.y;
     var dx = x - point.x;
     var dy = y - point.y;
     this.move(new Point(dx,dy));
 }
 Background.prototype.focus = function(annotation) {
-  var bounds = this.image.bounds;
+  var bounds = background.image.bounds;
   if (annotation) {
     bounds = annotation.boundary.bounds;
   }
-  var ratio = Math.min(this.max_height/bounds.height, this.max_width/bounds.width);
-  this.centerPoint(bounds.center);
-  this.scale(ratio);
+  var ratio = Math.min(background.max_height/bounds.height, background.max_width/bounds.width);
+  background.center(bounds.center);
+  background.scale(ratio);
 }
-Background.prototype.getBlank = function() {
-  var blank = new Raster({
-      size: {
-          width: this.image.width,
-          height: this.image.height
-      }
-  });
-  bbox = this.image.bounds;
-  blank.scale(bbox.height/blank.height);
-  blank.position = bbox.center;
-  return blank;
+function zoomIn() {
+  background.scale(1.25);
 }
-Background.prototype.getPixel = function(point) {
-  if ( ! this.image) { return null; }
-  var bounds = this.image.bounds;
-  var ratio = bounds.height / this.image.height;
-  var pixelX = Math.round((point.x - bounds.x) / ratio);
-  var pixelY = Math.round((point.y - bounds.y) / ratio);
-  return new Point(pixelX, pixelY);
+function zoomOut() {
+  background.scale(0.8);
 }
-Background.prototype.getPoint = function(pixel) {
-  if ( ! this.image) { return null; }
-  var bounds = this.image.bounds;
-  var ratio = bounds.height / this.image.height;
-  var pointX = pixel.x * ratio + bounds.x;
-  var pointY = pixel.y * ratio + bounds.y;
-  return new Point(pointX, pointY);
-}
-Background.prototype.toPointSpace = function(shape) {
-  if ( ! this.image) { return null; }
-  var ratio = this.image.bounds.height / this.image.height;
-  shape.translate(this.image.bounds.topLeft);
-  shape.scale(ratio, this.image.bounds.topLeft);
+function fitScreen() {
+  background.focus();
 }
 
 
@@ -126,7 +104,12 @@ function Annotation(mask, name){
   this.name = name;
   this.color = new Color(Math.random(), Math.random(), Math.random(), 1);
 
-  this.raster = background.getBlank();
+  this.raster = new Raster({
+      size: {
+          width: mask.shape[1],
+          height: mask.shape[0]
+      }
+  });
   this.raster.setImageData(maskToImageData(mask, this.color), new Point(0, 0));
   this.id = this.raster.id;
 
@@ -184,6 +167,13 @@ Annotation.prototype.setInvisible = function() {
 }
 Annotation.prototype.updateBoundary = function() {
   var newBoundary = makeBoundary(this.raster.getImageData());
+
+  // Scale from pixel space to point space
+  var scale = this.raster.bounds.height / this.raster.height;
+  newBoundary.translate(this.raster.bounds.topLeft);
+  newBoundary.scale(scale, this.raster.bounds.topLeft);
+
+  // Preserve boundary style
   if (this.boundary) {
     newBoundary.style = this.boundary.style;
     this.boundary.remove();
@@ -215,26 +205,24 @@ Annotation.prototype.updateBoundary = function() {
     }
   }
 }
-
 Annotation.prototype.unite = function(shape) {
   editRaster(this.raster, shape, "unite", this.color);
 }
 Annotation.prototype.subtract = function(shape) {
   editRaster(this.raster, shape, "subtract", this.color);
 }
-
 function editRaster(raster, shape, rule, color) {
   var other = shape.clone();
   other.fillColor = "black";
   other.strokeWidth = 0;
 
-  var otherRaster = other.rasterize(raster.resolution.height);
+  var otherRaster = other.rasterize(raster.resolution.width);
   if (otherRaster.height == 0 || otherRaster.width == 0) {
     other.remove();
     otherRaster.remove();
     return;
   }
-  var topLeft = background.getPixel(otherRaster.bounds.point);
+  var topLeft = getPixel(raster, otherRaster.bounds.point);
   var imageData0 = raster.getImageData();
   var imageData1 = otherRaster.getImageData();
   for (var x = 0; x < imageData1.width; x++) {
@@ -263,6 +251,14 @@ function editRaster(raster, shape, rule, color) {
   other.remove();
   otherRaster.remove();
 }
+function getPixel(raster, point) {
+  var bounds = raster.bounds;
+  var scaleX = bounds.width / raster.width;
+  var scaleY = bounds.height / raster.height;
+  var pixelX = Math.round((point.x - bounds.x) / scaleX);
+  var pixelY = Math.round((point.y - bounds.y) / scaleY);
+  return new Point(pixelX, pixelY);
+}
 function getColor(imageData, pixel) {
   var p = (pixel.y * imageData.width + pixel.x) * 4;
   var color = new Color();
@@ -283,11 +279,6 @@ function editColor(imageData, pixel, color) {
   imageData.data[p+2] = color.blue*255;
   imageData.data[p+3] = color.alpha*255;
 }
-
-//
-// Utils
-//
-
 function makeBoundary(imageData) {
   var boundaries = findBoundariesOpenCV(imageData);
   var paths = [];
@@ -320,9 +311,9 @@ function makeBoundary(imageData) {
       }
     }
   }
-  background.toPointSpace(compoundPath);
   return compoundPath;
 }
+
 
 //
 // Tools
@@ -330,7 +321,7 @@ function makeBoundary(imageData) {
 var selectTool = new Tool();
 selectTool.onMouseMove = function(event) {
   // Highlight top annotation. Unhighlight everything else.
-  var topAnn = this.getTopMostAnnotation(event)
+  var topAnn = this.getTopMostAnnotation(event);
   for (var i = 0; i < annotations.length; i++) {
     var ann = annotations[i];
     if (ann == topAnn) {
@@ -361,16 +352,9 @@ selectTool.onMouseDrag = function(event) {
   background.move(event.delta);
 }
 selectTool.onKeyDown = function(event) {
+  onKeyDownDefault(event);
   if (event.key == 'n') {
     newTool.switch();
-    return false;
-  }
-  if (event.key == '-') {
-    background.scale(0.8);
-    return false;
-  }
-  if (event.key == '=') {
-    background.scale(1.25);
     return false;
   }
   if (event.key == 'f' || event.key == 'escape') {
@@ -395,8 +379,8 @@ var editTool = new Tool();
 editTool.onMouseMove = function(event) {
   this.curser.position = event.point;
   // Snap curser position to things
-  if ( ! background.image.contains(this.curser.position)) {
-    var edge = new Shape.Rectangle(background.image.bounds);
+  if ( ! this.annotation.raster.contains(this.curser.position)) {
+    var edge = new Shape.Rectangle(this.annotation.raster.bounds);
     var edgePath = edge.toPath();
     edge.remove();
     edgePath.remove();
@@ -642,7 +626,7 @@ editTool.switch = function(annotation) {
   this.activate();
 }
 editTool.onKeyDown = function(event) {
-  event.point = this.curser.position;
+  onKeyDownDefault(event);
   if (event.key == 'escape') {
     if (this.boundaryPoint1.fixed) {
       editTool.switch(this.annotation);
@@ -662,20 +646,6 @@ editTool.onKeyDown = function(event) {
   if (event.key == 'space') {
     this.onMouseDown(event);
     return false;
-  }
-  if (event.key == '-') {
-    if ( ! this.boundaryPoint1.fixed) {
-      background.scale(0.8);
-      this.onMouseMove(event);
-      return false;
-    }
-  }
-  if (event.key == '=') {
-    if ( ! this.boundaryPoint1.fixed) {
-      background.scale(1.25);
-      this.onMouseMove(event);
-      return false;
-    }
   }
   if (event.key == 'f') {
     if ( ! this.boundaryPoint1.fixed) {
@@ -731,14 +701,7 @@ brushTool.switch = function(annotation) {
   this.activate();
 }
 brushTool.onKeyDown = function(event) {
-  if (event.key == '-') {
-    background.scale(0.8);
-    return false;
-  }
-  if (event.key == '=') {
-    background.scale(1.25);
-    return false;
-  }
+  onKeyDownDefault(event);
 }
 
 var newTool = new Tool();
@@ -816,6 +779,7 @@ newTool.switch = function () {
   }
 }
 newTool.onKeyDown = function(event) {
+  onKeyDownDefault(event);
   if (event.key == 'escape') {
     selectTool.switch();
     return false;
@@ -826,41 +790,20 @@ newTool.onKeyDown = function(event) {
   }
 }
 
-
-//
-// Buttons
-//
-var next_button = document.getElementById('next');
-next_button.onclick = function(){
-    next_image();
-}
-var previous_button = document.getElementById('previous');
-previous_button.onclick = function(){
-    previous_image();
-}
-var new_button = document.getElementById('new');
-new_button.onclick = function(){
-    newTool.switch();
-}
-var delete_button = document.getElementById('delete');
-delete_button.onclick = function(){
-  if (paper.tool == editTool) {
-    editTool.annotation.delete();
-    selectTool.switch();
+function onKeyDownDefault(event) {
+  if (paper.tool.curser) {
+    event.point = paper.tool.curser.position;
   }
-}
-var save_button = document.getElementById('save');
-save_button.onclick = function(){
-  saveAnnotations();
-}
-var sort_button = document.getElementById('sort');
-sort_button.onclick = function(){
-  // no sorting need anymore
-}
-var toggle_points_button = document.getElementById('toggle_points');
-toggle_points_button.onclick = function(){
-  showPoints = !(showPoints);
-  console.log("Show points " + showPoints);
+  if (event.key == '-') {
+    zoomOut();
+    paper.tool.onMouseMove(event);
+    return false;
+  }
+  if (event.key == '=') {
+    zoomIn();
+    paper.tool.onMouseMove(event);
+    return false;
+  }
 }
 
 
@@ -1021,3 +964,14 @@ tree.getAnnotationById = function(id) {
     }
   }
 }
+
+window.annotator = {}
+annotator.loadImage =  loadImage;
+annotator.loadAnnotations = loadAnnotations;
+annotator.zoomIn = zoomIn;
+annotator.zoomOut = zoomOut;
+annotator.fitScreen = fitScreen;
+annotator.selectTool = selectTool;
+annotator.editTool = editTool;
+annotator.brushTool = brushTool;
+annotator.newTool = newTool;
