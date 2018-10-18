@@ -1,4 +1,5 @@
 
+
 function maskToRLE(mask) {
 
 }
@@ -39,10 +40,8 @@ function maskToImageData(mask, color) {
 }
 
 function imageDataToMask(imageData) {
-  var h = imageData.height;
-  var w = imageData.width;
-  var array = nj.array(Array.from(imageData.data));
-  var array = array.reshape([h,w,4]);
+  var mat = cv.matFromImageData(imageData);
+  var array = matToArray(mat);
   var mask = array.slice(null,null,3);
   if (nj.max(mask) > 1) {
     mask = mask.divide(nj.max(mask));
@@ -56,8 +55,22 @@ function arrayToImageData(array) {
   cv.height = array.shape[0];
   cv.width = array.shape[1];
   nj.images.save(array, cv);
-  image_data = ctx.getImageData(0,0,array.shape[1], array.shape[0]);
-  return image_data;
+  imageData = ctx.getImageData(0,0,array.shape[1], array.shape[0]);
+  return imageData;
+}
+function matToImageData(mat) {
+  var imageData = new ImageData(new Uint8ClampedArray(mat.data), mat.cols, mat.rows);
+  return imageData;
+}
+function matToArray(mat) {
+  var channels = mat.data.length / (mat.rows * mat.cols);
+  var array = nj.array(Array.from(mat.data));
+  if (channels == 1) {
+    array = array.reshape(mat.rows, mat.cols);
+  } else {
+    array = array.reshape(mat.rows, mat.cols, channels);
+  }
+  return array;
 }
 
 function findBoundariesOpenCV(imageData) {
@@ -68,7 +81,7 @@ function findBoundariesOpenCV(imageData) {
   var contours = new cv.MatVector();
   var hierarchy = new cv.Mat();
   // // You can try more different parameters
-  cv.findContours(src, contours, hierarchy, cv.RETR_LIST, cv.CHAIN_APPROX_SIMPLE);
+  cv.findContours(src, contours, hierarchy, cv.RETR_LIST, cv.CHAIN_APPROX_NONE);
 
   var boundaries = [];
   for (var i = 0; i < contours.size(); i++) {
