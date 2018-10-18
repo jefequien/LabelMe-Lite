@@ -16,6 +16,8 @@ results
 build
 
 node_modules
-public/components
+public/components/*
 data/bundles
 data/annotations/
+
+!public/components/google-closure-library-compiler/
