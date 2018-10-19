@@ -24,31 +24,6 @@ function rleToMask(rle) {
   return mask;
 }
 
-function maskToImageData(mask, color) {
-  if (nj.max(mask) <= 1) {
-    mask = mask.multiply(255);
-  }
-  // Mask to raster
-  var r = nj.multiply(mask, color.red);
-  var g = nj.multiply(mask, color.green);
-  var b = nj.multiply(mask, color.blue);
-  var a = mask;
-  var color_mask = nj.stack([r, g, b, a], -1);
-
-  imageData = arrayToImageData(color_mask);
-  return imageData;
-}
-
-function imageDataToMask(imageData) {
-  var mat = cv.matFromImageData(imageData);
-  var array = matToArray(mat);
-  var mask = array.slice(null,null,3);
-  if (nj.max(mask) > 1) {
-    mask = mask.divide(nj.max(mask));
-  }
-  return mask;
-}
-
 function arrayToImageData(array) {
   var cv = document.createElement('canvas');
   var ctx = cv.getContext('2d');

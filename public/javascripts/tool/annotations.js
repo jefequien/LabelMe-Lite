@@ -5,18 +5,15 @@ function Annotation(name, mask){
   this.name = name;
   this.color = new Color(Math.random(), Math.random(), Math.random(), 1);
 
-  // Mask
-  this.mask = mask;
   this.boundary = new CompoundPath();
+  this.mask = mask;
   if (this.mask == null) {
     this.mask = nj.zeros([background.image.height, background.image.width]);
   }
-
-  // Raster
   this.raster = new Raster({size: new Size(this.mask.shape[1], this.mask.shape[0])});
   this.updateRaster();
-  this.id = this.raster.id;
 
+  this.id = this.raster.id;
   annotations.unshift(this); // add to front
   tree.addAnnotation(this);
 }
@@ -48,10 +45,25 @@ Annotation.prototype.updateBoundary = function() {
   this.boundary.pathData = boundary.pathData;
 }
 Annotation.prototype.updateMask = function() {
-  this.mask = imageDataToMask(this.raster.getImageData());
+  var imageData = this.raster.getImageData();
+  var mat = cv.matFromImageData(imageData);
+  var array = matToArray(mat);
+  var mask = array.slice(null,null,3);
+  if (nj.max(this.mask) > 1) {
+    mask = mask.divide(nj.max(mask));
+  }
+  this.mask = mask;
 }
 Annotation.prototype.updateRaster = function() {
-  this.raster.setImageData(maskToImageData(this.mask, this.color), new Point(0, 0));
+  var mask = this.mask.multiply(255);
+  var r = nj.multiply(mask, this.color.red);
+  var g = nj.multiply(mask, this.color.green);
+  var b = nj.multiply(mask, this.color.blue);
+  var a = mask;
+  var color_mask = nj.stack([r, g, b, a], -1);
+  var imageData = arrayToImageData(color_mask);
+
+  this.raster.setImageData(imageData, new Point(0, 0));
 }
 Annotation.prototype.delete = function() {
   annotations.splice(annotations.indexOf(this), 1 );
