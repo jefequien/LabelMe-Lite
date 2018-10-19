@@ -1,33 +1,57 @@
 /**
  * Annotation tool powered by PaperJS.
  */
-var annotations = [];
-
-function Annotation(mask, name){
+function Annotation(name, mask){
   this.name = name;
   this.color = new Color(Math.random(), Math.random(), Math.random(), 1);
 
-  this.raster = new Raster({
-      size: {
-          width: mask.shape[1],
-          height: mask.shape[0]
-      }
-  });
-  this.raster.setImageData(maskToImageData(mask, this.color), new Point(0, 0));
+  // Mask
+  this.mask = mask;
+  this.boundary = new CompoundPath();
+  if (this.mask == null) {
+    this.mask = nj.zeros([background.image.height, background.image.width]);
+  }
+
+  // Raster
+  this.raster = new Raster({size: new Size(this.mask.shape[1], this.mask.shape[0])});
+  this.updateRaster();
   this.id = this.raster.id;
 
   annotations.unshift(this); // add to front
   tree.addAnnotation(this);
+}
+Annotation.prototype.refresh = function() {
+  this.updateBoundary();
+  this.updateMask();
+  sortAnnotations();
 
-  // HACK: tool can't watch for double click so I'm getting the items to do it
-  this.raster.onDoubleClick = function(event) {
-    if (paper.tool == selectTool) {
-      selectTool.onDoubleClick(event);
-    }
+  if (this.boundary.area == 0) {
+    this.delete();
+    selectTool.switch();
   }
 }
-Annotation.prototype.toMask = function() {
-  return imageDataToMask(this.raster.getImageData());
+Annotation.prototype.updateBoundary = function() {
+  var imageData = this.raster.getImageData();
+  var boundaries = findBoundariesOpenCV(imageData);
+  var paths = [];
+  for (var i = 0; i < boundaries.length; i++) {
+    var path = new Path({
+      segments: boundaries[i],
+      closed: true
+    });
+    paths.push(path);
+  }
+  var boundary = new CompoundPath({ children: paths });
+  boundary.remove();
+
+  this.toPointSpace(boundary);
+  this.boundary.pathData = boundary.pathData;
+}
+Annotation.prototype.updateMask = function() {
+  this.mask = imageDataToMask(this.raster.getImageData());
+}
+Annotation.prototype.updateRaster = function() {
+  this.raster.setImageData(maskToImageData(this.mask, this.color), new Point(0, 0));
 }
 Annotation.prototype.delete = function() {
   annotations.splice(annotations.indexOf(this), 1 );
@@ -38,39 +62,31 @@ Annotation.prototype.delete = function() {
 }
 Annotation.prototype.translate = function(delta) {
   this.raster.translate(delta);
-  if (this.boundary) {
-    this.boundary.translate(delta);
-  }
+  this.boundary.translate(delta);
 }
 Annotation.prototype.scale = function(scale, center) {
   this.raster.scale(scale, center);
-  if (this.boundary) {
-    this.boundary.scale(scale, center);
-  }
+  this.boundary.scale(scale, center);
 }
 Annotation.prototype.highlight = function() {
   this.highlighted = true;
   this.raster.opacity = 0;
-  if (this.boundary) {
-    this.boundary.strokeColor = this.color;
-    this.boundary.strokeWidth = 2;
-  }
+  this.boundary.strokeColor = this.color;
+  this.boundary.strokeWidth = 2;
+
   tree.setActive(this, true);
   console.log(this.name);
 }
 Annotation.prototype.unhighlight = function() {
   this.highlighted = false;
   this.raster.opacity = 0.7;
-  if (this.boundary) {
-    this.boundary.strokeWidth = 0;
-  }
+  this.boundary.strokeWidth = 0;
+
   tree.setActive(this, false);
 }
-Annotation.prototype.setInvisible = function() {
+Annotation.prototype.hide = function() {
   this.raster.opacity = 0;
-  if (this.boundary) {
-    this.boundary.strokeWidth = 0;
-  }
+  this.boundary.strokeWidth = 0;
 }
 Annotation.prototype.getPixel = function(point) {
   var bounds = this.raster.bounds;
@@ -100,47 +116,6 @@ Annotation.prototype.toPointSpace = function(shape) {
   shape.scale(scale, new Point(0,0));
   shape.translate(delta);
 }
-Annotation.prototype.updateBoundary = function() {
-  var boundary = makeBoundary(this.raster.getImageData());
-
-  // Move from pixel space to point space
-  boundary.translate(new Point(0.5, 0.5));
-  var scale = this.raster.bounds.height / this.raster.height;
-  boundary.translate(this.raster.bounds.topLeft);
-  boundary.scale(scale, this.raster.bounds.topLeft);
-
-  // Preserve boundary style
-  if (this.boundary) {
-    boundary.style = this.boundary.style;
-    this.boundary.remove();
-    this.boundary = boundary;
-  } else {
-    boundary.strokeColor = "black";
-    boundary.strokeWidth = 5;
-    this.boundary = boundary;
-  }
-
-  if (this.boundary.area == 0) {
-    this.delete();
-    selectTool.switch();
-  }
-
-  // Sort annotation from smallest to largest.
-  var changed = true;
-  while (changed) {
-    changed = false;
-    for (var i = 0; i < annotations.length-1; i++) {
-      var ann0 = annotations[i];
-      var ann1 = annotations[i+1];
-      if (Math.abs(ann0.boundary.area) > Math.abs(ann1.boundary.area)) {
-        ann0.raster.insertBelow(ann1.raster);
-        annotations[i+1] = ann0;
-        annotations[i] = ann1;
-        changed = true;
-      }
-    }
-  }
-}
 Annotation.prototype.unite = function(shape) {
   this.edit(shape, "unite");
 }
@@ -148,28 +123,48 @@ Annotation.prototype.subtract = function(shape) {
   this.edit(shape, "subtract");
 }
 Annotation.prototype.edit = function(shape, rule) {
+  var imageData = this.raster.getImageData();
+  var color = new Color(0,0,0,0);
+  if (rule == "unite") {
+    color = this.color;
+  }
+
   var shape_pixel = shape.clone();
   this.toPixelSpace(shape_pixel);
-  shape_pixel.fillColor = "black";
   shape_pixel.remove();
 
+  // Edit boundary pixels
+  for (var i = 0; i < shape_pixel.segments.length; i++) {
+    var pixel = shape_pixel.segments[i].point;
+    editPixel(imageData, pixel, color);
+  }
+
+  // Edit interior pixels
   var tl = this.getPixel(shape.bounds.topLeft);
   var br = this.getPixel(shape.bounds.bottomRight);
-  var imageData = this.raster.getImageData();
   for (var x = tl.x; x <= br.x; x++) {
     for (var y = tl.y; y <= br.y; y++) {
-      var pixel = new Point(x,y)
-      var options = {fill: true, tolerance: 0.5};
-      if (shape_pixel.contains(pixel) || shape_pixel.hitTest(pixel, options)) {
-        if (rule == "unite") {
-          editColor(imageData, pixel, this.color);
-        } else if (rule == "subtract") {
-          editColor(imageData, pixel, new Color(0,0,0,0));
-        }
+      var pixel = new Point(x,y);
+      if (shape_pixel.contains(pixel)) {
+        editPixel(imageData, pixel, color);
       }
     }
   }
+
   this.raster.setImageData(imageData, new Point(0,0));
+}
+function editPixel(imageData, pixel, color) {
+  var x = Math.round(pixel.x);
+  var y = Math.round(pixel.y);
+  if (x < 0 || y < 0
+    || x >= imageData.width || y >= imageData.height) {
+    return;
+  }
+  var p = (y * imageData.width + x) * 4;
+  imageData.data[p] = color.red*255;
+  imageData.data[p+1] = color.green*255;
+  imageData.data[p+2] = color.blue*255;
+  imageData.data[p+3] = color.alpha*255;
 }
 function getColor(imageData, pixel) {
   var p = (pixel.y * imageData.width + pixel.x) * 4;
@@ -180,32 +175,6 @@ function getColor(imageData, pixel) {
   color.alpha = imageData.data[p+3];
   return color;
 }
-function editColor(imageData, pixel, color) {
-  if (pixel.x < 0 || pixel.y < 0
-    || pixel.x >= imageData.width || pixel.y >= imageData.height) {
-    return;
-  }
-  var p = (pixel.y * imageData.width + pixel.x) * 4;
-  imageData.data[p] = color.red*255;
-  imageData.data[p+1] = color.green*255;
-  imageData.data[p+2] = color.blue*255;
-  imageData.data[p+3] = color.alpha*255;
-}
-function makeBoundary(imageData) {
-  var paths = [];
-  var boundaries = findBoundariesOpenCV(imageData);
-  for (var i = 0; i < boundaries.length; i++) {
-    var path = new Path({
-      segments: boundaries[i],
-      closed: true
-    });
-    paths.push(path);
-  }
-  var paths = new CompoundPath({
-    children: paths
-  });
-  return paths;
-}
 
 //
 // Exports
@@ -215,8 +184,8 @@ function loadAnnotations(anns) {
     var category = anns[i]["category"];
     var rle = anns[i]["segmentation"];
     var mask = rleToMask(rle);
-    var annotation = new Annotation(mask, category);
-    annotation.updateBoundary();
+    var annotation = new Annotation(category, mask);
+    annotation.refresh();
     annotation.unhighlight();
   }
 }
@@ -235,7 +204,25 @@ function saveAnnotations() {
   return anns;
 }
 
+function sortAnnotations() {
+  // Sort annotation from smallest to largest.
+  var changed = true;
+  while (changed) {
+    changed = false;
+    for (var i = 0; i < annotations.length-1; i++) {
+      var ann0 = annotations[i];
+      var ann1 = annotations[i+1];
+      if (Math.abs(ann0.boundary.area) > Math.abs(ann1.boundary.area)) {
+        ann0.raster.insertBelow(ann1.raster);
+        annotations[i+1] = ann0;
+        annotations[i] = ann1;
+        changed = true;
+      }
+    }
+  }
+}
+
 window.Annotation = Annotation;
-window.annotations = annotations;
+window.annotations = [];
 window.loadAnnotations = loadAnnotations;
 window.saveAnnotations = saveAnnotations;

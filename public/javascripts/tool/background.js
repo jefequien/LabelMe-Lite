@@ -1,9 +1,6 @@
 /**
  * Annotation tool powered by PaperJS.
  */
-var background = new Background();
-paper.view._context.imageSmoothingEnabled = false;
-
 function Background() {
   this.canvas = document.getElementById('toolCanvas');
   this.canvas_center = new Point(this.canvas.width/2, this.canvas.height/2);
@@ -28,23 +25,11 @@ Background.prototype.setImageData = function(imageData) {
 }
 Background.prototype.move = function(delta) {
   if ( ! this.fixed) {
-    if (this.image) {
-      this.image.translate(delta);
-    }
-    for (var i = 0; i < annotations.length; i++){
-      annotations[i].translate(delta);
-    }
-    // paper.project.activeLayer.translate(delta);
+    paper.project.activeLayer.translate(delta);
   }
 }
 Background.prototype.scale = function(ratio) {
-  if (this.image) {
-    this.image.scale(ratio, this.canvas_center);
-  }
-  for (var i = 0; i < annotations.length; i++){
-      annotations[i].scale(ratio, this.canvas_center);
-  }
-  // paper.project.activeLayer.scale(ratio, this.canvas_center);
+  paper.project.activeLayer.scale(ratio, this.canvas_center);
 }
 Background.prototype.center = function(point) {
     var x = this.canvas_center.x;
@@ -112,7 +97,8 @@ function fitScreen() {
   background.focus();
 }
 
-window.background = background;
+window.background = new Background();
 window.zoomIn = zoomIn;
 window.zoomOut = zoomOut;
 window.fitScreen = fitScreen;
+paper.view._context.imageSmoothingEnabled = false; // Pixelates background

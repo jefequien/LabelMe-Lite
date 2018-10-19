@@ -28,6 +28,8 @@ Scissors.prototype.getPath = function(start, end) {
     if ( ! Array.isArray(root[0])) {
         root = [root];
     }
+    root = this.clamp(root);
+    end = this.clamp([end])[0];
 
     var key = JSON.stringify(root);
     if (key in this.allParents) {
@@ -51,9 +53,6 @@ Scissors.prototype.getPath = function(start, end) {
 }
 
 Scissors.prototype.getPathToRoot = function(parents, p) {
-    var x = Math.max(0, Math.min(p[0], this.top.shape[1]-1));
-    var y = Math.max(0, Math.min(p[1], this.top.shape[0]-1));
-    var p = [x,y];
     var path = [p];
     while (true) {
         var x = parents.get(p[1], p[0], 0);
@@ -74,6 +73,17 @@ Scissors.prototype.getPathToRoot = function(parents, p) {
         return null;
     }
     return path;
+}
+
+Scissors.prototype.clamp = function(points) {
+    var clamped = [];
+    for (var i = 0; i < points.length; i++) {
+        var p = points[i];
+        var x = Math.max(0, Math.min(p[0], this.top.shape[1]-1));
+        var y = Math.max(0, Math.min(p[1], this.top.shape[0]-1));
+        clamped.push([x,y]);
+    }
+    return clamped;
 }
 
 Scissors.prototype.addParents = function(root, parents, completed) {

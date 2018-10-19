@@ -9,6 +9,7 @@ function main(e) {
     var root = task["root"];
     var top = nj.array(JSON.parse(task["top"]));
 
+    console.log("Worker running...");
     console.time("APSP");
     allPathsShortestPath(top, root);
     console.timeEnd("APSP");
