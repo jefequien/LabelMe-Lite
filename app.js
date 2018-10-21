@@ -5,8 +5,8 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 
 var index = require('./routes/index');
-var dataController = require('./routes/dataController.js');
-var exampleController = require('./routes/exampleController.js');
+var dataController = require('./routes/dataController');
+var exampleController = require('./routes/exampleController');
 
 var app = express();
 
@@ -20,6 +20,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Routing
 app.use('/', index);
 app.use('/data', dataController);
 app.use('/examples', exampleController);

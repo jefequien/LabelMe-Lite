@@ -94,24 +94,23 @@ editTool.onMouseDrag = function(event) {
   this.refresh();
 }
 editTool.onKeyDown = function(event) {
-  event.point = this.curser.position;
+  // Zoom keys
   if (event.key == '9') {
-    // Zoom out
     zoomOut();
     return false;
   }
   if (event.key == '0') {
-    // Zoom in
     zoomIn();
     return false;
   }
   if (event.key == 'f') {
-    // Zoom to focus on annotation.
     background.focus(this.annotation);
     return false;
   }
+
+  // Escape keys
   if (event.key == 'escape') {
-    // Undo. If cannot undo, quit.
+    // Undo. Then quit.
     var success = this.undo();
     if ( ! success) {
       selectTool.switch();
@@ -119,7 +118,7 @@ editTool.onKeyDown = function(event) {
     return false;
   }
   if (event.key == 'backspace') {
-    // Undo. If cannot undo, delete annotation.
+    // Undo. Then delete.
     var success = this.undo();
     if ( ! success) {
       this.annotation.delete();
@@ -128,39 +127,19 @@ editTool.onKeyDown = function(event) {
     return false;
   }
   if (event.key == 'q') {
-    // Quit
     selectTool.switch();
     return false;
   }
-  if (event.key == 'space') {
-    // Toggle scissors
-    scissors.active = ( ! scissors.active);
+
+  // Tool keys
+  if (event.key == 'b') {
+    brushTool.switch(this.annotation);
     return false;
   }
-}
-editTool.editAnnotation = function(path) {
-  if (this.mode == "unite") {
-    this.annotation.unite(path);
-  } else {
-    this.annotation.subtract(path);
+  if (event.key == 'space') {
+    scissors.toggle();
+    return false;
   }
-  this.annotation.refresh();
-  
-  path.remove();
-  editTool.switch(this.annotation);
-}
-editTool.undo = function() {
-  var success = false;
-  if (this.points.length > 0) {
-    this.points.pop().remove();
-    success = true;
-  }
-  if (this.segments.length > 0) {
-    this.segments.pop().remove();
-    success = true;
-  }
-  this.refresh();
-  return success;
 }
 editTool.deactivate = function() {
   this.curser.remove();
@@ -176,16 +155,12 @@ editTool.deactivate = function() {
   for (var i = 0; i < this.segments.length; i++) {
     this.segments[i].remove();
   }
-  for (var i = 0; i < annotations.length; i++) {
-    annotations[i].unhighlight();
-  }
 
   clearInterval(this.interval);
 }
 editTool.switch = function(annotation) {
   this.toolName = "editTool";
   console.log("Switching to", this.toolName);
-
   paper.tool.deactivate();
   this.curser = new Shape.Circle(paper.tool.curser.position);
   this.activate();
@@ -207,6 +182,34 @@ editTool.switch = function(annotation) {
   this.refresh();
   this.interval = setInterval(this.refresh, 300);
 }
+editTool.refresh = function() {
+  var fakeEvent = {point: editTool.curser.position};
+  editTool.onMouseMove(fakeEvent);
+}
+editTool.editAnnotation = function(path) {
+  if (this.mode == "unite") {
+    this.annotation.unite(path);
+  } else {
+    this.annotation.subtract(path);
+  }
+  this.annotation.refresh();
+
+  path.remove();
+  editTool.switch(this.annotation);
+}
+editTool.undo = function() {
+  var success = false;
+  if (this.points.length > 0) {
+    this.points.pop().remove();
+    success = true;
+  }
+  if (this.segments.length > 0) {
+    this.segments.pop().remove();
+    success = true;
+  }
+  this.refresh();
+  return success;
+}
 editTool.snapCurser = function() {
   // Snap to annotation bounds
   if ( ! this.annotation.raster.contains(this.curser.position)) {
@@ -221,40 +224,39 @@ editTool.snapCurser = function() {
 }
 editTool.enforceStyles = function() {
   var radius = 4;
+  // Curser and annotation styles
   this.curser.radius = radius;
-  this.bp0.radius = radius;
-  this.bp1.radius = radius;
-
-  this.bp0.fillColor = "gold";
-  this.bp1.fillColor = "gold";
   if (this.mode == "unite") {
     this.curser.fillColor = "#00FF00";
+    this.annotation.unhighlight();
   } else {
     this.curser.fillColor = "red";
+    this.annotation.highlight();
   }
+  this.annotation.boundary.strokeColor = "gold";
+  this.annotation.boundary.strokeWidth = 3;
 
-  // Line styles
+  // Other styles
+  this.bp0.radius = radius;
+  this.bp0.fillColor = "gold";
+  this.bp0.strokeColor = "black";
+  this.bp0.strokeWidth = 2;
+  this.bp1.radius = radius;
+  this.bp1.style = this.bp0.style;
   this.line.strokeColor = "black";
   this.line.strokeWidth = 3;
   this.bl.style = this.line.style;
   this.bl.dashArray = [10, 4];
-  this.dashedLine.style = this.line.style;
-  this.dashedLine.dashArray = [10, 4];
+  this.dashedLine.style = this.bl.style;
+
+  // Toggle dashed line
   if (this.points.length >= 2 && this.curser.intersects(this.points[0])) {
       this.dashedLine.visible = false;
   } else {
     this.dashedLine.visible = true;
   }
 
-  // Annotation styles
-  this.annotation.boundary.strokeColor = "gold";
-  if (this.annotation.boundary.contains(this.curser.position)) {
-    this.annotation.raster.opacity = 0.3
-  } else {
-    this.annotation.raster.opacity = 0
-  }
-
-  // Keep curser and points the same size regardless of scaling.
+  // Keep points the same size regardless of scaling.
   var r = radius / (this.curser.bounds.height/2);
   this.curser.scale(r);
   this.bp0.scale(r);
@@ -274,12 +276,6 @@ editTool.setMode = function() {
     this.mode = "subtract";
   }
 }
-editTool.refresh = function() {
-  var fakeEvent = {};
-  fakeEvent.point = editTool.curser.position;
-  editTool.onMouseMove(fakeEvent);
-}
-
 editTool.getPath = function(start, end) {
   var path = new Path.Line(start, end);
   if (scissors.active) {
@@ -291,11 +287,11 @@ editTool.getPath = function(start, end) {
       path.segments = pixelList;
       background.toPointSpace(path);
 
-      // Edit path to fit better
-      path.segments.shift();
       path.insert(0, start);
-      path.segments.pop();
       path.add(end);
+      // Smooth out path
+      path.removeSegment(1);
+      path.removeSegment(path.segments.length - 2);
     }
   }
   return path;
@@ -323,11 +319,11 @@ editTool.getPathToBoundary = function(point) {
       path.segments = pixelList;
       background.toPointSpace(path);
 
-      // Edit path to fit better
-      var p = path.segments.shift().point;
-      path.insert(0, this.annotation.boundary.getNearestPoint(p));
-      path.segments.pop();
+      path.insert(0, this.annotation.boundary.getNearestPoint(path.firstSegment.point));
       path.add(point);
+      // Smooth out path
+      path.removeSegment(1);
+      path.removeSegment(path.segments.length - 2);
     }
   }
   return path;

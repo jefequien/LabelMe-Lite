@@ -1,7 +1,26 @@
 
 
 function maskToRLE(mask) {
+  var b = 0;
+  var c = 0;
+  var counts = [];
+  var flat = mask.flatten();
+  for (var i = 0; i < flat.shape[0]; i++) {
+    if (flat.get(i) == b) {
+      c += 1;
+    } else {
+      counts.push(c);
+      c = 1;
+      b = flat.get(i);
+    }
+  }
+  counts.push(c);
 
+  var rle = {};
+  rle["height"] = mask.shape[0];
+  rle["width"] = mask.shape[1];
+  rle["counts"] = counts.join("#");
+  return rle;
 }
 
 function rleToMask(rle) {
@@ -14,14 +33,20 @@ function rleToMask(rle) {
       for (var j = 0; j < counts[i]; j++) {
           mask.push(b);
       }
-      if (b == 0) {
-          b = 1;
-      } else {
-          b = 0;
-      }
+      b = (b == 0) ? 1 : 0;
   }
   var mask = nj.array(mask).reshape(height, width);
   return mask;
+}
+
+function getImageData(image) {
+    var cv = document.createElement('canvas');
+    var ctx = cv.getContext('2d');
+    cv.height = image.height;
+    cv.width = image.width;
+    ctx.drawImage(image, 0, 0, image.width, image.height);
+    var imageData = ctx.getImageData(0, 0, image.width, image.height);
+    return imageData;
 }
 
 function arrayToImageData(array) {
@@ -46,33 +71,4 @@ function matToArray(mat) {
     array = array.reshape(mat.rows, mat.cols, channels);
   }
   return array;
-}
-
-function findBoundariesOpenCV(imageData) {
-  var src = cv.matFromImageData(imageData);
-  var dst = cv.Mat.zeros(src.cols, src.rows, cv.CV_8UC3);
-  cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
-  cv.threshold(src, src, 1, 255, cv.THRESH_BINARY);
-  var contours = new cv.MatVector();
-  var hierarchy = new cv.Mat();
-  // // You can try more different parameters
-  cv.findContours(src, contours, hierarchy, cv.RETR_LIST, cv.CHAIN_APPROX_NONE);
-
-  var boundaries = [];
-  for (var i = 0; i < contours.size(); i++) {
-    var cnt = contours.get(i);
-    if (cv.contourArea(cnt) > 5) {
-      var bnd = [];
-      for (var j = 0; j < cnt.rows; j++) {
-        bnd.push([cnt.data32S[j*2], cnt.data32S[j*2+1]])
-      }
-      boundaries.push(bnd);
-    }
-    cnt.delete();
-  }
-  src.delete();
-  dst.delete();
-  contours.delete();
-  hierarchy.delete();
-  return boundaries;
 }

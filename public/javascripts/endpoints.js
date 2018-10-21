@@ -1,14 +1,37 @@
 
+var href = window.location.href;
+var url = href.split('?')[0];
+var query = href.split('?')[1];
 
-var base_url = parseBaseURL();
-var query = parseQuery();
+var base_url = parseBaseURL(url);
 var params = parseParams(query);
 
 //
 // Get Requests
 //
-function getTask(callback) {
-    var endpoint = base_url + "/data/tasks?" + query;
+function getImageURL(src) {
+    var endpoint = base_url + "/data/images?" + query;
+    return endpoint;
+}
+function nextImage() {
+    var endpoint = base_url + "/data/images/next?" + query;
+    var callback = function(data) {
+      json = JSON.parse(data);
+      window.location.href = url + "?" + buildQuery(json);
+    }
+    get_async(endpoint, callback);
+}
+function prevImage() {
+    var endpoint = base_url + "/data/images/prev?" + query;
+    var callback = function(data) {
+      json = JSON.parse(data);
+      window.location.href = url + "?" + buildQuery(json);
+    }
+    get_async(endpoint, callback);
+}
+
+function getAnnotations(callback) {
+    var endpoint = base_url + "/data/annotations?" + query;
     var parse = function(data) {
       json = JSON.parse(data);
       callback(json);
@@ -23,36 +46,8 @@ function getBundle(callback) {
     }
     get_async(endpoint, parse);
 }
-function getData(callback) {
-  var endpoint = base_url + "/data?" + query;
-    var parse = function(data) {
-      json = JSON.parse(data);
-      callback(json);
-    }
-    get_async(endpoint, parse);
-}
 function get_annotation_tree(callback) {
     var endpoint = base_url + "/annotations/trees?" + query;
-    get_async(endpoint, callback);
-}
-function next_image() {
-    var endpoint = base_url + "/images/next?" + query;
-    var callback = function(data) {
-      params["image"] = data;
-      query = build_query_string(params);
-      var next_href = base_url + "/labelme?" + query;
-      window.location.href = next_href;
-    }
-    get_async(endpoint, callback);
-}
-function previous_image() {
-    var endpoint = base_url + "/images/previous?" + query;
-    var callback = function(data) {
-      params["image"] = data;
-      query = build_query_string(params);
-      var next_href = base_url + "/labelme?" + query;
-      window.location.href = next_href;
-    }
     get_async(endpoint, callback);
 }
 
@@ -62,18 +57,6 @@ function previous_image() {
 function postAnnotations(json) {
     var endpoint = base_url + "/annotations?" + query;
     post(endpoint, json);
-}
-function post_annotation_tree(json) {
-    var endpoint = base_url + "/annotations/trees?" + query;
-    post(endpoint, json);
-}
-
-function build_query_string(params) {
-  query = ""; 
-  for (var key in params) {
-    query = query + "&" + key + "=" + params[key];
-  }
-  return query.substring(1);
 }
 
 function get_async(url, callback) {
@@ -107,21 +90,11 @@ function post(url, json) {
 //
 // Parse URL functions
 //
-function parseBaseURL() {
-  var href = window.location.href;
-  var url = href.split('?')[0];
+function parseBaseURL(url) {
   var split = url.split('/');
   var base_url = split[0] +"/" + split[1] + "/" + split[2];
   return base_url
 }
-
-function parseQuery() {
-  var href = window.location.href;
-  var href_split = href.split('?');
-  var query = href_split[1];
-  return query;
-}
-
 function parseParams(query) {
   var query_split = query.split("&");
   var params = {}
@@ -132,4 +105,11 @@ function parseParams(query) {
     params[key] = value;
   }
   return params;
+}
+function buildQuery(params) {
+  query = ""; 
+  for (var key in params) {
+    query = query + "&" + key + "=" + params[key];
+  }
+  return query.substring(1);
 }

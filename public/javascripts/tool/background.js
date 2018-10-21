@@ -1,35 +1,51 @@
 /**
  * Annotation tool powered by PaperJS.
  */
+
 function Background() {
   this.canvas = document.getElementById('toolCanvas');
   this.canvas_center = new Point(this.canvas.width/2, this.canvas.height/2);
-  this.max_height = 500;
-  this.max_width = 700;
-  this.fixed = false;
+  this.max_height = 400;
+  this.max_width = 600;
+
+  var rect = new Path.Rectangle(new Point(0,0), new Point(500, 400));
+  rect.position = this.canvas_center;
+  rect.strokeColor = "black";
+  rect.strokeWidth = 5;
+
+  this.image = rect.rasterize();
+  this.image.sendToBack();
+  rect.remove();
 }
 Background.prototype.setImage = function(image) {
-  if (background.image) {
+  var raster = new Raster(image);
+  raster.position = this.canvas_center;
+  raster.onLoad = function() {
     background.image.remove();
+    background.image = raster;
+    background.image.sendToBack();
+    for (var i = 0; i < annotations.length; i++) {
+      background.align(annotations[i]);
+    }
+    background.focus();
   }
-
-  background.image = new Raster(image);
-  background.image.sendToBack();
-  for (var i = 0; i < annotations.length; i++) {
-    background.align(annotations[i]);
-  }
-  background.focus();
 }
-Background.prototype.setImageData = function(imageData) {
-  this.image.setImageData(imageData, new Point(0,0));
+Background.prototype.setTempImage = function(imageData) {
+  this.tempImage = this.image.clone();
+  this.tempImage.setImageData(imageData, new Point(0,0));
+  this.tempImage.insertAbove(this.image);
+}
+Background.prototype.removeTempImage = function() {
+  this.tempImage.remove();
 }
 Background.prototype.move = function(delta) {
-  if ( ! this.fixed) {
-    paper.project.activeLayer.translate(delta);
-  }
+  paper.project.activeLayer.translate(delta);
 }
-Background.prototype.scale = function(ratio) {
-  paper.project.activeLayer.scale(ratio, this.canvas_center);
+Background.prototype.scale = function(scale, point) {
+  if (point == null) {
+    point = this.canvas_center;
+  }
+  paper.project.activeLayer.scale(scale, point);
 }
 Background.prototype.center = function(point) {
     var x = this.canvas_center.x;
@@ -43,58 +59,68 @@ Background.prototype.focus = function(annotation) {
   if (annotation) {
     bounds = annotation.boundary.bounds;
   }
-  var ratio = Math.min(background.max_height/bounds.height, background.max_width/bounds.width);
+  var scale = Math.min(background.max_height/bounds.height, background.max_width/bounds.width);
   background.center(bounds.center);
-  background.scale(ratio);
+  background.scale(scale);
 }
 Background.prototype.align = function(annotation) {
   var img_bounds = this.image.bounds;
   var ann_bounds = annotation.raster.bounds;
+  var img_scale = img_bounds.height / this.image.height;
+  var ann_scale = ann_bounds.height / annotation.raster.height;
   annotation.translate(img_bounds.topLeft - ann_bounds.topLeft);
-  annotation.scale(img_bounds.height / ann_bounds.height, img_bounds.topLeft);
+  annotation.scale(img_scale / ann_scale, img_bounds.topLeft);
 }
 
 Background.prototype.getPixel = function(point) {
   var bounds = this.image.bounds;
-  var scale = bounds.height / this.image.height;
-  var pixelX = (point.x - bounds.left) / scale - 0.5;
-  var pixelY = (point.y - bounds.top) / scale - 0.5;
-  return new Point(Math.round(pixelX), Math.round(pixelY));
+  var size = this.image.size;
+  var tl = bounds.topLeft;
+
+  var x = (point.x - tl.x) * (size.height/ bounds.height) - 0.5;
+  var y = (point.y - tl.y) * (size.height/ bounds.height) - 0.5;
+  return new Point(Math.round(x), Math.round(y));
 }
 Background.prototype.getPoint = function(pixel) {
   var bounds = this.image.bounds;
-  var scale = bounds.height / this.image.height;
-  var pointX = (pixel.x + 0.5) * scale + bounds.left;
-  var pointY = (pixel.y + 0.5) * scale + bounds.top;
-  return new Point(pointX, pointY);
+  var size = this.image.size;
+  var tl = bounds.topLeft;
+
+  var x = (pixel.x + 0.5) * (bounds.height / size.height) + tl.x;
+  var y = (pixel.y + 0.5) * (bounds.height / size.height) + tl.y;
+  return new Point(x, y);
 }
 Background.prototype.toPixelSpace = function(shape) {
-  var delta = this.image.bounds.topLeft;
-  var scale = this.image.height / this.image.bounds.height;
-  shape.translate(-delta);
-  shape.scale(scale, new Point(0,0));
-  shape.translate(new Point(-0.5,-0.5));
+  var bounds = this.image.bounds;
+  var size = this.image.size;
+  var tl = bounds.topLeft;
+
+  shape.translate(-tl);
+  shape.scale(size.height / bounds.height, new Point(0, 0));
+  shape.translate(new Point(-0.5, -0.5));
 }
 Background.prototype.toPointSpace = function(shape) {
-  var delta = this.image.bounds.topLeft;
-  var scale = this.image.bounds.height / this.image.height;
-  shape.translate(new Point(0.5,0.5));
-  shape.scale(scale, new Point(0,0));
-  shape.translate(delta);
+  var bounds = this.image.bounds;
+  var size = this.image.size;
+  var tl = bounds.topLeft;
+
+  shape.translate(new Point(0.5, 0.5));
+  shape.scale(bounds.height / size.height, new Point(0, 0));
+  shape.translate(tl);
 }
 
 
 //
 // Exports
 //
-function zoomIn() {
-  background.scale(1.25);
+function zoomIn(center) {
+  background.scale(1.25, center);
 }
-function zoomOut() {
-  background.scale(0.8);
+function zoomOut(center) {
+  background.scale(0.8, center);
 }
 function fitScreen() {
-  background.focus();
+  background.focus(paper.tool.annotation);
 }
 
 window.background = new Background();

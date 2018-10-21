@@ -17,15 +17,17 @@ function main(e) {
 function sendResults(root, parents, completed) {
     var res = {};
     res["root"] = root;
-    res["parents"] = parents;
+    res["map"] = parents;
     res["completed"] = completed;
     res = JSON.stringify(res);
     self.postMessage(res);
 }
 
 function allPathsShortestPath(top, root) {
-    distances = nj.multiply(nj.ones(top.shape), -1);
-    parents = nj.zeros([top.shape[0], top.shape[1], 2], dtype='int32');
+    var distances = nj.ones(top.shape);
+    var parents = nj.ones([top.shape[0], top.shape[1], 2], dtype='int32');
+    distances = nj.multiply(distances, -1);
+    parents = nj.multiply(parents, -1);
 
     var queue = new goog.structs.PriorityQueue();
     for (var i = 0; i < root.length; i++) {

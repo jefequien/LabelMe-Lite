@@ -3,100 +3,118 @@
 var scissors = new Scissors();
 
 function Scissors() {
-    this.active = true;
-
     this.allParents = {};
     this.worker = newWorker();
 }
+Scissors.prototype.toggle = function() {
+    if (this.active) {
+        this.active = false;
+        background.removeTempImage();
+    } else {
+        if (this.top) {
+            this.active = true;
 
-Scissors.prototype.setImageData = function(imageData) {
-    this.top = getTopography(imageData);
-    // this.visualize();
-
-    this.allParents = {};
-    this.worker.terminate();
+            // Visualize top
+            var vis = nj.multiply(this.top, 255/nj.max(this.top));
+            var imageData = arrayToImageData(vis);
+            background.setTempImage(imageData);
+        } else {
+            console.log("Could not activate scissors.");
+        }
+    }
 }
-
-Scissors.prototype.visualize = function() {
-    var vis = nj.multiply(this.top, 255/nj.max(this.top));
-    var imageData = arrayToImageData(vis);
-    background.setImageData(imageData);
+Scissors.prototype.setImage = function(image_url) {
+    var img = new Image();
+    img.crossOrigin = "anonymous";
+    img.src = image_url;
+    img.onload = function() {
+        var imageData = getImageData(this);
+        scissors.top = computeTopography(imageData);
+        scissors.allParents = {};
+    }
 }
 
 Scissors.prototype.getPath = function(start, end) {
-    var root = start;
-    if ( ! Array.isArray(root[0])) {
-        root = [root];
-    }
-    root = this.clamp(root);
-    end = this.clamp([end])[0];
+    var preprocessed = this.preprocess(start, end);
+    var root = preprocessed.root;
+    var point = preprocessed.point;
 
-    var key = JSON.stringify(root);
-    if (key in this.allParents) {
-        var parents = this.allParents[key]["parents"];
-        var completed = this.allParents[key]["completed"];
-        if ( ! completed) {
+    var parents = this.allParents[JSON.stringify(root)];
+    if (parents) {
+        if ( ! parents.completed) {
             this.sendTaskToWorker(root);
         }
-
-        var path = this.getPathToRoot(parents, end);
-        if (path != null) {
-            path.reverse();
+        var path = this.getPathToRoot(parents.map, point);
+        path.reverse();
+        if (pointInPoints(path[0], root)) {
+            if (path.length == 1) {
+                path.push(path[0]);
+            }
             return path;
-        } else {
-            return null;
         }
     } else {
         this.sendTaskToWorker(root);
-        return null;
     }
+    return null;
 }
 
-Scissors.prototype.getPathToRoot = function(parents, p) {
+Scissors.prototype.getPathToRoot = function(map, p) {
     var path = [p];
     while (true) {
-        var x = parents.get(p[1], p[0], 0);
-        var y = parents.get(p[1], p[0], 1);
-        if (x == 0 && y == 0) {
+        var x = map.get(p[1], p[0], 0);
+        var y = map.get(p[1], p[0], 1);
+        if (x == -1 && y == -1) {
+            break; // Done
+        } else if (x == null || y == null) {
+            console.log("BUG!")
             break;
         }
         p = [x,y];
         path.push(p);
-
-        // Prevents loop
-        if (x == null || y == null) {
-            console.log("BUG!")
-            break;
-        }
-    }
-    if (path.length == 1) {
-        return null;
     }
     return path;
 }
 
+//
+// Preprocess
+//
+Scissors.prototype.preprocess = function(start, end) {
+    if ( ! Array.isArray(start[0])) {
+        start = [start];
+    }
+    var point = this.clamp([end])[0];
+    var root = this.clip(start);
+    if (root.length == 0) {
+        root = this.clamp(start);
+    }
+    return {"root": root, "point": point};
+}
 Scissors.prototype.clamp = function(points) {
     var clamped = [];
     for (var i = 0; i < points.length; i++) {
-        var p = points[i];
+        var p = [Math.round(points[i][0]), Math.round(points[i][1])];
         var x = Math.max(0, Math.min(p[0], this.top.shape[1]-1));
         var y = Math.max(0, Math.min(p[1], this.top.shape[0]-1));
         clamped.push([x,y]);
     }
     return clamped;
 }
-
-Scissors.prototype.addParents = function(root, parents, completed) {
-    var key = JSON.stringify(root);
-    this.allParents[key] = {"parents": parents, "completed": completed};
+Scissors.prototype.clip = function(points) {
+    var clipped = [];
+    for (var i = 0; i < points.length; i++) {
+        var p = [Math.round(points[i][0]), Math.round(points[i][1])];
+        var x = Math.max(0, Math.min(Math.round(p[0]), this.top.shape[1]-1));
+        var y = Math.max(0, Math.min(Math.round(p[1]), this.top.shape[0]-1));
+        if (p[0] == x && p[1] == y) {
+            clipped.push([x,y]);
+        }
+    }
+    return clipped;
 }
 
+
 Scissors.prototype.sendTaskToWorker = function(root) {
-    // Send task to worker
-    var task = {};
-    task["root"] = root;
-    task["top"] = this.top;
-    var task = JSON.stringify(task);
+    var task = JSON.stringify({"root": root, "top": this.top});
     if (this.worker.task != task) {
         this.worker.terminate();
         this.worker = newWorker();
@@ -107,19 +125,24 @@ Scissors.prototype.sendTaskToWorker = function(root) {
 
 function newWorker() {
     var worker = new Worker('javascripts/tool/intelligent_scissors_worker.js');
-    worker.addEventListener('message', receiveDataFromWorker);
+    worker.addEventListener('message', function(e) {
+        var res = JSON.parse(e.data);
+        var root = res["root"];
+        var map = nj.array(JSON.parse(res["map"]));
+        var completed = res["completed"];
+        scissors.allParents[JSON.stringify(root)] = {"map": map, "completed": completed};
+    });
     return worker;
 }
-function receiveDataFromWorker(e) {
-    var res = JSON.parse(e.data);
-    var root = res["root"];
-    var parents = nj.array(JSON.parse(res["parents"]));
-    var completed = res["completed"];
-
-    scissors.addParents(root, parents, completed);
+function pointInPoints(p, points) {
+    for (var i = 0; i < points.length; i++) {
+        if (p[0] == points[i][0] && p[1] == points[i][1]) {
+            return true;
+        }
+    }
+    return false;
 }
-
-function getTopography(imageData) {
+function computeTopography(imageData) {
     var src = cv.matFromImageData(imageData);
     var dst = new cv.Mat();
     cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY, 0);

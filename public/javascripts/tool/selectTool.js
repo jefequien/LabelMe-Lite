@@ -1,21 +1,15 @@
 
 
-
 var selectTool = new Tool();
 selectTool.onMouseMove = function(event) {
   this.curser.position = event.point;
-  // Highlight top annotation. Unhighlight everything else.
-  var topAnn = this.getTopMostAnnotation(this.curser.position);
+  // Highlight one annotation. Unhighlight everything else.
+  var annotation = this.getAnnotationAt(this.curser.position);
   for (var i = 0; i < annotations.length; i++) {
-    var ann = annotations[i];
-    if (ann == topAnn) {
-      if ( ! ann.highlighted) {
-        ann.highlight();
-      }
+    if (annotations[i] == annotation) {
+      annotations[i].highlight();
     } else {
-      if (ann.highlighted) {
-        ann.unhighlight();
-      }
+      annotations[i].unhighlight();
     }
   }
 }
@@ -25,9 +19,9 @@ selectTool.onMouseUp = function(event) {
     return;
   }
 
-  var topAnn = this.getTopMostAnnotation(this.curser.position);
-  if (topAnn) {
-    editTool.switch(topAnn);
+  var annotation = this.getAnnotationAt(this.curser.position);
+  if (annotation != null) {
+    editTool.switch(annotation);
   }
 }
 selectTool.onMouseDrag = function(event) {
@@ -35,6 +29,7 @@ selectTool.onMouseDrag = function(event) {
   this.isDragging = true;
 }
 selectTool.onKeyDown = function(event) {
+  // Zoom keys
   if (event.key == '9') {
     zoomOut();
     return false;
@@ -43,12 +38,36 @@ selectTool.onKeyDown = function(event) {
     zoomIn();
     return false;
   }
-  if (event.key == 'f' || event.key == 'escape') {
+  if (event.key == 'f') {
     background.focus();
     return false;
   }
+
+  // Escape keys
+  if (event.key == 'escape'
+    || event.key == 'backspace'
+    || event.key == 'q') {
+    background.focus();
+    return false;
+  }
+
+  // Tool keys
   if (event.key == 'n') {
     newTool.switch();
+    return false;
+  }
+  if (event.key == 'e') {
+    var annotation = this.getAnnotationAt(this.curser.position);
+    if (annotation) {
+      editTool.switch(annotation);
+    }
+    return false;
+  }
+  if (event.key == 'b') {
+    var annotation = this.getAnnotationAt(this.curser.position);
+    if (annotation) {
+      brushTool.switch(annotation);
+    }
     return false;
   }
 }
@@ -60,21 +79,21 @@ selectTool.deactivate = function() {
 selectTool.switch = function() {
   this.toolName = "selectTool";
   console.log("Switching to", this.toolName);
-
   paper.tool.deactivate();
-  this.curser = new Shape.Circle();
+  this.curser = new Shape.Circle(background.canvas_center);
   this.activate();
 
   for (var i = 0; i < annotations.length; i++) {
     annotations[i].unhighlight();
   }
 }
-selectTool.getTopMostAnnotation = function(point) {
+selectTool.getAnnotationAt = function(point) {
   for (var i = 0; i < annotations.length; i++) {
     if (annotations[i].boundary.contains(point)) {
       return annotations[i];
     }
   }
+  return null;
 }
 
 window.selectTool = selectTool;

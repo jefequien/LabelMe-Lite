@@ -43,18 +43,22 @@ newTool.onMouseDrag = function(event) {
   this.isDragging = true;
 }
 newTool.onKeyDown = function(event) {
-  event.point = this.curser.position;
+  // Zoom keys
   if (event.key == '9') {
-    // Zoom out
     zoomOut();
     return false;
   }
   if (event.key == '0') {
-    // Zoom in
     zoomIn();
     return false;
   }
-  if (event.key == 'backspace' || event.key == 'escape') {
+  if (event.key == 'f') {
+    background.focus();
+    return false;
+  }
+  
+  // Escape keys
+  if (event.key == 'escape' || event.key == 'backspace') {
     // Undo. If cannot undo, quit.
     var success = this.undo();
     if (! success) {
@@ -63,20 +67,55 @@ newTool.onKeyDown = function(event) {
     return false;
   }
   if (event.key == 'q') {
-    // Quit
     selectTool.switch();
     return false;
   }
+
+  // Tool keys
   if (event.key == 'space') {
-    // Toggle scissors
-    scissors.active = ( ! scissors.active);
+    scissors.toggle();
     return false;
   }
 }
+newTool.deactivate = function() {
+  this.curser.remove();
+  this.line.remove();
+
+  for (var i = 0; i < this.points.length; i++) {
+    this.points[i].remove();
+  }
+  for (var i = 0; i < this.segments.length; i++) {
+    this.segments[i].remove();
+  }
+
+  clearInterval(this.interval);
+}
+newTool.switch = function () {
+  this.toolName = "newTool";
+  console.log("Switching to", this.toolName);
+  paper.tool.deactivate();
+  this.curser = new Shape.Circle(paper.tool.curser.position);
+  this.activate();
+
+  for (var i = 0; i < annotations.length; i++) {
+    annotations[i].hide();
+  }
+
+  this.line = new Path();
+  this.points = [];
+  this.segments = [];
+  this.enforceStyles();
+
+  this.requestName();
+  this.refresh();
+  this.interval = setInterval(this.refresh, 300);
+}
+newTool.refresh = function() {
+  var fakeEvent = {point: newTool.curser.position};
+  newTool.onMouseMove(fakeEvent);
+}
 newTool.createAnnotation = function(path) {
   var annotation = new Annotation(this.name);
-  background.align(annotation);
-
   annotation.unite(path);
   annotation.refresh();
 
@@ -95,43 +134,6 @@ newTool.undo = function() {
   }
   this.refresh();
   return success;
-}
-newTool.deactivate = function() {
-  this.curser.remove();
-  this.line.remove();
-
-  for (var i = 0; i < this.points.length; i++) {
-    this.points[i].remove();
-  }
-  for (var i = 0; i < this.segments.length; i++) {
-    this.segments[i].remove();
-  }
-  for (var i = 0; i < annotations.length; i++) {
-    annotations[i].unhighlight();
-  }
-
-  clearInterval(this.interval);
-}
-newTool.switch = function () {
-  this.toolName = "newTool";
-  console.log("Switching to", this.toolName);
-
-  paper.tool.deactivate();
-  this.curser = new Shape.Circle(paper.tool.curser.position);
-  this.activate();
-
-  for (var i = 0; i < annotations.length; i++) {
-    annotations[i].hide();
-  }
-
-  this.line = new Path();
-  this.points = [];
-  this.segments = [];
-  this.enforceStyles();
-
-  this.requestName();
-  this.refresh();
-  this.interval = setInterval(this.refresh, 300);
 }
 newTool.snapCurser = function() {
   // Snap to annotation bounds
@@ -169,11 +171,6 @@ newTool.enforceStyles = function() {
     this.points[i].scale(r);
   }
 }
-newTool.refresh = function() {
-  var fakeEvent = {};
-  fakeEvent.point = newTool.curser.position;
-  newTool.onMouseMove(fakeEvent);
-}
 newTool.requestName = function() {
   this.name = prompt("Please enter object name.", "");
   if (this.name == null || this.name == "") {
@@ -189,11 +186,12 @@ newTool.getPath = function(start, end) {
     if (pixelList != null) {
       path.segments = pixelList;
       background.toPointSpace(path);
-      // Edit start and end of path to fit better
-      path.segments.shift();
-      path.segments.pop();
+      
       path.insert(0, start);
       path.add(end);
+      // Smooth out path
+      path.removeSegment(1);
+      path.removeSegment(path.segments.length - 2);
     }
   }
   return path;
