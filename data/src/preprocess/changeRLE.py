@@ -40,6 +40,9 @@ if __name__ == "__main__":
     parser.add_argument('-i', '--input_file', type=str, default="./data/annotations/ade20k/ade20k_train_annotations.json")
     parser.add_argument('-o', '--output_file', type=str, default="./data/annotations/ade20k/ade20k_train_annotations_#.json")
     args = parser.parse_args()
+    
+    if not os.path.exists(os.path.dirname(args.output_file)):
+        os.makeDirs(os.path.dirname(args.output_file))
 
     coco = COCO(args.input_file)
     c = 0

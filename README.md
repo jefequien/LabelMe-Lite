@@ -12,6 +12,8 @@ Extensively uses [Paper.js](http://paperjs.org/)
 Make sure you have [Node.js](http://nodejs.org/) and the [Heroku Toolbelt](https://toolbelt.heroku.com/) installed.
 
 ```sh
+Need cocoapi, nodejs, bower
+
 git clone https://github.com/hujh14/LabelMe-Lite.git # or clone your own fork
 cd LabelMe-Lite
 npm install
