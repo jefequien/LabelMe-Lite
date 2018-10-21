@@ -1,7 +1,11 @@
 import os
 import json
 import numpy as np
-from itertools import chain, zip_longest
+from itertools import chain
+try:
+    from itertools import zip_longest as zip_longest
+except:
+    from itertools import izip_longest as zip_longest
 
 from pycocotools.coco import COCO
 
