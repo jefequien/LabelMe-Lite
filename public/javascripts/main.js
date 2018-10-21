@@ -6,8 +6,7 @@ function main() {
 
     var image_url = getImageURL();
     background.setImage(image_url);
-    var temp = "https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/Squash_court.JPG/275px-Squash_court.JPG";
-    scissors.setImage(temp);
+    scissors.setImage(image_url);
 
     getAnnotations(function(res) {
         loadAnnotations(res.annotations);   
@@ -28,5 +27,5 @@ function main_old() {
 }
 
 window.onload = function() {
-    main_old();
+    main();
 }
