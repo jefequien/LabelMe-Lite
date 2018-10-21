@@ -31,8 +31,13 @@ def maskToRLE(mask):
 
 
 if __name__ == "__main__":
-    ann_fn = "../annotations/ade20k/ade20k_train_annotations.json"
-    coco = COCO(ann_fn)
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-i', '--input_file', type=str, default="./data/annotations/ade20k/ade20k_train_annotations.json")
+    parser.add_argument('-o', '--output_file', type=str, default="./data/annotations/ade20k/ade20k_train_annotations_#.json")
+    args = parser.parse_args()
+
+    coco = COCO(args.input_file)
     c = 0
     for annId in coco.anns:
         c += 1
@@ -45,5 +50,5 @@ if __name__ == "__main__":
     output["images"] = list(coco.imgs.values())
     output["annotations"] = list(coco.anns.values())
     output["categories"] = list(coco.cats.values())
-    with open('../annotations/ade20k/ade20k_train_annotations_#.json', 'w') as outfile:
-        json.dump(output, outfile, indent=2)
+    with open(args.output_file, 'w') as f:
+        json.dump(output, f, indent=2)

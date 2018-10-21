@@ -15,6 +15,8 @@ Make sure you have [Node.js](http://nodejs.org/) and the [Heroku Toolbelt](https
 git clone https://github.com/hujh14/LabelMe-Lite.git # or clone your own fork
 cd LabelMe-Lite
 npm install
+bower install
+sh setup_datasets.sh
 npm start
 ```
 
