@@ -70,6 +70,10 @@ selectTool.onKeyDown = function(event) {
     }
     return false;
   }
+  if (event.key == 'space') {
+    scissors.toggle();
+    return false;
+  }
 }
 selectTool.deactivate = function() {
   if (this.curser) {
