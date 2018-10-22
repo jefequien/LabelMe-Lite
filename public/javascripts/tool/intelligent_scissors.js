@@ -158,10 +158,10 @@ Scissors.prototype.activateWorker = function(root) {
         worker.postMessage(JSON.stringify(message));
         this.allWorkers[key] = worker;
     }
-    if ( ! (worker.active || worker.done)) {
+    if ( ! (this.workerActive || worker.done)) {
         var message = {"cmd": "run", "run_time": this.frequency};
         worker.postMessage(JSON.stringify(message));
-        worker.active = true;
+        this.workerActive = true;
     }
 }
 function newWorker() {
@@ -173,8 +173,8 @@ function newWorker() {
         var done = results["done"];
 
         scissors.allParents[JSON.stringify(root)] = parents;
-        scissors.allWorkers[JSON.stringify(root)].active = false;
         scissors.allWorkers[JSON.stringify(root)].done = done;
+        scissors.workerActive = false;
     });
     return worker;
 }

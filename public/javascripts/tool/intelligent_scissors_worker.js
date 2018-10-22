@@ -6,13 +6,15 @@ self.onmessage = function(event) {
     var cmd = message.cmd;
 
     if (cmd == "init") {
-        console.log("INIT");
+        console.time("INIT");
         initialize(message.top, message.root);
+        console.timeEnd("INIT");
     }
     if (cmd == "run") {
         self.start = new Date();
         console.time("RUN");
         APSP(message.run_time);
+        console.timeEnd("RUN");
     }
 }
 
@@ -43,7 +45,6 @@ function postResults(done) {
     results["parents"] = self.parents;
     results["done"] = done;
     self.postMessage(JSON.stringify(results));
-    console.timeEnd("RUN");
 }
 
 function APSP(run_time) {
