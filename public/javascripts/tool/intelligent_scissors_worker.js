@@ -1,67 +1,83 @@
 
-self.addEventListener('message', main, false);
 
-function main(e) {
+
+self.onmessage = function(event) {
+    var message = JSON.parse(event.data);
+    var cmd = message.cmd;
+
+    if (cmd == "init") {
+        console.log("INIT");
+        initialize(message.top, message.root);
+    }
+    if (cmd == "run") {
+        self.start = new Date();
+        console.time("RUN");
+        APSP(message.run_time);
+    }
+}
+
+function initialize(top, root) {
     self.importScripts('../../components/numjs/dist/numjs.js');
     self.importScripts('../../components/google-closure-library-compiler/compiled.js');
 
-    var task = JSON.parse(e.data);
-    var root = task["root"];
-    var top = nj.array(JSON.parse(task["top"]));
+    self.top = nj.array(JSON.parse(top));
+    self.root = root;
 
-    console.log("Worker running...");
-    console.time("APSP");
-    allPathsShortestPath(top, root);
-    console.timeEnd("APSP");
-}
-function sendResults(root, parents, completed) {
-    var res = {};
-    res["root"] = root;
-    res["map"] = parents;
-    res["completed"] = completed;
-    res = JSON.stringify(res);
-    self.postMessage(res);
-}
+    var shape = self.top.shape;
+    self.distances = nj.ones(shape);
+    self.distances = nj.multiply(self.distances, -1);
+    self.parents = nj.ones([shape[0], shape[1], 2], dtype='int32');
+    self.parents = nj.multiply(self.parents, -1);
 
-function allPathsShortestPath(top, root) {
-    var distances = nj.ones(top.shape);
-    var parents = nj.ones([top.shape[0], top.shape[1], 2], dtype='int32');
-    distances = nj.multiply(distances, -1);
-    parents = nj.multiply(parents, -1);
-
-    var queue = new goog.structs.PriorityQueue();
-    for (var i = 0; i < root.length; i++) {
-        var r = root[i];
-        distances.set(r[1], r[0], 0)
-        queue.enqueue(0, r);
+    self.queue = new goog.structs.PriorityQueue();
+    for (var i = 0; i < self.root.length; i++) {
+        var r = self.root[i];
+        self.distances.set(r[1], r[0], 0)
+        self.queue.enqueue(0, r);
     }
-
-    var c = 0;
-    while (queue.getCount() > 0) {
-        var p = queue.dequeue();
-        var p_dist = distances.get(p[1], p[0]);
-        var n_dists = getDistsToNeighbors(top, p);
-        for (var key in n_dists) {
-            var n = JSON.parse(key);
-            var n_dist = n_dists[key] + p_dist;
-            var n_dist_old = distances.get(n[1], n[0]);
-            if (n_dist < n_dist_old || n_dist_old == -1) {
-                distances.set(n[1], n[0], n_dist);
-                parents.set(n[1], n[0], 0, p[0]);
-                parents.set(n[1], n[0], 1, p[1]);
-                queue.enqueue(n_dist, n);
-            }
-        }
-        c += 1;
-        if (c % 2000 == 0) {
-            sendResults(root, parents, false);
-        }
-    }
-    sendResults(root, parents, true);
-    return parents;
 }
 
-function getDistsToNeighbors(top, p) {
+function postResults(done) {
+    var results = {};
+    results["root"] = self.root;
+    results["parents"] = self.parents;
+    results["done"] = done;
+    self.postMessage(JSON.stringify(results));
+    console.timeEnd("RUN");
+}
+
+function APSP(run_time) {
+    var start = new Date();
+    var time = new Date();
+    while (time - start < run_time) {
+        if (self.queue.getCount() == 0) {
+            postResults(true);
+            return;
+        }
+        APSP_step(self.top, self.parents, self.distances, self.queue);
+        time = new Date();
+    }
+    postResults(false);
+}
+
+function APSP_step(top, parents, distances, queue) {
+    var p = queue.dequeue();
+    var p_dist = distances.get(p[1], p[0]);
+    var n_dists = getDistancesToNeighbors(top, p);
+    for (var key in n_dists) {
+        var n = JSON.parse(key);
+        var n_dist = n_dists[key] + p_dist;
+        var n_dist_old = distances.get(n[1], n[0]);
+        if (n_dist < n_dist_old || n_dist_old == -1) {
+            distances.set(n[1], n[0], n_dist);
+            parents.set(n[1], n[0], 0, p[0]);
+            parents.set(n[1], n[0], 1, p[1]);
+            queue.enqueue(n_dist, n);
+        }
+    }
+}
+
+function getDistancesToNeighbors(top, p) {
     var h = top.shape[0];
     var w = top.shape[1];
     var dists = {};

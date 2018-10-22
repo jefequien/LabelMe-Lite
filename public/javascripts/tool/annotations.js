@@ -13,13 +13,12 @@ function Annotation(name, mask){
   }
   this.raster = new Raster({size: new Size(this.mask.shape[1], this.mask.shape[0])});
   this.updateRaster();
-  this.unhighlight();
-
   this.id = this.raster.id;
 
   annotations.unshift(this); // add to front
   background.align(this);
   tree.addAnnotation(this);
+  this.unhighlight();
 }
 Annotation.prototype.updateRaster = function() {
   var mask = this.mask.multiply(255);
@@ -48,6 +47,7 @@ Annotation.prototype.updateBoundary = function() {
   boundary.remove();
 
   this.boundary.pathData = boundary.pathData;
+  this.boundary.moveAbove(this.raster);
 }
 Annotation.prototype.updateMask = function() {
   var imageData = this.raster.getImageData();
@@ -60,8 +60,8 @@ Annotation.prototype.updateMask = function() {
   this.mask = mask;
 }
 Annotation.prototype.refresh = function() {
-  this.updateBoundary();
   this.updateMask();
+  this.updateBoundary();
   sortAnnotations();
 
   if (this.boundary.area == 0) {
@@ -215,15 +215,19 @@ function loadAnnotations(anns) {
     return;
   }
   for (var i = 0; i < anns.length; i++) {
-    var category = anns[i]["category"];
-    var rle = anns[i]["segmentation"];
-    var mask = rleToMask(rle);
-    var annotation = new Annotation(category, mask);
-    annotation.refresh();
+    setTimeout(function(ann) {
+      var category = ann["category"];
+      var rle = ann["segmentation"];
+      var mask = rleToMask(rle);
+      var annotation = new Annotation(category, mask);
+      annotation.updateBoundary();
+      sortAnnotations();
+    }, 100, anns[i]);
   }
 }
 
 function saveAnnotations() {
+  console.time("Save");
   var anns = [];
   for (var i = 0; i < annotations.length; i++) {
     var name = annotations[i].name;
@@ -235,6 +239,7 @@ function saveAnnotations() {
     ann["segmentation"] = rle;
     anns.push(ann);
   }
+  console.timeEnd("Save");
   return anns;
 }
 

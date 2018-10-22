@@ -9,7 +9,7 @@ function main() {
     scissors.setImage(image_url);
 
     getAnnotations(function(res) {
-        loadAnnotations(res.annotations);   
+        loadAnnotations(res.annotations);
     });
 }
 

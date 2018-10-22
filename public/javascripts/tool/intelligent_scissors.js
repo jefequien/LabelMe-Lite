@@ -3,8 +3,9 @@
 var scissors = new Scissors();
 
 function Scissors() {
+    this.frequency = 500;
     this.allParents = {};
-    this.worker = newWorker();
+    this.allWorkers = {};
 }
 Scissors.prototype.toggle = function() {
     if (this.active) {
@@ -23,28 +24,26 @@ Scissors.prototype.toggle = function() {
         }
     }
 }
-Scissors.prototype.setImage = function(image_url) {
-    var img = new Image();
-    img.crossOrigin = "anonymous";
-    img.src = image_url;
-    img.onload = function() {
-        var imageData = getImageData(this);
-        scissors.top = computeTopography(imageData);
-        scissors.allParents = {};
+Scissors.prototype.reset = function() {
+    this.allParents = {};
+    for (var key in this.allWorkers) {
+        this.allWorkers[key].terminate();
     }
+    this.allWorkers = {};
 }
 
+//
+// Pathfinding
+//
 Scissors.prototype.getPath = function(start, end) {
-    var preprocessed = this.preprocess(start, end);
-    var root = preprocessed.root;
-    var point = preprocessed.point;
-
+    var result = this.preprocess(start, end);
+    var root = result.root;
+    var point = result.point;
+    this.activateWorker(root);
+    
     var parents = this.allParents[JSON.stringify(root)];
     if (parents) {
-        if ( ! parents.completed) {
-            this.sendTaskToWorker(root);
-        }
-        var path = this.getPathToRoot(parents.map, point);
+        var path = this.getPathToRoot(parents, point);
         path.reverse();
         if (pointInPoints(path[0], root)) {
             if (path.length == 1) {
@@ -52,12 +51,9 @@ Scissors.prototype.getPath = function(start, end) {
             }
             return path;
         }
-    } else {
-        this.sendTaskToWorker(root);
     }
     return null;
 }
-
 Scissors.prototype.getPathToRoot = function(map, p) {
     var path = [p];
     while (true) {
@@ -73,6 +69,44 @@ Scissors.prototype.getPathToRoot = function(map, p) {
         path.push(p);
     }
     return path;
+}
+function pointInPoints(p, points) {
+    for (var i = 0; i < points.length; i++) {
+        if (p[0] == points[i][0] && p[1] == points[i][1]) {
+            return true;
+        }
+    }
+    return false;
+}
+
+//
+// Topography
+//
+Scissors.prototype.setImage = function(image_url) {
+    var img = new Image();
+    img.crossOrigin = "anonymous";
+    img.src = image_url;
+    img.onload = function() {
+        var imageData = getImageData(this);
+        scissors.top = computeTopography(imageData);
+        scissors.reset();
+    }
+}
+function computeTopography(imageData) {
+    var src = cv.matFromImageData(imageData);
+    var dst = new cv.Mat();
+    cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY, 0);
+    cv.Canny(dst, dst, 50, 100, 3, false);
+    var ksize = new cv.Size(3, 3);
+    cv.GaussianBlur(dst, dst, ksize, 0);
+    var top = matToArray(dst);
+    src.delete();
+    dst.delete();
+
+    var top = nj.divide(top, nj.max(top));
+    var top = nj.multiply(top, -1);
+    var top = nj.add(top, 1);
+    return top;
 }
 
 //
@@ -112,51 +146,37 @@ Scissors.prototype.clip = function(points) {
     return clipped;
 }
 
-
-Scissors.prototype.sendTaskToWorker = function(root) {
-    var task = JSON.stringify({"root": root, "top": this.top});
-    if (this.worker.task != task) {
-        this.worker.terminate();
-        this.worker = newWorker();
-        this.worker.postMessage(task);
-        this.worker.task = task;
+//
+// Workers
+//
+Scissors.prototype.activateWorker = function(root) {
+    var key = JSON.stringify(root);
+    var worker = this.allWorkers[key];
+    if (worker == null) {
+        worker = newWorker();
+        var message = {"cmd": "init", "top": this.top, "root": root};
+        worker.postMessage(JSON.stringify(message));
+        this.allWorkers[key] = worker;
+    }
+    if ( ! (worker.active || worker.done)) {
+        var message = {"cmd": "run", "run_time": this.frequency};
+        worker.postMessage(JSON.stringify(message));
+        worker.active = true;
     }
 }
-
 function newWorker() {
     var worker = new Worker('javascripts/tool/intelligent_scissors_worker.js');
-    worker.addEventListener('message', function(e) {
-        var res = JSON.parse(e.data);
-        var root = res["root"];
-        var map = nj.array(JSON.parse(res["map"]));
-        var completed = res["completed"];
-        scissors.allParents[JSON.stringify(root)] = {"map": map, "completed": completed};
+    worker.addEventListener('message', function(event) {
+        var results = JSON.parse(event.data);
+        var root = results["root"];
+        var parents = nj.array(JSON.parse(results["parents"]));
+        var done = results["done"];
+
+        scissors.allParents[JSON.stringify(root)] = parents;
+        scissors.allWorkers[JSON.stringify(root)].active = false;
+        scissors.allWorkers[JSON.stringify(root)].done = done;
     });
     return worker;
-}
-function pointInPoints(p, points) {
-    for (var i = 0; i < points.length; i++) {
-        if (p[0] == points[i][0] && p[1] == points[i][1]) {
-            return true;
-        }
-    }
-    return false;
-}
-function computeTopography(imageData) {
-    var src = cv.matFromImageData(imageData);
-    var dst = new cv.Mat();
-    cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY, 0);
-    cv.Canny(dst, dst, 50, 100, 3, false);
-    var ksize = new cv.Size(3, 3);
-    cv.GaussianBlur(dst, dst, ksize, 0);
-    var top = matToArray(dst);
-    src.delete();
-    dst.delete();
-
-    var top = nj.divide(top, nj.max(top));
-    var top = nj.multiply(top, -1);
-    var top = nj.add(top, 1);
-    return top;
 }
 
 window.scissors = scissors;
