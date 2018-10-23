@@ -144,7 +144,7 @@ brushTool.switch = function(annotation) {
 
   var scale = background.image.bounds.height/background.image.height; // Points per pixel
   var annSize = Math.min(this.annotation.boundary.bounds.height, this.annotation.boundary.bounds.width) / scale;
-  this.toolSize = Math.max(1, 1.5 * Math.sqrt(annSize));
+  this.toolSize = Math.max(1, 1.3 * Math.sqrt(annSize));
 
   this.smartBrush = new Path();
   this.smartBrush.visible = false;
