@@ -5,7 +5,7 @@ function Brush() {
     this.vis = false;
     this.active = false;
 }
-Scissors.prototype.toggle = function() {
+Brush.prototype.toggle = function() {
     if (this.active) {
         this.active = false;
     } else {
@@ -88,7 +88,7 @@ function getDistancesToNeighbors(top, p) {
         if (x >= 0 && x < w && y >= 0 && y < h) {
             var c = Math.sqrt(d[0]*d[0] + d[1]*d[1]);
             var key = JSON.stringify([x,y]);
-            dists[key] = (top.get(y,x) + 0.2) * c;
+            dists[key] = (top.get(y,x) + 0.05) * c;
         }
     }
     return dists;
