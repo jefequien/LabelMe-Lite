@@ -47,6 +47,7 @@ brushTool.editAnnotation = function() {
   }
 }
 brushTool.updateSmartBrush = function() {
+  console.log(brush.active);
   if (brush.active) {
     var num = this.toolSize * this.toolSize;
     var p = background.getPixel(this.curser.position);
@@ -98,7 +99,7 @@ brushTool.onKeyDown = function(event) {
   }
   if (event.key == 's') {
     brush.toggle();
-    if (brush.active) {
+    if ( ! brush.active) {
       this.curser.visible = true;
       this.smartBrush.visible = false;
       this.smartBrush.selected = false;
