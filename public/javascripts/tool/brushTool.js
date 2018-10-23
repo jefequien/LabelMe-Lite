@@ -7,24 +7,32 @@ brushTool.onMouseMove = function(event) {
   this.curser.position = event.point;
   this.updateSmartBrush();
   // Set mode
-  if (this.annotation.boundary.contains(this.curser.position)) {
+  var pixel = background.getPixel(this.curser.position);
+  if (this.annotation.containsPixel(pixel)) {
     this.mode = "unite";
   } else {
     this.mode = "subtract";
   }
+
   this.enforceStyles();
+  if (this.annotation.rasterinv.visible == false) {
+    if ( this.annotation.intersects(this.curser)) {
+      this.annotation.raster.opacity = Math.max(this.annotation.raster.opacity, 0.5);
+    }
+  }
 }
 brushTool.onMouseDrag = function(event) {
   this.curser.position = event.point;
   this.updateSmartBrush();
+  this.enforceStyles();
+  if (this.annotation.rasterinv.visible == false) {
+    this.annotation.raster.opacity = Math.max(this.annotation.raster.opacity, 0.5);
+  }
 
   this.editAnnotation();
 }
 brushTool.onMouseDown = function(event) {
   brushTool.onMouseDrag(event);
-}
-brushTool.onMouseUp = function(event) {
-  this.annotation.refresh();
 }
 brushTool.editAnnotation = function() {
   var shape = this.curser;
@@ -82,7 +90,7 @@ brushTool.onKeyDown = function(event) {
     increaseToolSize();
     return false;
   }
-  if (event.key == 'e') {
+  if (event.key == 'space') {
     editTool.switch(this.annotation);
     return false;
   }
@@ -98,13 +106,12 @@ brushTool.onKeyDown = function(event) {
     }
     return false;
   }
-  if (event.key == 'space') {
-    if (this.mode == "subtract") {
-      this.mode = "unite";
+  if (event.key == 'i') {
+    if (this.annotation.rasterinv.visible) {
+      this.annotation.rasterinv.visible = false;
     } else {
-      this.mode = "subtract";
+      this.annotation.rasterinv.visible = true;
     }
-    this.enforceStyles();
   }
   if (event.key == 'v') {
     brush.toggleVisualize();
@@ -115,7 +122,9 @@ brushTool.deactivate = function() {
   this.curser.remove();
   this.smartBrush.remove();
   this.annotation.boundary.visible = true;
+  this.annotation.raster.visible = true;
   this.annotation.rasterinv.visible = false;
+  this.annotation.refresh();
 }
 brushTool.switch = function(annotation) {
   this.toolName = "brushTool";
@@ -130,11 +139,12 @@ brushTool.switch = function(annotation) {
   }
   this.annotation.highlight();
   this.annotation.boundary.visible = false;
-  this.annotation.rasterinv.visible = true;
+  this.annotation.rasterinv.visible = false;
+  background.focus(this.annotation);
 
-  var scale = background.image.bounds.height/background.image.height // Points per pixel
-  var ann_height = (this.annotation.boundary.bounds.height / scale); // Annotation height in pixels
-  this.toolSize = Math.max(1, ann_height / 10)
+  var scale = background.image.bounds.height/background.image.height; // Points per pixel
+  var annSize = Math.min(this.annotation.boundary.bounds.height, this.annotation.boundary.bounds.width) / scale;
+  this.toolSize = Math.max(1, 1.5 * Math.sqrt(annSize));
 
   this.smartBrush = new Path();
   this.smartBrush.visible = false;

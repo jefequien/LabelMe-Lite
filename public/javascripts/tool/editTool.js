@@ -134,11 +134,11 @@ editTool.onKeyDown = function(event) {
   }
 
   // Tool keys
-  if (event.key == 'b') {
+  if (event.key == 'space') {
     brushTool.switch(this.annotation);
     return false;
   }
-  if (event.key == 'space') {
+  if (event.key == 's') {
     scissors.toggle();
     return false;
   }

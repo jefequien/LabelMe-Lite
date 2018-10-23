@@ -131,6 +131,19 @@ Annotation.prototype.subtract = function(shape) {
   editRaster(this.raster, new Color(0,0,0,0), pixels);
   editRaster(this.rasterinv, this.colorinv, pixels);
 }
+Annotation.prototype.intersects = function(shape) {
+  var pixels = getPixels(shape);
+  for (var i = 0; i < pixels.length; i++) {
+    if (this.containsPixel(pixels[i])) {
+      return true;
+    }
+  }
+  return false;
+}
+Annotation.prototype.containsPixel = function(pixel) {
+  var color = this.raster.getPixel(pixel);
+  return color.alpha != 0;
+}
 function setRaster(raster, color, mask) {
   var mask = mask.multiply(255);
   var r = nj.multiply(mask, color.red);

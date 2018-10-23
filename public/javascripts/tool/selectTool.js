@@ -75,7 +75,7 @@ selectTool.onKeyDown = function(event) {
     return false;
   }
   if (event.key == 'v') {
-    scissors.toggleVisualize();
+    brush.toggleVisualize();
     return false;
   }
 }

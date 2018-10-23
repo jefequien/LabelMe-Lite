@@ -76,7 +76,7 @@ function getDistancesToNeighbors(top, p) {
         if (x >= 0 && x < w && y >= 0 && y < h) {
             var c = Math.sqrt(d[0]*d[0] + d[1]*d[1]);
             var key = JSON.stringify([x,y]);
-            dists[key] = (top.get(y,x) + 0.1) * c;
+            dists[key] = (top.get(y,x) + 0.2) * c;
         }
     }
     return dists;
@@ -97,15 +97,18 @@ Brush.prototype.setImage = function(image_url) {
 Brush.prototype.computeTopography = function(imageData) {
     var src = cv.matFromImageData(imageData);
     var dst = new cv.Mat();
-    cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY, 0);
-    cv.Canny(dst, dst, 50, 100, 3, false);
-    var ksize = new cv.Size(3, 3);
-    cv.GaussianBlur(dst, dst, ksize, 0);
+    cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
+    cv.Laplacian(src, dst, cv.CV_8U, 1, 1, 0, cv.BORDER_DEFAULT);
+    // cv.Canny(src, dst, 50, 100, 3, false);
+    // var ksize = new cv.Size(3, 3);
+    // cv.GaussianBlur(dst, dst, ksize, 0);
     var top = matToArray(dst);
     src.delete();
     dst.delete();
-
-    this.top = nj.divide(top, nj.max(top));
+    top = nj.divide(top, nj.max(top));
+    // top = nj.multiply(top, top);
+    top = nj.sqrt(top);
+    this.top = top;
 }
 
 window.brush = brush;

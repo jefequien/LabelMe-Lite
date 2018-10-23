@@ -7,7 +7,7 @@ function Background() {
   this.canvas_center = new Point(this.canvas.width/2, this.canvas.height/2);
   this.focus_height = 400;
   this.focus_width = 600;
-  this.focus_max_scale = 20; // Points per pixel
+  this.focus_max_scale = 5; // Points per pixel
 
   var rect = new Path.Rectangle(new Point(0,0), new Point(500, 400));
   rect.position = this.canvas_center;
@@ -59,10 +59,13 @@ Background.prototype.center = function(point) {
     this.move(new Point(dx,dy));
 }
 Background.prototype.focus = function(annotation) {
-  var target_bounds = this.image.bounds;
+  var target_bounds = null;
   if (annotation) {
     target_bounds = annotation.boundary.bounds;
+  } else {
+    target_bounds = this.image.bounds;
   }
+
   var scale = Math.min(this.focus_height/target_bounds.height, this.focus_width/target_bounds.width);
   this.center(target_bounds.center);
   this.scale(scale);
