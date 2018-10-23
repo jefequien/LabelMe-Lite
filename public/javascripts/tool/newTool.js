@@ -76,6 +76,10 @@ newTool.onKeyDown = function(event) {
     scissors.toggle();
     return false;
   }
+  if (event.key == 'v') {
+    scissors.toggleVisualize();
+    return false;
+  }
 }
 newTool.deactivate = function() {
   this.curser.remove();
@@ -178,22 +182,33 @@ newTool.requestName = function() {
   }
 }
 newTool.getPath = function(start, end) {
-  var path = new Path.Line(start, end);
   if (scissors.active) {
-    var p0 = background.getPixel(start);
-    var p1 = background.getPixel(end);
-    var pixelList = scissors.getPath([p0.x, p0.y], [p1.x, p1.y]);
-    if (pixelList != null) {
-      path.segments = pixelList;
-      background.toPointSpace(path);
-      
-      path.insert(0, start);
-      path.add(end);
-      // Smooth out path
-      path.removeSegment(1);
-      path.removeSegment(path.segments.length - 2);
+    // Try pixels along line
+    var path = new Path.Line(start, end);
+    background.toPixelSpace(path);
+    path.remove();
+
+    for (var i = 0; i < path.length; i+=20) {
+      var p0 = path.firstSegment.point;
+      var p1 = path.getPointAt(path.length-i);
+
+      var pixelList = scissors.getPath([p0.x, p0.y], [p1.x, p1.y]);
+      if (pixelList != null) {
+        var newPath = new Path({"segments": pixelList})
+        background.toPointSpace(newPath);
+
+        // Smooth out path
+        newPath.insert(0, start);
+        newPath.add(end);
+        newPath.removeSegment(1);
+        newPath.removeSegment(newPath.segments.length - 2);
+        return newPath;
+      }
     }
   }
+
+  // Default
+  var path = new Path.Line(start, end);
   return path;
 }
 

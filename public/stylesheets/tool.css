@@ -27,10 +27,18 @@ canvas {
     position: absolute;
     z-index: 2;
     top: 10%; left: 80%;
+    height: 500px;
     width: 200px;
     background-color: black;
     border-color: transparent;
 }
+
+ul.fancytree-container {
+    height: 425px;
+    width: 170px;
+    overflow: auto;
+    position: relative;
+  }
 
 /********** BUTTONS *************/
 

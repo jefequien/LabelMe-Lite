@@ -6,21 +6,32 @@ function Scissors() {
     this.frequency = 500;
     this.allParents = {};
     this.allWorkers = {};
+
+    this.active = false;
+    this.vis = false;
 }
 Scissors.prototype.toggle = function() {
     if (this.active) {
         this.active = false;
-        background.removeTempImage();
     } else {
         if (this.top) {
             this.active = true;
-
+        } else {
+            console.log("Could not activate scissors.");
+        }
+    }
+}
+Scissors.prototype.toggleVisualize = function() {
+    if (this.vis) {
+        this.vis = false;
+        background.removeTempImage();
+    } else {
+        if (this.top) {
+            this.vis = true;
             // Visualize top
             var vis = nj.multiply(this.top, 255/nj.max(this.top));
             var imageData = arrayToImageData(vis);
             background.setTempImage(imageData);
-        } else {
-            console.log("Could not activate scissors.");
         }
     }
 }
@@ -45,8 +56,11 @@ Scissors.prototype.getPath = function(start, end) {
     if (parents) {
         var path = this.getPathToRoot(parents, point);
         path.reverse();
+
+        // Verify path[0] is in root
         if (pointInPoints(path[0], root)) {
             if (path.length == 1) {
+                // If end was in root, still return path of length 2.
                 path.push(path[0]);
             }
             return path;
@@ -54,11 +68,11 @@ Scissors.prototype.getPath = function(start, end) {
     }
     return null;
 }
-Scissors.prototype.getPathToRoot = function(map, p) {
+Scissors.prototype.getPathToRoot = function(parents, p) {
     var path = [p];
     while (true) {
-        var x = map.get(p[1], p[0], 0);
-        var y = map.get(p[1], p[0], 1);
+        var x = parents.get(p[1], p[0], 0);
+        var y = parents.get(p[1], p[0], 1);
         if (x == -1 && y == -1) {
             break; // Done
         } else if (x == null || y == null) {

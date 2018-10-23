@@ -6,7 +6,7 @@ $("#tree").fancytree({
       aria: false, // Enable WAI-ARIA support
       autoActivate: true, // Automatically activate a node when it is focused using keyboard
       autoCollapse: false, // Automatically collapse all siblings, when a node is expanded
-      autoScroll: false, // Automatically scroll nodes into visible area
+      autoScroll: true, // Automatically scroll nodes into visible area
       clickFolderMode: 4, // 1:activate, 2:expand, 3:activate and expand, 4:activate (dblclick expands)
       checkbox: false, // Show checkboxes
       debugLevel: 1, // 0:quiet, 1:normal, 2:debug

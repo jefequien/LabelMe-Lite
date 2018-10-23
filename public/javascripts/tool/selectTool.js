@@ -74,6 +74,10 @@ selectTool.onKeyDown = function(event) {
     scissors.toggle();
     return false;
   }
+  if (event.key == 'v') {
+    scissors.toggleVisualize();
+    return false;
+  }
 }
 selectTool.deactivate = function() {
   if (this.curser) {

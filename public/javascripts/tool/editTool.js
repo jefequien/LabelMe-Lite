@@ -140,6 +140,10 @@ editTool.onKeyDown = function(event) {
     scissors.toggle();
     return false;
   }
+  if (event.key == 'v') {
+    scissors.toggleVisualize();
+    return false;
+  }
 }
 editTool.deactivate = function() {
   this.curser.remove();
@@ -277,33 +281,43 @@ editTool.setMode = function() {
   }
 }
 editTool.getPath = function(start, end) {
-  var path = new Path.Line(start, end);
   if (scissors.active) {
-    var p0 = background.getPixel(start);
-    var p1 = background.getPixel(end);
+    // Try pixels along line
+    var path = new Path.Line(start, end);
+    background.toPixelSpace(path);
+    path.remove();
 
-    var pixelList = scissors.getPath([p0.x, p0.y], [p1.x, p1.y]);
-    if (pixelList != null) {
-      path.segments = pixelList;
-      background.toPointSpace(path);
+    for (var i = 0; i < path.length; i+=20) {
+      var p0 = path.firstSegment.point;
+      var p1 = path.getPointAt(path.length-i);
 
-      path.insert(0, start);
-      path.add(end);
-      // Smooth out path
-      path.removeSegment(1);
-      path.removeSegment(path.segments.length - 2);
+      var pixelList = scissors.getPath([p0.x, p0.y], [p1.x, p1.y]);
+      if (pixelList != null) {
+        var newPath = new Path({"segments": pixelList})
+        background.toPointSpace(newPath);
+
+        // Smooth out path
+        newPath.insert(0, start);
+        newPath.add(end);
+        newPath.removeSegment(1);
+        newPath.removeSegment(newPath.segments.length - 2);
+        return newPath;
+      }
     }
   }
+
+  // Default
+  var path = new Path.Line(start, end);
   return path;
 }
-editTool.getPathToBoundary = function(point) {
-  var path = new Path.Line(this.annotation.boundary.getNearestPoint(point), point);
+editTool.getPathToBoundary = function(end) {
+  var start = this.annotation.boundary.getNearestPoint(end);
   if (scissors.active) {
+    // Get pixels in boundary
+    var pixels = [];
     var boundaryPixel = this.annotation.boundary.clone()
     background.toPixelSpace(boundaryPixel);
     boundaryPixel.remove();
-
-    var pixels = [];
     for (var i = 0; i < boundaryPixel.children.length; i++) {
       var child = boundaryPixel.children[i];
       for (var j = 0; j < child.segments.length; j++) {
@@ -313,49 +327,55 @@ editTool.getPathToBoundary = function(point) {
       }
     }
 
-    var p = background.getPixel(point);
-    var pixelList = scissors.getPath(pixels, [p.x, p.y]);
-    if (pixelList != null) {
-      path.segments = pixelList;
-      background.toPointSpace(path);
+    // Try pixels along line
+    var path = new Path.Line(start, end);
+    background.toPixelSpace(path);
+    path.remove();
 
-      path.insert(0, this.annotation.boundary.getNearestPoint(path.firstSegment.point));
-      path.add(point);
-      // Smooth out path
-      path.removeSegment(1);
-      path.removeSegment(path.segments.length - 2);
+    for (var i = 0; i < path.length; i+=20) {
+      var p1 = path.getPointAt(path.length-i);
+
+      var pixelList = scissors.getPath(pixels, [p1.x, p1.y]);
+      if (pixelList != null) {
+        var newPath = new Path({"segments": pixelList})
+        background.toPointSpace(newPath);
+
+        // Smooth out path
+        newPath.add(end);
+        newPath.removeSegment(newPath.segments.length - 2);
+        return newPath;
+      }
     }
   }
+
+  // Default
+  var path = new Path.Line(start, end);
   return path;
 }
 editTool.getPathUsingBoundary = function(point0, point1) {
-  for (var i = 0; i < this.annotation.boundary.children.length; i++) {
-    var boundary = this.annotation.boundary.children[i].clone();
-    var p0 = boundary.getLocationOf(point0);
-    var p1 = boundary.getLocationOf(point1);
+  var point0 = this.annotation.boundary.getNearestPoint(point0);
+  var point1 = this.annotation.boundary.getNearestPoint(point1);
+
+  var boundaries = this.annotation.boundary.children;
+  for (var i = 0; i < boundaries.length; i++) {
+    var path = boundaries[i].clone();
+    path.remove();
+    var p0 = path.getLocationOf(point0);
+    var p1 = path.getLocationOf(point1);
     if (p0 != null && p1 != null) {
-      // p0 and p1 are on boundary
-      boundary.splitAt(p0);
-      var other = boundary.splitAt(p1);
-      if ( ! other) {
-        // p0 and p1 were the same point
-        boundary.remove();
+      path.splitAt(p0);
+      var other = path.splitAt(p1);
+      if (other) {
+        other.reverse();
+        other.remove();
+      } else {
+        // p0 == p1
         return new Path.Line(point0, point1);
       }
 
       // Return the shorter path
-      var shorter = null;
-      if (boundary.length < other.length) {
-        shorter = new Path(boundary.pathData);
-      } else {
-        shorter = new Path(other.pathData);
-        shorter.reverse();
-      }
-      boundary.remove();
-      other.remove();
-      return shorter;
-    } else {
-      boundary.remove();
+      path = (path.length < other.length) ? path : other;
+      return new Path(path.pathData);
     }
   }
   return null;
