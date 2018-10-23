@@ -145,7 +145,9 @@ brushTool.switch = function(annotation) {
   this.annotation.highlight();
   this.annotation.boundary.visible = false;
   this.annotation.rasterinv.visible = false;
-  background.focus(this.annotation);
+  if (background.image_focused) {
+    background.focus(this.annotation);
+  }
 
   var scale = background.image.bounds.height/background.image.height; // Points per pixel
   var annSize = Math.min(this.annotation.boundary.bounds.height, this.annotation.boundary.bounds.width) / scale;

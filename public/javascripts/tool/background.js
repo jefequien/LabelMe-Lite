@@ -62,9 +62,12 @@ Background.prototype.focus = function(annotation) {
   var target_bounds = null;
   if (annotation) {
     target_bounds = annotation.boundary.bounds;
+    this.image_focused = false;
   } else {
     target_bounds = this.image.bounds;
+    this.image_focused = true;
   }
+  console.log(this.image_focused);
 
   var scale = Math.min(this.focus_height/target_bounds.height, this.focus_width/target_bounds.width);
   this.center(target_bounds.center);
