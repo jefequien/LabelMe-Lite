@@ -85,7 +85,9 @@ editTool.onMouseUp = function(event) {
 
   } else {
     this.points.push(this.curser.clone());
-    this.segments.push(this.line.clone());
+    if (this.points.length > 1) {
+      this.segments.push(this.line.clone());
+    }
   }
 }
 editTool.onMouseDrag = function(event) {
@@ -313,20 +315,6 @@ editTool.getPath = function(start, end) {
 editTool.getPathToBoundary = function(end) {
   var start = this.annotation.boundary.getNearestPoint(end);
   if (scissors.active) {
-    // Get pixels in boundary
-    var pixels = [];
-    var boundaryPixel = this.annotation.boundary.clone()
-    background.toPixelSpace(boundaryPixel);
-    boundaryPixel.remove();
-    for (var i = 0; i < boundaryPixel.children.length; i++) {
-      var child = boundaryPixel.children[i];
-      for (var j = 0; j < child.segments.length; j++) {
-        var x = Math.round(child.segments[j].point.x);
-        var y = Math.round(child.segments[j].point.y);
-        pixels.push([x,y])
-      }
-    }
-
     // Try pixels along line
     var path = new Path.Line(start, end);
     background.toPixelSpace(path);
@@ -335,7 +323,7 @@ editTool.getPathToBoundary = function(end) {
     for (var i = 0; i < path.length; i+=20) {
       var p1 = path.getPointAt(path.length-i);
 
-      var pixelList = scissors.getPath(pixels, [p1.x, p1.y]);
+      var pixelList = scissors.getPath(this.annotation.boundaryPixels, [p1.x, p1.y]);
       if (pixelList != null) {
         var newPath = new Path({"segments": pixelList})
         background.toPointSpace(newPath);

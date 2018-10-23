@@ -1,6 +1,5 @@
 
 
-
 self.onmessage = function(event) {
     var message = JSON.parse(event.data);
     var cmd = message.cmd;
@@ -27,14 +26,16 @@ function initialize(top, root) {
 
     var shape = self.top.shape;
     self.distances = nj.ones(shape);
-    self.distances = nj.multiply(self.distances, -1);
+    self.distances = nj.multiply(self.distances, -2);
     self.parents = nj.ones([shape[0], shape[1], 2], dtype='int32');
-    self.parents = nj.multiply(self.parents, -1);
+    self.parents = nj.multiply(self.parents, -2);
 
     self.queue = new goog.structs.PriorityQueue();
     for (var i = 0; i < self.root.length; i++) {
         var r = self.root[i];
-        self.distances.set(r[1], r[0], 0)
+        self.distances.set(r[1], r[0], 0);
+        self.parents.set(r[1], r[0], 0, -1);
+        self.parents.set(r[1], r[0], 1, -1);
         self.queue.enqueue(0, r);
     }
 }
@@ -62,18 +63,20 @@ function APSP(run_time) {
 }
 
 function APSP_step(top, parents, distances, queue) {
+    var p_dist = queue.peekKey();
     var p = queue.dequeue();
-    var p_dist = distances.get(p[1], p[0]);
     var n_dists = getDistancesToNeighbors(top, p);
     for (var key in n_dists) {
         var n = JSON.parse(key);
-        var n_dist = n_dists[key] + p_dist;
-        var n_dist_old = distances.get(n[1], n[0]);
-        if (n_dist < n_dist_old || n_dist_old == -1) {
-            distances.set(n[1], n[0], n_dist);
-            parents.set(n[1], n[0], 0, p[0]);
-            parents.set(n[1], n[0], 1, p[1]);
-            queue.enqueue(n_dist, n);
+        if (parents.get(n[1], n[0], 0) == -2) {
+            var n_dist = n_dists[key] + p_dist;
+            var n_dist_old = distances.get(n[1], n[0]);
+            if (n_dist < n_dist_old || n_dist_old == -2) {
+                distances.set(n[1], n[0], n_dist);
+                parents.set(n[1], n[0], 0, p[0]);
+                parents.set(n[1], n[0], 1, p[1]);
+                queue.enqueue(n_dist, n);
+            }
         }
     }
 }

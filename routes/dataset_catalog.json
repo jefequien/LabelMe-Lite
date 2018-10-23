@@ -27,6 +27,6 @@
     "ade20k_val_predictions": {
       "im_dir": "ade20k/images/", 
       "ann_fn": "annotations/ade20k_val_predictions_#.json",
-      "load": false
+      "load": true
     }
 }
