@@ -74,7 +74,7 @@ newTool.onKeyDown = function(event) {
   }
 
   // Tool keys
-  if (event.key == 'space') {
+  if (event.key == 's') {
     scissors.toggle();
     return false;
   }
