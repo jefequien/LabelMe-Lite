@@ -47,13 +47,15 @@ brushTool.editAnnotation = function() {
   }
 }
 brushTool.updateSmartBrush = function() {
-  var num = this.toolSize * this.toolSize;
-  var p = background.getPixel(this.curser.position);
-  var pixels = brush.getNearestPixels([p.x, p.y], num);
-  var path = new Path(pixels);
-  path.remove();
-  background.toPointSpace(path);
-  this.smartBrush.segments = path.segments;
+  if (brush.active) {
+    var num = this.toolSize * this.toolSize;
+    var p = background.getPixel(this.curser.position);
+    var pixels = brush.getNearestPixels([p.x, p.y], num);
+    var path = new Path(pixels);
+    path.remove();
+    background.toPointSpace(path);
+    this.smartBrush.segments = path.segments;
+  }
 }
 brushTool.onKeyDown = function(event) {
   // Zoom keys
@@ -95,7 +97,8 @@ brushTool.onKeyDown = function(event) {
     return false;
   }
   if (event.key == 's') {
-    if (this.smartBrush.visible) {
+    brush.toggle();
+    if (brush.active) {
       this.curser.visible = true;
       this.smartBrush.visible = false;
       this.smartBrush.selected = false;

@@ -296,7 +296,16 @@ function sortAnnotations() {
   }
 }
 
+function clearAnnotations() {
+  for (var i = 0; i < annotations.length; i++) {
+    annotations[i].delete();
+  }
+  annotations = [];
+  selectTool.switch();
+}
+
 window.Annotation = Annotation;
 window.annotations = [];
 window.loadAnnotations = loadAnnotations;
 window.saveAnnotations = saveAnnotations;
+window.clearAnnotations = clearAnnotations;
