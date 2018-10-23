@@ -10,8 +10,8 @@ newTool.onMouseMove = function(event) {
     this.line.segments = [];
   } else {
     var path = this.getPath(this.points[this.points.length-1].position, this.curser.position);
-    this.line.segments = path.segments;
     path.remove();
+    this.line.segments = path.segments;
   }
 }
 newTool.onMouseUp = function(event) {
@@ -22,7 +22,7 @@ newTool.onMouseUp = function(event) {
 
   if (this.curser.intersects(this.points[0])) {
     if (this.points.length >= 2) {
-      // Create new annotation
+    // Create new annotation
       this.segments.push(this.line.clone());
 
       // Join segments to form one path
@@ -31,11 +31,13 @@ newTool.onMouseUp = function(event) {
         path.join(this.segments[i]);
       }
       this.createAnnotation(path);
-
     }
+
   } else {
     this.points.push(this.curser.clone());
-    this.segments.push(this.line.clone());
+    if (this.points.length > 1) {
+      this.segments.push(this.line.clone());
+    }
   }
 }
 newTool.onMouseDrag = function(event) {
@@ -183,10 +185,11 @@ newTool.requestName = function() {
 }
 newTool.getPath = function(start, end) {
   if (scissors.active) {
+
     // Try pixels along line
     var path = new Path.Line(start, end);
-    background.toPixelSpace(path);
     path.remove();
+    background.toPixelSpace(path);
 
     for (var i = 0; i < path.length; i+=20) {
       var p0 = path.firstSegment.point;

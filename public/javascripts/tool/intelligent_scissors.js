@@ -3,7 +3,7 @@
 var scissors = new Scissors();
 
 function Scissors() {
-    this.frequency = 500;
+    this.maxRuntime = 500;
     this.allParents = {};
     this.allWorkers = {};
 
@@ -50,18 +50,16 @@ Scissors.prototype.getPath = function(start, end) {
     var result = this.preprocess(start, end);
     var root = result.root;
     var point = result.point;
-    this.activateWorker(root);
+    this.findAPSP(root);
     
     var parents = this.allParents[JSON.stringify(root)];
     if (parents) {
         var path = this.getPathToRoot(parents, point);
-        path.reverse();
-
-        // Verify path[0] is in root
-        if (pointInPoints(path[0], root)) {
+        if (path) {
+            // Success
+            path.reverse();
             if (path.length == 1) {
-                // If end was in root, still return path of length 2.
-                path.push(path[0]);
+                path.push(path[0]); // end was in start
             }
             return path;
         }
@@ -74,23 +72,16 @@ Scissors.prototype.getPathToRoot = function(parents, p) {
         var x = parents.get(p[1], p[0], 0);
         var y = parents.get(p[1], p[0], 1);
         if (x == -1 && y == -1) {
-            break; // Done
+            return path;
+        } else if (x == -2 && y == -2) {
+            return null;
         } else if (x == null || y == null) {
             console.log("BUG!")
-            break;
+            return;
         }
         p = [x,y];
         path.push(p);
     }
-    return path;
-}
-function pointInPoints(p, points) {
-    for (var i = 0; i < points.length; i++) {
-        if (p[0] == points[i][0] && p[1] == points[i][1]) {
-            return true;
-        }
-    }
-    return false;
 }
 
 //
@@ -102,25 +93,24 @@ Scissors.prototype.setImage = function(image_url) {
     img.src = image_url;
     img.onload = function() {
         var imageData = getImageData(this);
-        scissors.top = computeTopography(imageData);
+        scissors.computeTopography(imageData);
         scissors.reset();
     }
 }
-function computeTopography(imageData) {
+Scissors.prototype.computeTopography = function(imageData) {
     var src = cv.matFromImageData(imageData);
     var dst = new cv.Mat();
-    cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY, 0);
-    cv.Canny(dst, dst, 50, 100, 3, false);
-    var ksize = new cv.Size(3, 3);
-    cv.GaussianBlur(dst, dst, ksize, 0);
+    cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
+    cv.Laplacian(src, dst, cv.CV_8U, 1, 1, 0, cv.BORDER_DEFAULT);
+    // cv.Canny(src, dst, 50, 100, 3, false);
+    // var ksize = new cv.Size(3, 3);
+    // cv.GaussianBlur(dst, dst, ksize, 0);
     var top = matToArray(dst);
     src.delete();
     dst.delete();
 
     var top = nj.divide(top, nj.max(top));
-    var top = nj.multiply(top, -1);
-    var top = nj.add(top, 1);
-    return top;
+    this.top = nj.add(nj.multiply(top, -1), 1);
 }
 
 //
@@ -163,7 +153,7 @@ Scissors.prototype.clip = function(points) {
 //
 // Workers
 //
-Scissors.prototype.activateWorker = function(root) {
+Scissors.prototype.findAPSP = function(root) {
     var key = JSON.stringify(root);
     var worker = this.allWorkers[key];
     if (worker == null) {
@@ -172,8 +162,10 @@ Scissors.prototype.activateWorker = function(root) {
         worker.postMessage(JSON.stringify(message));
         this.allWorkers[key] = worker;
     }
+
+    // Only one worker active at a time
     if ( ! (this.workerActive || worker.done)) {
-        var message = {"cmd": "run", "run_time": this.frequency};
+        var message = {"cmd": "run", "run_time": this.maxRuntime};
         worker.postMessage(JSON.stringify(message));
         this.workerActive = true;
     }

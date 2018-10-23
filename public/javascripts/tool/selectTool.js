@@ -21,7 +21,7 @@ selectTool.onMouseUp = function(event) {
 
   var annotation = this.getAnnotationAt(this.curser.position);
   if (annotation != null) {
-    editTool.switch(annotation);
+    brushTool.switch(annotation);
   }
 }
 selectTool.onMouseDrag = function(event) {
@@ -75,7 +75,7 @@ selectTool.onKeyDown = function(event) {
     return false;
   }
   if (event.key == 'v') {
-    scissors.toggleVisualize();
+    brush.toggleVisualize();
     return false;
   }
 }

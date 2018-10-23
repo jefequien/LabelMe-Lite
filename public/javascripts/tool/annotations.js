@@ -5,35 +5,35 @@
 function Annotation(name, mask){
   this.name = name;
   this.color = new Color(Math.random(), Math.random(), Math.random(), 1);
+  this.colorinv = this.color;
+  // this.colorinv = new Color(0.5, 0.5, 0.5, 1);
 
-  this.boundary = new CompoundPath();
   this.mask = mask;
   if (this.mask == null) {
     this.mask = nj.zeros([background.image.height, background.image.width]);
   }
+
   this.raster = new Raster({size: new Size(this.mask.shape[1], this.mask.shape[0])});
-  this.updateRaster();
+  this.rasterinv = this.raster.clone();
+  this.rasterinv.visible = false;
   this.id = this.raster.id;
+
+  this.boundary = new CompoundPath();
+  this.boundaryPixels = [];
+
+  setRaster(this.raster, this.color, this.mask);
+  setRaster(this.rasterinv, this.colorinv, nj.add(nj.multiply(this.mask, -1), 1));
 
   annotations.unshift(this); // add to front
   background.align(this);
   tree.addAnnotation(this);
   this.unhighlight();
 }
-Annotation.prototype.updateRaster = function() {
-  var mask = this.mask.multiply(255);
-  var r = nj.multiply(mask, this.color.red);
-  var g = nj.multiply(mask, this.color.green);
-  var b = nj.multiply(mask, this.color.blue);
-  var a = mask;
-  var color_mask = nj.stack([r, g, b, a], -1);
-  var imageData = arrayToImageData(color_mask);
-
-  this.raster.setImageData(imageData, new Point(0, 0));
-}
 Annotation.prototype.updateBoundary = function() {
   var imageData = this.raster.getImageData();
   var boundaries = findBoundariesOpenCV(imageData);
+
+  this.boundaryPixels = [];
   var paths = [];
   for (var i = 0; i < boundaries.length; i++) {
     var path = new Path({
@@ -41,13 +41,12 @@ Annotation.prototype.updateBoundary = function() {
       closed: true
     });
     paths.push(path);
+    this.boundaryPixels = this.boundaryPixels.concat(boundaries[i]);
   }
-  var boundary = new CompoundPath({ children: paths });
-  background.toPointSpace(boundary);
-  boundary.remove();
 
-  this.boundary.pathData = boundary.pathData;
-  this.boundary.moveAbove(this.raster);
+  var paths = new CompoundPath({children: paths});
+  background.toPointSpace(paths);
+  this.boundary.pathData = paths.pathData;
 }
 Annotation.prototype.updateMask = function() {
   var imageData = this.raster.getImageData();
@@ -82,10 +81,12 @@ Annotation.prototype.delete = function() {
 //
 Annotation.prototype.translate = function(delta) {
   this.raster.translate(delta);
+  this.rasterinv.translate(delta);
   this.boundary.translate(delta);
 }
 Annotation.prototype.scale = function(scale, center) {
   this.raster.scale(scale, center);
+  this.rasterinv.scale(scale, center);
   this.boundary.scale(scale, center);
 }
 
@@ -106,6 +107,7 @@ Annotation.prototype.highlight = function() {
 Annotation.prototype.unhighlight = function() {
   this.highlighted = false;
   this.raster.opacity = 0.7;
+  this.boundary.strokeColor = this.color;
   this.boundary.strokeWidth = 0;
 
   tree.setActive(this, false);
@@ -120,35 +122,45 @@ Annotation.prototype.hide = function() {
 // Edit raster
 //
 Annotation.prototype.unite = function(shape) {
-  this.edit(shape, this.color);
+  var pixels = getPixels(shape);
+  editRaster(this.raster, this.color, pixels);
+  editRaster(this.rasterinv, new Color(0,0,0,0), pixels);
 }
 Annotation.prototype.subtract = function(shape) {
-  this.edit(shape, new Color(0,0,0,0));
+  var pixels = getPixels(shape);
+  editRaster(this.raster, new Color(0,0,0,0), pixels);
+  editRaster(this.rasterinv, this.colorinv, pixels);
 }
-Annotation.prototype.edit = function(shape, color) {
-  var imageData = this.raster.getImageData();
-  var shape_pixel = shape.clone();
-  background.toPixelSpace(shape_pixel);
-  shape_pixel.remove();
-
-  // Edit boundary pixels
-  for (var i = 0; i < shape_pixel.length; i++) {
-    var pixel = shape_pixel.getPointAt(i);
-    setPixelColor(imageData, pixel, color);
-  }
-
-  // Edit interior pixels
-  var tl = background.getPixel(shape.bounds.topLeft);
-  var br = background.getPixel(shape.bounds.bottomRight);
-  for (var x = tl.x; x <= br.x; x++) {
-    for (var y = tl.y; y <= br.y; y++) {
-      var pixel = new Point(x,y);
-      if (shape_pixel.contains(pixel)) {
-        setPixelColor(imageData, pixel, color);
-      }
+Annotation.prototype.intersects = function(shape) {
+  var pixels = getPixels(shape);
+  for (var i = 0; i < pixels.length; i++) {
+    if (this.containsPixel(pixels[i])) {
+      return true;
     }
   }
-  this.raster.setImageData(imageData, new Point(0,0));
+  return false;
+}
+Annotation.prototype.containsPixel = function(pixel) {
+  var color = this.raster.getPixel(pixel);
+  return color.alpha != 0;
+}
+function setRaster(raster, color, mask) {
+  var mask = mask.multiply(255);
+  var r = nj.multiply(mask, color.red);
+  var g = nj.multiply(mask, color.green);
+  var b = nj.multiply(mask, color.blue);
+  var a = mask;
+  var color_mask = nj.stack([r, g, b, a], -1);
+  var imageData = arrayToImageData(color_mask);
+
+  raster.setImageData(imageData, new Point(0, 0));
+}
+function editRaster(raster, color, pixels) {
+  var imageData = raster.getImageData();
+  for (var i = 0; i < pixels.length; i++) {
+    setPixelColor(imageData, pixels[i], color);
+  }
+  raster.setImageData(imageData, new Point(0,0));
 }
 function setPixelColor(imageData, pixel, color) {
   var x = Math.round(pixel.x);
@@ -173,6 +185,29 @@ function getPixelColor(imageData, pixel) {
   color.blue = imageData.data[p+2];
   color.alpha = imageData.data[p+3];
   return color;
+}
+function getPixels(shape) {
+  var shape_pixel = shape.clone();
+  shape_pixel.remove();
+  background.toPixelSpace(shape_pixel);
+
+  var pixels = [];
+  // Boundary pixels
+  for (var i = 0; i < shape_pixel.length; i++) {
+    pixels.push(shape_pixel.getPointAt(i));
+  }
+  // Interior pixels
+  var tl = background.getPixel(shape.bounds.topLeft);
+  var br = background.getPixel(shape.bounds.bottomRight);
+  for (var x = tl.x; x <= br.x; x++) {
+    for (var y = tl.y; y <= br.y; y++) {
+      var pixel = new Point(x,y);
+      if (shape_pixel.contains(pixel)) {
+        pixels.push(pixel);
+      }
+    }
+  }
+  return pixels;
 }
 
 //

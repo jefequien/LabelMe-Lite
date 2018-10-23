@@ -5,8 +5,9 @@
 function Background() {
   this.canvas = document.getElementById('toolCanvas');
   this.canvas_center = new Point(this.canvas.width/2, this.canvas.height/2);
-  this.max_height = 400;
-  this.max_width = 600;
+  this.focus_height = 400;
+  this.focus_width = 600;
+  this.focus_max_scale = 5; // Points per pixel
 
   var rect = new Path.Rectangle(new Point(0,0), new Point(500, 400));
   rect.position = this.canvas_center;
@@ -31,6 +32,9 @@ Background.prototype.setImage = function(image) {
   }
 }
 Background.prototype.setTempImage = function(imageData) {
+  if (this.tempImage) {
+    this.tempImage.remove();
+  }
   this.tempImage = this.image.clone();
   this.tempImage.setImageData(imageData, new Point(0,0));
   this.tempImage.insertAbove(this.image);
@@ -55,13 +59,21 @@ Background.prototype.center = function(point) {
     this.move(new Point(dx,dy));
 }
 Background.prototype.focus = function(annotation) {
-  var bounds = background.image.bounds;
+  var target_bounds = null;
   if (annotation) {
-    bounds = annotation.boundary.bounds;
+    target_bounds = annotation.boundary.bounds;
+  } else {
+    target_bounds = this.image.bounds;
   }
-  var scale = Math.min(background.max_height/bounds.height, background.max_width/bounds.width);
-  background.center(bounds.center);
-  background.scale(scale);
+
+  var scale = Math.min(this.focus_height/target_bounds.height, this.focus_width/target_bounds.width);
+  this.center(target_bounds.center);
+  this.scale(scale);
+
+  var scale = this.image.bounds.height / this.image.height;
+  if (scale > this.focus_max_scale) {
+    this.scale((this.image.height * this.focus_max_scale) / this.image.bounds.height)
+  }
 }
 Background.prototype.align = function(annotation) {
   var img_bounds = this.image.bounds;
