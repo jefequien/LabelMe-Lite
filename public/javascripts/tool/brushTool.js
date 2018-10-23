@@ -108,6 +108,7 @@ brushTool.onKeyDown = function(event) {
       this.smartBrush.visible = true;
       this.smartBrush.selected = true;
     }
+    this.refresh();
     return false;
   }
   if (event.key == 'i') {
