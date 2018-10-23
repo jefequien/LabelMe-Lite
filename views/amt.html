@@ -11,6 +11,13 @@
 
     <title>LabelMeLite</title>
 
+    <!-- Fancytree CSS -->
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="vendor/fancytree/skin-bootstrap/ui.fancytree.css" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link href="stylesheets/tool.css" rel="stylesheet">
+    
     <link href="stylesheets/amt.css" rel="stylesheet">
     <link href="stylesheets/tool_simple.css" rel="stylesheet">
 
@@ -44,24 +51,40 @@
     </div>
 
 
-    <div class="container">
-        <canvas id="toolCanvas"></canvas>
+    <!-- Canvas -->
+    <canvas id="toolCanvas"></canvas>
+
+    <!-- Annotations Table --> 
+    <div id="annotationPanel" class="panel panel-default">
+        <div id="annotationHeader" class="panel-heading">
+          <b>Annotations</b>
+        </div>
+        <div id="tree" class="panel-body fancytree-fade-expander"></div>
     </div>
 
-    <!-- jQuery -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-
-    <!-- Bootstrap Core JavaScript -->
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <!-- Fancytree Javascript -->
+    <script src="//code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script src="//code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
+    <script src="vendor/fancytree/jquery.fancytree-all.min.js"></script>
 
     <!-- Custom Javascript -->
     <script type="text/javascript" src="components/numjs/dist/numjs.min.js"></script>
     <script type="text/javascript" src="javascripts/opencv.js"></script>
-    <script type="text/javascript" src="javascripts/endpoints.js"></script>
-    <script type="text/javascript" src="javascripts/tool_utils.js"></script>
+    <script type="text/javascript" src="components/google-closure-library-compiler/compiled.js"></script>
     <script type="text/javascript" src="components/paper/dist/paper-full.js"></script>
-    <!-- Note: You can only have 1 paperscript! -->
-    <script type="text/paperscript" src="javascripts/tool_simple.js" canvas="toolCanvas"></script>
+    
+    <script type="text/paperscript" src="javascripts/tool/selectTool.js" canvas="toolCanvas"></script>
+    <script type="text/paperscript" src="javascripts/tool/brushTool.js" canvas="toolCanvas"></script>
+    <script type="text/paperscript" src="javascripts/tool/editTool.js" canvas="toolCanvas"></script>
+    <script type="text/paperscript" src="javascripts/tool/newTool.js" canvas="toolCanvas"></script>
+    <script type="text/paperscript" src="javascripts/tool/annotations.js" canvas="toolCanvas"></script>
+    <script type="text/paperscript" src="javascripts/tool/background.js" canvas="toolCanvas"></script>
+    <script type="text/paperscript" src="javascripts/tool/tree.js" canvas="toolCanvas"></script>
+
+    <script type="text/javascript" src="javascripts/tool/tool_utils.js"></script>
+    <script type="text/javascript" src="javascripts/tool/intelligent_scissors.js"></script>
+    <script type="text/javascript" src="javascripts/tool/intelligent_brush.js"></script>
+    <script type="text/javascript" src="javascripts/endpoints.js"></script>
 
     <script type="text/javascript" src="javascripts/main_amt.js"></script>
 

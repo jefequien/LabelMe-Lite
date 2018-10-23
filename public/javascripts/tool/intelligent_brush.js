@@ -3,6 +3,18 @@ var brush = new Brush();
 function Brush() {
     this.maxBrushSize = 100;
     this.vis = false;
+    this.active = false;
+}
+Scissors.prototype.toggle = function() {
+    if (this.active) {
+        this.active = false;
+    } else {
+        if (this.top) {
+            this.active = true;
+        } else {
+            console.log("Could not activate SmartBrush.");
+        }
+    }
 }
 Brush.prototype.toggleVisualize = function() {
     if (this.vis) {

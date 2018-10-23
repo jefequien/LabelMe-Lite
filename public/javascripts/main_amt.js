@@ -15,13 +15,17 @@ function next() {
     if (current_num < bundle.length - 1) {
         current_num += 1;
         var task = bundle[current_num];
+        var image_url = task["image_url"];
         var annotation = task["annotations"][0];
 
         $('#categoryDiv span').text(annotation["category"]);
         updateSubmitButton();
 
-        clearTool();
-        setUpTool(task);
+        clearAnnotations();
+        background.setImage(image_url);
+        scissors.setImage(image_url);
+        brush.setImage(image_url);
+        loadAnnotations([annotation]);
     }
 }
 
