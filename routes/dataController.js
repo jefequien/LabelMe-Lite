@@ -5,16 +5,17 @@ var cocoapi = require('./coco');
 var router = express.Router();
 
 var DATA_DIR = path.join(__dirname, "../data");
-var DATASETS = require('./dataset_catalog.json');
-
-var datasets = loadDatasets();
-var bundles = loadBundles();
 
 router.get('/images', function(req, res) {
     var proj_name = req.query.proj_name;
     var file_name = req.query.file_name;
 
-    var img_dir = path.join(DATA_DIR, DATASETS[proj_name].im_dir);
+    var im_dir = path.join(DATA_DIR, getImDir(proj_name));
+    if (im_dir == null) {
+        res.status(404).send('Project name not found');
+        return;
+    }
+
     var img_path = path.join(img_dir, file_name);
     res.sendFile(img_path);
 });
@@ -23,7 +24,7 @@ router.get('/images/next', function(req, res) {
     var proj_name = req.query.proj_name;
     var file_name = req.query.file_name;
 
-    var coco = datasets[proj_name];
+    var coco = loadCOCO(proj_name);
     if (coco == null) {
         res.status(404).send('Project name not found');
         return;
@@ -48,7 +49,7 @@ router.get('/images/prev', function(req, res) {
     var proj_name = req.query.proj_name;
     var file_name = req.query.file_name;
 
-    var coco = datasets[proj_name];
+    var coco = loadCOCO(proj_name);
     if (coco == null) {
         res.status(404).send('Project name not found');
         return;
@@ -73,7 +74,7 @@ router.get('/annotations', function(req, res) {
     var proj_name = req.query.proj_name;
     var file_name = req.query.file_name;
 
-    var coco = datasets[proj_name];
+    var coco = loadCOCO(proj_name);
     if (coco == null) {
         res.status(404).send('Project name not found');
         return;
@@ -107,7 +108,7 @@ router.get('/annotations', function(req, res) {
     }
 
     // No CORS access
-    var img_url = "http://places.csail.mit.edu/scaleplaces/datasets/" + DATASETS[proj_name].im_dir + file_name;
+    var img_url = "http://places.csail.mit.edu/scaleplaces/datasets/" + path.join(getImDir(proj_name), file_name);
 
     var response = {};
     response["proj_name"] = proj_name;
@@ -125,19 +126,36 @@ router.get('/bundles', function(req, res) {
     res.sendFile(file_path);
 });
 
-function loadDatasets() {
-    var datasets = {};
-    for (var proj_name in DATASETS) {
-        if (DATASETS[proj_name]["load"]) {
+function getImDir(proj_name) {
+    if (proj_name.includes('ade')) {
+        return "ade20k/images/";
+    } else if (proj_name.includes('coco') || proj_name.includes('2017')) {
+        return "coco/images/";
+    } else if (proj_name.includes('places')) {
+        return "places/images/";
+    } else {
+        return null;
+    }
+}
+
+var COCOs = {};
+function loadCOCO(proj_name) {
+    console.log("Looking for", proj_name);
+    var coco = COCOs[proj_name];
+    if (coco) {
+        return coco;
+    } else {
+        var ann_fn = path.join(DATA_DIR, "annotations/" + proj_name + "_#.json");
+        if (fs.existsSync(ann_fn)) {
             console.time(proj_name);
-            var ann_fn = path.join(DATA_DIR, DATASETS[proj_name].ann_fn);
-            var coco = new cocoapi.COCO(ann_fn);
-            datasets[proj_name] = coco;
+            COCOs[proj_name] = new cocoapi.COCO(ann_fn);
             console.timeEnd(proj_name);
         }
+        return COCOs[proj_name];
     }
-    return datasets;
 }
+
+var bundles = {};
 function loadBundles() {
 
 }

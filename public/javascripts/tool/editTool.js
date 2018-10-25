@@ -176,6 +176,9 @@ editTool.switch = function(annotation) {
     annotations[i].hide();
   }
   this.annotation.highlight();
+  if (background.image_focused) {
+    background.focus(this.annotation);
+  }
 
   this.points = [];
   this.segments = [];
