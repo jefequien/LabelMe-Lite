@@ -47,7 +47,6 @@ brushTool.editAnnotation = function() {
   }
 }
 brushTool.updateSmartBrush = function() {
-  console.log(brush.active);
   if (brush.active) {
     var num = this.toolSize * this.toolSize;
     var p = background.getPixel(this.curser.position);
@@ -143,11 +142,13 @@ brushTool.switch = function(annotation) {
     annotations[i].hide();
   }
   this.annotation.highlight();
-  this.annotation.boundary.visible = false;
-  this.annotation.rasterinv.visible = false;
   if (background.image_focused) {
     background.focus(this.annotation);
   }
+  
+  this.annotation.boundary.visible = false;
+  this.annotation.rasterinv.visible = true;
+  this.annotation.refresh();
 
   var scale = background.image.bounds.height/background.image.height; // Points per pixel
   var annSize = Math.min(this.annotation.boundary.bounds.height, this.annotation.boundary.bounds.width) / scale;

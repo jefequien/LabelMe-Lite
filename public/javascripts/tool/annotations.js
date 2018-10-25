@@ -3,10 +3,9 @@
  */
  
 function Annotation(name, mask){
+  console.time(name);
   this.name = name;
   this.color = new Color(Math.random(), Math.random(), Math.random(), 1);
-  this.colorinv = this.color;
-  // this.colorinv = new Color(0.5, 0.5, 0.5, 1);
 
   this.mask = mask;
   if (this.mask == null) {
@@ -22,12 +21,12 @@ function Annotation(name, mask){
   this.boundaryPixels = [];
 
   setRaster(this.raster, this.color, this.mask);
-  setRaster(this.rasterinv, this.colorinv, nj.add(nj.multiply(this.mask, -1), 1));
 
   annotations.unshift(this); // add to front
   background.align(this);
   tree.addAnnotation(this);
   this.unhighlight();
+  console.timeEnd(name);
 }
 Annotation.prototype.updateBoundary = function() {
   var imageData = this.raster.getImageData();
@@ -47,15 +46,19 @@ Annotation.prototype.updateBoundary = function() {
   var paths = new CompoundPath({children: paths});
   background.toPointSpace(paths);
   this.boundary.pathData = paths.pathData;
+  
+  if (this.boundary.area == 0) {
+    this.delete();
+    selectTool.switch();
+  }
 }
 Annotation.prototype.updateMask = function() {
   var imageData = this.raster.getImageData();
   var mat = cv.matFromImageData(imageData);
   var array = matToArray(mat);
   var mask = array.slice(null,null,3);
-  if (nj.max(mask) > 1) {
-    mask = mask.divide(nj.max(mask));
-  }
+  mask = mask.reshape(mask.shape[0], mask.shape[1]);
+  mask = mask.divide(nj.max(mask));
   this.mask = mask;
 }
 Annotation.prototype.refresh = function() {
@@ -63,10 +66,8 @@ Annotation.prototype.refresh = function() {
   this.updateBoundary();
   sortAnnotations();
 
-  if (this.boundary.area == 0) {
-    this.delete();
-    selectTool.switch();
-  }
+  var maskinv = nj.add(nj.multiply(this.mask, -1), 1);
+  setRaster(this.rasterinv, this.color, maskinv);
 }
 Annotation.prototype.delete = function() {
   this.raster.remove();
@@ -129,7 +130,7 @@ Annotation.prototype.unite = function(shape) {
 Annotation.prototype.subtract = function(shape) {
   var pixels = getPixels(shape);
   editRaster(this.raster, new Color(0,0,0,0), pixels);
-  editRaster(this.rasterinv, this.colorinv, pixels);
+  editRaster(this.rasterinv, this.color, pixels);
 }
 Annotation.prototype.intersects = function(shape) {
   var pixels = getPixels(shape);

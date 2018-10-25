@@ -66,7 +66,6 @@ $("#tree").fancytree({
             node.setTitle(name);
           }
         }
-        background.focus(annotation);
         editTool.switch(annotation);
         return false;
       }
