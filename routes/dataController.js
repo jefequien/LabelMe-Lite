@@ -16,8 +16,8 @@ router.get('/images', function(req, res) {
         return;
     }
 
-    var img_path = path.join(img_dir, file_name);
-    res.sendFile(img_path);
+    var im_path = path.join(im_dir, file_name);
+    res.sendFile(im_path);
 });
 
 router.get('/images/next', function(req, res) {
