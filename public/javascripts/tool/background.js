@@ -44,12 +44,14 @@ Background.prototype.removeTempImage = function() {
 }
 Background.prototype.move = function(delta) {
   paper.project.activeLayer.translate(delta);
+  this.image_focused = false;
 }
 Background.prototype.scale = function(scale, point) {
   if (point == null) {
     point = this.canvas_center;
   }
   paper.project.activeLayer.scale(scale, point);
+  this.image_focused = false;
 }
 Background.prototype.center = function(point) {
     var x = this.canvas_center.x;
@@ -59,23 +61,22 @@ Background.prototype.center = function(point) {
     this.move(new Point(dx,dy));
 }
 Background.prototype.focus = function(annotation) {
-  var target_bounds = null;
+  var target = this.image.bounds;
   if (annotation) {
-    target_bounds = annotation.boundary.bounds;
-    this.image_focused = false;
-  } else {
-    target_bounds = this.image.bounds;
-    this.image_focused = true;
+    target = annotation.boundary.bounds;
   }
-  console.log(this.image_focused);
 
-  var scale = Math.min(this.focus_height/target_bounds.height, this.focus_width/target_bounds.width);
-  this.center(target_bounds.center);
+  var scale = Math.min(this.focus_height/target.height, this.focus_width/target.width);
+  this.center(target.center);
   this.scale(scale);
-
+  // Enforce max scale
   var scale = this.image.bounds.height / this.image.height;
   if (scale > this.focus_max_scale) {
     this.scale((this.image.height * this.focus_max_scale) / this.image.bounds.height)
+  }
+
+  if (annotation == null) {
+    this.image_focused = true;
   }
 }
 Background.prototype.align = function(annotation) {

@@ -221,10 +221,11 @@ editTool.undo = function() {
 }
 editTool.snapCurser = function() {
   // Snap to annotation bounds
-  if ( ! this.annotation.raster.contains(this.curser.position)) {
-    var bounds = new Path.Rectangle(this.annotation.raster.bounds);
-    this.curser.position = bounds.getNearestPoint(this.curser.position);
-    bounds.remove();
+  var ann_bounds = this.annotation.raster.bounds;
+  if ( ! ann_bounds.contains(this.curser.position)) {
+    var rect = new Path.Rectangle(ann_bounds);
+    this.curser.position = rect.getNearestPoint(this.curser.position);
+    rect.remove();
   }
   // Snap to first point
   if (this.curser.intersects(this.points[0])) {
