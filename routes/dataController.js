@@ -90,10 +90,14 @@ router.get('/annotations', function(req, res) {
     var anns = coco.loadAnns(annIds);
     var annotations = [];
     for (var i = 0; i < anns.length; i++) {
-        var name = coco.cats[anns[i]["category_id"]]["name"];
+        var catId = anns[i]["category_id"];
         var segm = anns[i]["segmentation"];
         var score = anns[i]["score"];
-
+        
+        var name = catId;
+        if (coco.cats[catId]) {
+            name = coco.cats[catId]["name"];
+        }
         if (score != null) {
             name = name + " " + score.toFixed(3);
             if (score < 0.5) {
@@ -106,7 +110,6 @@ router.get('/annotations', function(req, res) {
         ann["segmentation"] = segm;
         annotations.push(ann);
     }
-
     // No CORS access
     var img_url = "http://places.csail.mit.edu/scaleplaces/datasets/" + path.join(getImDir(proj_name), file_name);
 
@@ -140,7 +143,6 @@ function getImDir(proj_name) {
 
 var COCOs = {};
 function loadCOCO(proj_name) {
-    console.log("Looking for", proj_name);
     var coco = COCOs[proj_name];
     if (coco) {
         return coco;
