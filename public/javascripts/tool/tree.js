@@ -16,7 +16,7 @@ $("#tree").fancytree({
       generateIds: false, // Generate id attributes like <span id='fancytree-id-KEY'>
       idPrefix: "ft_", // Used to generate node id´s like <span id='fancytree-id-<key>'>
       icon: true, // Display node icons
-      keyboard: true, // Support keyboard navigation
+      keyboard: false, // Support keyboard navigation
       keyPathSeparator: "/", // Used by node.getKeyPath() and tree.loadKeyPath()
       minExpandLevel: 1, // 1: root node is not collapsible
       quicksearch: false, // Navigate to next node by typing the first letters
@@ -62,7 +62,7 @@ $("#tree").fancytree({
         if (paper.tool.annotation == annotation) {
           // Change name.
           var name = requestName();
-          if (name != null && name != "") {
+          if (name != null) {
             node.setTitle(name);
           }
         }
@@ -91,10 +91,12 @@ tree.idMap = {};
 tree.deleteAnnotation = function (annotation) {
   var key = String(annotation.id);
   var node = tree.getNodeByKey(key);
-  while( node.hasChildren() ) {
-    node.getFirstChild().moveTo(node.parent, "child");
+  if (node) {
+    while( node.hasChildren() ) {
+      node.getFirstChild().moveTo(node.parent, "child");
+    }
+    node.remove();
   }
-  node.remove();
 }
 tree.addAnnotation = function (annotation) {
   var key = String(annotation.id);
@@ -153,6 +155,14 @@ tree.getAnnotationById = function(id) {
       return annotations[i];
     }
   }
+}
+
+function requestName() {
+  var name = prompt("Please enter an object name.", "");
+  if (name == null || name == "") {
+    return null;
+  }
+  return name
 }
 
 window.tree = tree;

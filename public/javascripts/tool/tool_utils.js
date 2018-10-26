@@ -35,7 +35,7 @@ function rleToMask(rle) {
       }
       b = (b == 0) ? 1 : 0;
   }
-  var mask = nj.array(mask).reshape(height, width);
+  var mask = nj.uint8(mask).reshape(height, width);
   return mask;
 }
 

@@ -6,27 +6,36 @@ function Annotation(name, mask){
   console.time(name);
   this.name = name;
   this.color = new Color(Math.random(), Math.random(), Math.random(), 1);
+  this.colorinv = this.color / 2;
 
+  // Mask
   this.mask = mask;
   if (this.mask == null) {
     this.mask = nj.zeros([background.image.height, background.image.width]);
   }
-
+  // Raster
   this.raster = new Raster({size: new Size(this.mask.shape[1], this.mask.shape[0])});
   this.rasterinv = this.raster.clone();
-  this.rasterinv.visible = false;
   this.id = this.raster.id;
-
+  // Boundary
   this.boundary = new CompoundPath();
   this.boundaryPixels = [];
-
-  setRaster(this.raster, this.color, this.mask);
+  this.boundaryHistory = [];
 
   annotations.unshift(this); // add to front
   background.align(this);
   tree.addAnnotation(this);
+
   this.unhighlight();
   console.timeEnd(name);
+}
+Annotation.prototype.updateRaster = function() {
+  setRaster(this.raster, this.color, this.mask);
+}
+Annotation.prototype.updateRasterInv = function() {
+  this.updateMask();
+  var maskinv = nj.add(nj.multiply(this.mask, -1), 1);
+  setRaster(this.rasterinv, this.colorinv, maskinv);
 }
 Annotation.prototype.updateBoundary = function() {
   var imageData = this.raster.getImageData();
@@ -44,37 +53,71 @@ Annotation.prototype.updateBoundary = function() {
   }
 
   var paths = new CompoundPath({children: paths});
-  background.toPointSpace(paths);
+  paths.remove();
+
+  this.boundaryHistory.push(paths.pathData);
   this.boundary.pathData = paths.pathData;
-  
+  background.toPointSpace(this.boundary);
+
+  sortAnnotations();
   if (this.boundary.area == 0) {
-    this.delete();
-    selectTool.switch();
+    if (! this.deleted) {
+      this.delete();
+      selectTool.switch();
+    }
   }
 }
 Annotation.prototype.updateMask = function() {
   var imageData = this.raster.getImageData();
   var mat = cv.matFromImageData(imageData);
   var array = matToArray(mat);
-  var mask = array.slice(null,null,3);
-  mask = mask.reshape(mask.shape[0], mask.shape[1]);
-  mask = mask.divide(nj.max(mask));
-  this.mask = mask;
-}
-Annotation.prototype.refresh = function() {
-  this.updateMask();
-  this.updateBoundary();
-  sortAnnotations();
+  var mask = array.slice(null,null,3).clone();
 
-  var maskinv = nj.add(nj.multiply(this.mask, -1), 1);
-  setRaster(this.rasterinv, this.color, maskinv);
+  var flat = mask.flatten();
+  var mask = []
+  var b = 0;
+  for (var i = 0; i < flat.shape[0]; i++) {
+    if (flat.get(i) == 255) {
+      mask.push(1);
+    } else {
+      mask.push(0);
+    }
+  }
+  this.mask = nj.uint8(mask).reshape(this.raster.height, this.raster.width);
 }
 Annotation.prototype.delete = function() {
   this.raster.remove();
+  this.rasterinv.remove();
   this.boundary.remove();
   annotations.splice(annotations.indexOf(this), 1);
   tree.deleteAnnotation(this);
+  this.deleted = true;
   console.log("Deleted annotation.");
+}
+Annotation.prototype.undo = function() {
+  if (this.boundaryHistory.length > 1) {
+    this.boundaryHistory.pop();
+    var oldBoundary = new CompoundPath(this.boundaryHistory[this.boundaryHistory.length-1])
+    background.toPointSpace(oldBoundary);
+    oldBoundary.strokeWidth = 0;
+    oldBoundary.opacity = 1;
+    oldBoundary.fillColor = this.color;
+    var raster = oldBoundary.rasterize(this.raster.resolution.height);
+    var tl = background.getPixel(raster.bounds.topLeft);
+    oldBoundary.remove();
+    raster.remove();
+
+    this.boundary.pathData = oldBoundary.pathData;
+    this.boundaryPixels = getPixelsBoundary(this.boundary);
+    this.raster.setImageData(raster.getImageData(), tl);
+    editRaster(this.raster, this.color, this.boundaryPixels);
+
+     // Use mask to resolve rasterize issue
+    this.updateMask();
+    this.updateRaster();
+    return true;
+  }
+  return false;
 }
 
 //
@@ -100,6 +143,7 @@ Annotation.prototype.highlight = function() {
   }
   this.highlighted = true;
   this.raster.opacity = 0.2;
+  this.rasterinv.opacity = 0;
   this.boundary.strokeColor = this.color;
   this.boundary.strokeWidth = 3;
 
@@ -108,38 +152,51 @@ Annotation.prototype.highlight = function() {
 Annotation.prototype.unhighlight = function() {
   this.highlighted = false;
   this.raster.opacity = 0.7;
+  this.rasterinv.opacity = 0;
   this.boundary.strokeColor = this.color;
   this.boundary.strokeWidth = 0;
 
   tree.setActive(this, false);
 }
 Annotation.prototype.hide = function() {
-  this.highlighted = false;
-  this.raster.opacity = 0;
-  this.boundary.strokeWidth = 0;
+  this.hidden = true;
+  this.raster.visible = false;
+  this.rasterinv.visible = false;
+  this.boundary.visible = false;
+}
+Annotation.prototype.unhide = function() {
+  this.hidden = false;
+  this.raster.visible = true;
+  this.rasterinv.visible = true;
+  this.boundary.visible = true;
 }
 
 //
 // Edit raster
 //
 Annotation.prototype.unite = function(shape) {
-  var pixels = getPixels(shape);
+  console.time("get");
+  var pixels = getAllPixels(shape);
+  console.timeEnd("get");
+  console.time("raster");
+  editRaster(this.raster, this.color, pixels);
+  editRaster(this.rasterinv, new Color(0,0,0,0), pixels);
+  console.timeEnd("raster");
+}
+Annotation.prototype.subtract = function(shape) {
+  var pixels = getAllPixels(shape);
+  editRaster(this.raster, new Color(0,0,0,0), pixels);
+  editRaster(this.rasterinv, this.colorinv, pixels);
+}
+Annotation.prototype.unitePath = function(shape) {
+  var pixels = getPixelsBoundary(shape);
   editRaster(this.raster, this.color, pixels);
   editRaster(this.rasterinv, new Color(0,0,0,0), pixels);
 }
-Annotation.prototype.subtract = function(shape) {
-  var pixels = getPixels(shape);
+Annotation.prototype.subtractPath = function(shape) {
+  var pixels = getPixelsBoundary(shape);
   editRaster(this.raster, new Color(0,0,0,0), pixels);
   editRaster(this.rasterinv, this.color, pixels);
-}
-Annotation.prototype.intersects = function(shape) {
-  var pixels = getPixels(shape);
-  for (var i = 0; i < pixels.length; i++) {
-    if (this.containsPixel(pixels[i])) {
-      return true;
-    }
-  }
-  return false;
 }
 Annotation.prototype.containsPixel = function(pixel) {
   var color = this.raster.getPixel(pixel);
@@ -161,7 +218,7 @@ function editRaster(raster, color, pixels) {
   for (var i = 0; i < pixels.length; i++) {
     setPixelColor(imageData, pixels[i], color);
   }
-  raster.setImageData(imageData, new Point(0,0));
+  raster.setImageData(imageData, new Point(0, 0));
 }
 function setPixelColor(imageData, pixel, color) {
   var x = Math.round(pixel.x);
@@ -187,16 +244,19 @@ function getPixelColor(imageData, pixel) {
   color.alpha = imageData.data[p+3];
   return color;
 }
-function getPixels(shape) {
+function getAllPixels(shape) {
+  var pixels0 = getPixelsBoundary(shape);
+  var pixels1 = getPixelsInterior(shape);
+  return pixels0.concat(pixels1);
+}
+function getPixelsInteriorBetter(shape) {
+  // Mask
+}
+function getPixelsInterior(shape) {
+  var pixels = [];
   var shape_pixel = shape.clone();
   shape_pixel.remove();
   background.toPixelSpace(shape_pixel);
-
-  var pixels = [];
-  // Boundary pixels
-  for (var i = 0; i < shape_pixel.length; i++) {
-    pixels.push(shape_pixel.getPointAt(i));
-  }
   // Interior pixels
   var tl = background.getPixel(shape.bounds.topLeft);
   var br = background.getPixel(shape.bounds.bottomRight);
@@ -207,6 +267,24 @@ function getPixels(shape) {
         pixels.push(pixel);
       }
     }
+  }
+  return pixels;
+
+}
+function getPixelsBoundary(shape) {
+  var pixels = [];
+  if (shape.children) {
+    for (var i = 0; i < shape.children.length; i++) {
+      pixels = pixels.concat(getPixelsBoundary(shape.children[i]));
+    }
+    return pixels;
+  }
+
+  var shape_pixel = shape.clone();
+  shape_pixel.remove();
+  background.toPixelSpace(shape_pixel);
+  for (var i = 0; i < shape_pixel.length; i++) {
+    pixels.push(shape_pixel.getPointAt(i));
   }
   return pixels;
 }
@@ -250,22 +328,23 @@ function loadAnnotations(anns) {
   if (anns == null) {
     return;
   }
-  for (var i = 0; i < anns.length; i++) {
-    setTimeout(function(ann) {
-      var category = ann["category"];
-      var rle = ann["segmentation"];
+  setTimeout(function(anns) {
+    for (var i = 0; i < anns.length; i++) {
+      var category = anns[i]["category"];
+      var rle = anns[i]["segmentation"];
       var mask = rleToMask(rle);
       var annotation = new Annotation(category, mask);
+      annotation.updateRaster();
       annotation.updateBoundary();
-      sortAnnotations();
-    }, 100, anns[i]);
-  }
+    }
+  }, 100, anns);
 }
 
 function saveAnnotations() {
   console.time("Save");
   var anns = [];
   for (var i = 0; i < annotations.length; i++) {
+    annotations[i].updateMask();
     var name = annotations[i].name;
     var mask = annotations[i].mask;
     var rle = maskToRLE(mask);

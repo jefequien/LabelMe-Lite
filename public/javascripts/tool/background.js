@@ -44,14 +44,12 @@ Background.prototype.removeTempImage = function() {
 }
 Background.prototype.move = function(delta) {
   paper.project.activeLayer.translate(delta);
-  this.image_focused = false;
 }
 Background.prototype.scale = function(scale, point) {
   if (point == null) {
     point = this.canvas_center;
   }
   paper.project.activeLayer.scale(scale, point);
-  this.image_focused = false;
 }
 Background.prototype.center = function(point) {
     var x = this.canvas_center.x;
@@ -61,9 +59,12 @@ Background.prototype.center = function(point) {
     this.move(new Point(dx,dy));
 }
 Background.prototype.focus = function(annotation) {
+  this.lastFocus = annotation;
   var target = this.image.bounds;
   if (annotation) {
-    target = annotation.boundary.bounds;
+    if (annotation.boundary.bounds.height > 0 && annotation.boundary.bounds.width > 0) {
+      target = annotation.boundary.bounds;
+    }
   }
 
   var scale = Math.min(this.focus_height/target.height, this.focus_width/target.width);
@@ -75,9 +76,6 @@ Background.prototype.focus = function(annotation) {
     this.scale((this.image.height * this.focus_max_scale) / this.image.bounds.height)
   }
 
-  if (annotation == null) {
-    this.image_focused = true;
-  }
 }
 Background.prototype.align = function(annotation) {
   var img_bounds = this.image.bounds;
@@ -129,18 +127,5 @@ Background.prototype.toPointSpace = function(shape) {
 //
 // Exports
 //
-function zoomIn(center) {
-  background.scale(1.25, center);
-}
-function zoomOut(center) {
-  background.scale(0.8, center);
-}
-function fitScreen() {
-  background.focus(paper.tool.annotation);
-}
-
 window.background = new Background();
-window.zoomIn = zoomIn;
-window.zoomOut = zoomOut;
-window.fitScreen = fitScreen;
 paper.view._context.imageSmoothingEnabled = false; // Pixelates background

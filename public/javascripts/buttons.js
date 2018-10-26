@@ -33,19 +33,19 @@ nextButton.onclick = function(){
 //
 var zoomInButton = document.getElementById('zoomIn');
 zoomInButton.onclick = function(){
-    zoomIn();
+    paper.tool.onKeyDown({key: 'e'});
 }
 var zoomOutButton = document.getElementById('zoomOut');
 zoomOutButton.onclick = function(){
-    zoomOut();
+    paper.tool.onKeyDown({key: 'q'});
 }
 var fitScreenButton = document.getElementById('fitScreen');
 fitScreenButton.onclick = function(){
-    fitScreen();
+    paper.tool.onKeyDown({key: 'f'});
 }
 var lassoButton = document.getElementById('lasso');
 lassoButton.onclick = function(){
-    scissors.toggle();
+    paper.tool.onKeyDown({key: 'space'});
 }
 
 //
@@ -53,17 +53,17 @@ lassoButton.onclick = function(){
 //
 var selectToolButton = document.getElementById('selectTool');
 selectToolButton.onclick = function(){
-    selectTool.switch();
-}
-var newToolButton = document.getElementById('newTool');
-newToolButton.onclick = function(){
-    newTool.switch();
+    paper.tool.onKeyDown({key: '1'});
 }
 var editToolButton = document.getElementById('editTool');
 editToolButton.onclick = function(){
-    // editTool.switch();
+    paper.tool.onKeyDown({key: '2'});
 }
 var brushToolButton = document.getElementById('brushTool');
 brushToolButton.onclick = function(){
-    // brushTool.switch();
+    paper.tool.onKeyDown({key: '3'});
+}
+var newToolButton = document.getElementById('newTool');
+newToolButton.onclick = function(){
+    paper.tool.onKeyDown({key: '4'});
 }

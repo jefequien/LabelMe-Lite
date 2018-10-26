@@ -14,23 +14,13 @@ newTool.onMouseMove = function(event) {
     this.line.segments = path.segments;
   }
 }
-newTool.onMouseUp = function(event) {
-  if (this.isDragging) {
-    this.isDragging = false;
-    return;
-  }
-
+newTool.onMouseDown = function(event) {
+  this.onMouseMove(event);
   if (this.curser.intersects(this.points[0])) {
     if (this.points.length >= 2) {
     // Create new annotation
       this.segments.push(this.line.clone());
-
-      // Join segments to form one path
-      var path = new Path();
-      for (var i = 0; i < this.segments.length; i++) {
-        path.join(this.segments[i]);
-      }
-      this.createAnnotation(path);
+      this.createAnnotation(this.segments);
     }
 
   } else {
@@ -40,47 +30,21 @@ newTool.onMouseUp = function(event) {
     }
   }
 }
-newTool.onMouseDrag = function(event) {
-  background.move(event.delta);
-  this.isDragging = true;
-}
 newTool.onKeyDown = function(event) {
-  // Zoom keys
-  if (event.key == '9') {
-    zoomOut();
-    return false;
-  }
-  if (event.key == '0') {
-    zoomIn();
-    return false;
-  }
-  if (event.key == 'f') {
-    background.focus();
-    return false;
-  }
+  onKeyDownShared(event);
   
-  // Escape keys
-  if (event.key == 'escape' || event.key == 'backspace') {
-    // Undo. If cannot undo, quit.
+  if (event.key == 'z' || event.key == 'backspace') {
+    // Undo. Then, quit.
     var success = this.undo();
     if (! success) {
       selectTool.switch();
     }
-    return false;
   }
-  if (event.key == 'q') {
-    selectTool.switch();
-    return false;
-  }
-
-  // Tool keys
-  if (event.key == 's') {
+  if (event.key == 'space') {
     scissors.toggle();
-    return false;
   }
   if (event.key == 'v') {
     scissors.toggleVisualize();
-    return false;
   }
 }
 newTool.deactivate = function() {
@@ -113,19 +77,23 @@ newTool.switch = function () {
   this.enforceStyles();
 
   this.requestName();
-  this.refresh();
-  this.interval = setInterval(this.refresh, 300);
+  this.refreshTool();
+  this.interval = setInterval(this.refreshTool, 300);
 }
-newTool.refresh = function() {
-  var fakeEvent = {point: newTool.curser.position};
-  newTool.onMouseMove(fakeEvent);
+newTool.refreshTool = function() {
+  newTool.onMouseMove({point: newTool.curser.position});
 }
-newTool.createAnnotation = function(path) {
+newTool.createAnnotation = function(segments) {
+  // Join segments to form one path
+  var path = new Path();
+  for (var i = 0; i < segments.length; i++) {
+    path.join(segments[i]);
+  }
+  path.remove();
+
   var annotation = new Annotation(this.name);
   annotation.unite(path);
-  annotation.refresh();
-
-  path.remove();
+  annotation.updateBoundary();
   selectTool.switch();
 }
 newTool.undo = function() {
@@ -138,7 +106,6 @@ newTool.undo = function() {
     this.segments.pop().remove();
     success = true;
   }
-  this.refresh();
   return success;
 }
 newTool.snapCurser = function() {

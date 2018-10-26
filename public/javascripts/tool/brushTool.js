@@ -13,13 +13,7 @@ brushTool.onMouseMove = function(event) {
   } else {
     this.mode = "subtract";
   }
-
   this.enforceStyles();
-  if (this.annotation.rasterinv.visible == false) {
-    if ( this.annotation.intersects(this.curser)) {
-      this.annotation.raster.opacity = Math.max(this.annotation.raster.opacity, 0.5);
-    }
-  }
 }
 brushTool.onMouseDrag = function(event) {
   this.curser.position = event.point;
@@ -58,45 +52,26 @@ brushTool.updateSmartBrush = function() {
   }
 }
 brushTool.onKeyDown = function(event) {
-  // Zoom keys
+  onKeyDownShared(event);
   if (event.key == '9') {
-    zoomOut(this.curser.position);
-    return false;
+    this.toolSize *= 0.8;
+    this.refreshTool();
   }
-  if (event.key == '0') {
-    zoomIn(this.curser.position);
-    return false;
+  else if (event.key == '0') {
+    this.toolSize *= 1.25;
+    this.refreshTool();
   }
-  if (event.key == 'f') {
-    background.focus(this.annotation);
-    return false;
+  else if (event.key == 'u') {
+    var success = this.annotation.undo();
+    if ( ! success) {
+      selectTool.switch();
+    }
   }
-
-  // Escape keys
-  if (event.key == 'escape' || event.key == 'q') {
-    selectTool.switch();
-    return false;
-  }
-  if (event.key == 'backspace') {
+  else if (event.key == 'backspace') {
     this.annotation.delete();
     selectTool.switch();
-    return false;
   }
-  
-  // Tool keys
-  if (event.key == '[') {
-    decreaseToolSize();
-    return false;
-  }
-  if (event.key == ']') {
-    increaseToolSize();
-    return false;
-  }
-  if (event.key == 'space') {
-    editTool.switch(this.annotation);
-    return false;
-  }
-  if (event.key == 's') {
+  else if (event.key == 'space') {
     brush.toggle();
     if ( ! brush.active) {
       this.curser.visible = true;
@@ -107,28 +82,16 @@ brushTool.onKeyDown = function(event) {
       this.smartBrush.visible = true;
       this.smartBrush.selected = true;
     }
-    this.refresh();
-    return false;
+    this.refreshTool();
   }
-  if (event.key == 'i') {
-    if (this.annotation.rasterinv.visible) {
-      this.annotation.rasterinv.visible = false;
-    } else {
-      this.annotation.rasterinv.visible = true;
-    }
-  }
-  if (event.key == 'v') {
+  else if (event.key == 'v') {
     brush.toggleVisualize();
-    return false;
   }
 }
 brushTool.deactivate = function() {
   this.curser.remove();
   this.smartBrush.remove();
-  this.annotation.boundary.visible = true;
-  this.annotation.raster.visible = true;
-  this.annotation.rasterinv.visible = false;
-  this.annotation.refresh();
+  this.annotation.updateBoundary();
 }
 brushTool.switch = function(annotation) {
   this.toolName = "brushTool";
@@ -138,31 +101,31 @@ brushTool.switch = function(annotation) {
   this.activate();
 
   this.annotation = annotation;
+  this.annotation.updateRasterInv();
+  if (background.lastFocus != this.annotation) {
+    background.focus(this.annotation);
+  }
+
   for (var i = 0; i < annotations.length; i++) {
     annotations[i].hide();
   }
-  this.annotation.highlight();
-  if (background.image_focused) {
-    background.focus(this.annotation);
-  }
-  
-  this.annotation.boundary.visible = false;
-  this.annotation.rasterinv.visible = true;
-  this.annotation.refresh();
+  this.annotation.unhide();
 
+  // Compute toolSize
   var scale = background.image.bounds.height/background.image.height; // Points per pixel
   var annSize = Math.min(this.annotation.boundary.bounds.height, this.annotation.boundary.bounds.width) / scale;
-  this.toolSize = Math.max(1, 1.3 * Math.sqrt(annSize));
+  this.toolSize = Math.max(1, 2 * Math.sqrt(annSize));
 
   this.smartBrush = new Path();
   this.smartBrush.visible = false;
 
-  this.activate();
-  this.refresh();
+  this.refreshTool();
+  if (this.annotation.deleted) {
+    selectTool.switch();
+  }
 }
-brushTool.refresh = function() {
-  var fakeEvent = {point: brushTool.curser.position};
-  brushTool.onMouseMove(fakeEvent);
+brushTool.refreshTool = function() {
+  brushTool.onMouseMove({point: brushTool.curser.position});
 }
 brushTool.enforceStyles = function() {
   // Curser and annotation styles
@@ -177,19 +140,11 @@ brushTool.enforceStyles = function() {
     this.annotation.raster.opacity = 0;
     this.annotation.rasterinv.opacity = 0.8;
   }
+  this.annotation.boundary.strokeWidth = 0;
 }
 
 
 //
 // Exports
 //
-function increaseToolSize() {
-  brushTool.toolSize *= 1.25;
-  brushTool.refresh();
-}
-function decreaseToolSize() {
-  brushTool.toolSize *= 0.8;
-  brushTool.refresh();
-}
-
 window.brushTool = brushTool;
