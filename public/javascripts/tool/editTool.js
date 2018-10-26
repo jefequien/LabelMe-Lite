@@ -103,7 +103,9 @@ editTool.onKeyDown = function(event) {
   }
   if (event.key == 'u') {
     var success = this.annotation.undo();
-    if ( ! success) {
+    if (success) {
+      editTool.switch(this.annotation);
+    } else {
       selectTool.switch();
     }
   }
@@ -185,7 +187,6 @@ editTool.editAnnotation = function(segments) {
   for (var i = 0; i < segments.length; i++) {
     path.join(segments[i]);
   }
-  path.remove();
 
   if (this.mode == "unite") {
     this.annotation.unite(path);
@@ -193,14 +194,15 @@ editTool.editAnnotation = function(segments) {
     this.annotation.subtract(path);
 
     // Keep interior boundary
-    var path = new Path();
+    var interior = new Path();
     for (var i = 0; i < segments.length-1; i++) {
-      path.join(segments[i]);
+      interior.join(segments[i]);
     }
-    path.remove();
-    this.annotation.unitePath(path);
+    this.annotation.unitePath(interior);
+    interior.remove();
   }
 
+  path.remove();
   this.annotation.updateBoundary();
   editTool.switch(this.annotation);
 }

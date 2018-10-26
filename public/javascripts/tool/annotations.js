@@ -97,24 +97,20 @@ Annotation.prototype.delete = function() {
 Annotation.prototype.undo = function() {
   if (this.boundaryHistory.length > 1) {
     this.boundaryHistory.pop();
-    var oldBoundary = new CompoundPath(this.boundaryHistory[this.boundaryHistory.length-1])
+    var oldBoundary = new CompoundPath(this.boundaryHistory[this.boundaryHistory.length-1]);
     background.toPointSpace(oldBoundary);
-    oldBoundary.strokeWidth = 0;
-    oldBoundary.opacity = 1;
-    oldBoundary.fillColor = this.color;
-    var raster = oldBoundary.rasterize(this.raster.resolution.height);
-    var tl = background.getPixel(raster.bounds.topLeft);
-    oldBoundary.remove();
-    raster.remove();
+
+    var pixels0 = getPixelsBoundary(oldBoundary);
+    var pixels1 = getPixelsInterior(oldBoundary);
+    var pixels = pixels0.concat(pixels1);
+
+    this.mask = nj.zeros(this.mask.shape);
+    this.updateRaster();
+    editRaster(this.raster, this.color, pixels);
 
     this.boundary.pathData = oldBoundary.pathData;
-    this.boundaryPixels = getPixelsBoundary(this.boundary);
-    this.raster.setImageData(raster.getImageData(), tl);
-    editRaster(this.raster, this.color, this.boundaryPixels);
-
-     // Use mask to resolve rasterize issue
-    this.updateMask();
-    this.updateRaster();
+    this.boundaryPixels = pixels0;
+    oldBoundary.remove();
     return true;
   }
   return false;
@@ -175,16 +171,16 @@ Annotation.prototype.unhide = function() {
 // Edit raster
 //
 Annotation.prototype.unite = function(shape) {
-  console.time("get");
-  var pixels = getAllPixels(shape);
-  console.timeEnd("get");
-  console.time("raster");
+  var pixels0 = getPixelsBoundary(shape);
+  var pixels1 = getPixelsInterior(shape);
+  var pixels = pixels0.concat(pixels1);
   editRaster(this.raster, this.color, pixels);
   editRaster(this.rasterinv, new Color(0,0,0,0), pixels);
-  console.timeEnd("raster");
 }
 Annotation.prototype.subtract = function(shape) {
-  var pixels = getAllPixels(shape);
+  var pixels0 = getPixelsBoundary(shape);
+  var pixels1 = getPixelsInterior(shape);
+  var pixels = pixels0.concat(pixels1);
   editRaster(this.raster, new Color(0,0,0,0), pixels);
   editRaster(this.rasterinv, this.colorinv, pixels);
 }
@@ -228,65 +224,69 @@ function setPixelColor(imageData, pixel, color) {
     return;
   }
   var p = (y * imageData.width + x) * 4;
-  imageData.data[p] = color.red*255;
-  imageData.data[p+1] = color.green*255;
-  imageData.data[p+2] = color.blue*255;
-  imageData.data[p+3] = color.alpha*255;
+  imageData.data[p] = color.red * 255;
+  imageData.data[p+1] = color.green * 255;
+  imageData.data[p+2] = color.blue * 255;
+  imageData.data[p+3] = color.alpha * 255;
 }
 function getPixelColor(imageData, pixel) {
   var x = Math.round(pixel.x);
   var y = Math.round(pixel.y);
   var p = (y * imageData.width + x) * 4;
   var color = new Color();
-  color.red = imageData.data[p];
-  color.green = imageData.data[p+1];
-  color.blue = imageData.data[p+2];
-  color.alpha = imageData.data[p+3];
+  color.red = imageData.data[p] / 255;
+  color.green = imageData.data[p+1]/ 255;
+  color.blue = imageData.data[p+2] / 255;
+  color.alpha = imageData.data[p+3] / 255;
   return color;
-}
-function getAllPixels(shape) {
-  var pixels0 = getPixelsBoundary(shape);
-  var pixels1 = getPixelsInterior(shape);
-  return pixels0.concat(pixels1);
-}
-function getPixelsInteriorBetter(shape) {
-  // Mask
 }
 function getPixelsInterior(shape) {
   var pixels = [];
-  var shape_pixel = shape.clone();
-  shape_pixel.remove();
-  background.toPixelSpace(shape_pixel);
-  // Interior pixels
-  var tl = background.getPixel(shape.bounds.topLeft);
-  var br = background.getPixel(shape.bounds.bottomRight);
-  for (var x = tl.x; x <= br.x; x++) {
-    for (var y = tl.y; y <= br.y; y++) {
+  var clone = shape.clone();
+  clone.strokeWidth = 0;
+  clone.fillColor = "red";
+  background.toPixelSpace(clone);
+  clone.translate(new Point(-0.5, -0.5)); // Align to prepare for rasterize.
+  var raster = clone.rasterize();
+  raster.translate(new Point(0.5, 0.5)); // Move back
+  var imageData = raster.getImageData();
+  clone.remove();
+  raster.remove();
+
+  var tlPixel = raster.bounds.topLeft + new Point(0.5, 0.5);
+  background.toPointSpace(raster);
+  for (var x = 0; x < imageData.width; x++) {
+    for (var y = 0; y < imageData.height; y++) {
       var pixel = new Point(x,y);
-      if (shape_pixel.contains(pixel)) {
-        pixels.push(pixel);
+      var color = getPixelColor(imageData, pixel);
+      if (color.alpha == 1) {
+        pixels.push(pixel + tlPixel);
       }
     }
   }
   return pixels;
-
 }
-function getPixelsBoundary(shape) {
+function getPixelsBoundary(path) {
   var pixels = [];
-  if (shape.children) {
-    for (var i = 0; i < shape.children.length; i++) {
-      pixels = pixels.concat(getPixelsBoundary(shape.children[i]));
+  if ( ! path.length) {
+    path = path.toPath();
+    path.remove();
+  }
+  // Recursive for compoundPaths
+  if (path.children) {
+    for (var i = 0; i < path.children.length; i++) {
+      pixels = pixels.concat(getPixelsBoundary(path.children[i]));
+    }
+    return pixels;
+  } else {
+    var path_pixel = path.clone();
+    path_pixel.remove();
+    background.toPixelSpace(path_pixel);
+    for (var i = 0; i < path_pixel.length; i = i + 0.5) {
+      pixels.push(path_pixel.getPointAt(i));
     }
     return pixels;
   }
-
-  var shape_pixel = shape.clone();
-  shape_pixel.remove();
-  background.toPixelSpace(shape_pixel);
-  for (var i = 0; i < shape_pixel.length; i++) {
-    pixels.push(shape_pixel.getPointAt(i));
-  }
-  return pixels;
 }
 
 //
