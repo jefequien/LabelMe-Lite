@@ -25,29 +25,31 @@
 
 <body>
 
-    <div id="questionDiv">
-        <button onclick="toggleClarification(); " type="button">Instruction</button>
-        <span> Please label the following category. </span>
-        <input type="submit" id="submitButton" value="Submit (? images left)" disabled onclick="return confirmSubmit()">
-    </div>
+    <div id="topPanel">
+        <div id="questionDiv">
+            <button onclick="toggleClarification(); " type="button">Instruction</button>
+            <span> Please label the following category. </span>
+            <input type="submit" id="submitButton" value="Submit (? images left)" disabled onclick="return confirmSubmit()">
+        </div>
 
-    <div id="clarificationDiv">
-        <dl>
-            Refine the prediction below.
-            Please only annotate one instance of the category.
+        <div id="clarificationDiv">
+            <dl>
+                Refine the prediction below.
+                Please only annotate one instance of the category.
 
-            <dt>Controls: </dt>
-                <dd>- Click to select boundary points. </dd>
-                <dd>- Drag to use rectangle tool. </dd>
-        </ul>
-        
-        <p><i><b>Note: </b> These annotations are computer generated. </i></p>
-        <p> Fix up the boundary. </p>
-    </div>
+                <dt>Controls: </dt>
+                    <dd>- Click to select boundary points. </dd>
+                    <dd>- Drag to use rectangle tool. </dd>
+            </ul>
+            
+            <p><i><b>Note: </b> These annotations are computer generated. </i></p>
+            <p> Fix up the boundary. </p>
+        </div>
 
-    <div id="categoryDiv">
-        <b>Category: </b><span>None</span>
-        <button type="button" id="nextButton" onclick="next();">Next</button>
+        <div id="categoryDiv">
+            <b>Category: </b><span>None</span>
+            <button type="button" id="nextButton" onclick="next();">Next</button>
+        </div>
     </div>
 
 

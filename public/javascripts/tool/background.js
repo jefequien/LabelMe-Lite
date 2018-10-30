@@ -46,7 +46,7 @@ Background.prototype.move = function(delta) {
   paper.project.activeLayer.translate(delta);
 }
 Background.prototype.scale = function(scale, point) {
-  if (point == null) {
+  if (point == null || (point.x == 0 && point.y == 0)) {
     point = this.canvas_center;
   }
   paper.project.activeLayer.scale(scale, point);

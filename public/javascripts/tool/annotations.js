@@ -60,12 +60,6 @@ Annotation.prototype.updateBoundary = function() {
   background.toPointSpace(this.boundary);
 
   sortAnnotations();
-  if (this.boundary.area == 0) {
-    if (! this.deleted) {
-      this.delete();
-      selectTool.switch();
-    }
-  }
 }
 Annotation.prototype.updateMask = function() {
   var imageData = this.raster.getImageData();
@@ -174,29 +168,46 @@ Annotation.prototype.unite = function(shape) {
   var pixels0 = getPixelsBoundary(shape);
   var pixels1 = getPixelsInterior(shape);
   var pixels = pixels0.concat(pixels1);
-  editRaster(this.raster, this.color, pixels);
-  editRaster(this.rasterinv, new Color(0,0,0,0), pixels);
+  editRaster(this.raster, this.color, pixels, "unite");
+  editRaster(this.rasterinv, this.colorinv, pixels, "subtract");
 }
 Annotation.prototype.subtract = function(shape) {
   var pixels0 = getPixelsBoundary(shape);
   var pixels1 = getPixelsInterior(shape);
   var pixels = pixels0.concat(pixels1);
-  editRaster(this.raster, new Color(0,0,0,0), pixels);
-  editRaster(this.rasterinv, this.colorinv, pixels);
+  editRaster(this.raster, this.color, pixels, "subtract");
+  editRaster(this.rasterinv, this.colorinv, pixels, "unite");
+}
+Annotation.prototype.flip = function(shape) {
+  var pixels0 = getPixelsBoundary(shape);
+  var pixels1 = getPixelsInterior(shape);
+  var pixels = pixels0.concat(pixels1);
+
+  var pixelsUnique = [];
+  var pixelsSet = new Set();
+  for (var i = 0; i < pixels.length; i++) {
+    var str = JSON.stringify(pixels[i]);
+    if ( ! pixelsSet.has(str)) {
+      pixelsUnique.push(pixels[i]);
+      pixelsSet.add(str);
+    }
+  }
+  editRaster(this.raster, this.color, pixelsUnique, "flip");
+  editRaster(this.rasterinv, this.colorinv, pixelsUnique, "flip");
 }
 Annotation.prototype.unitePath = function(shape) {
   var pixels = getPixelsBoundary(shape);
-  editRaster(this.raster, this.color, pixels);
-  editRaster(this.rasterinv, new Color(0,0,0,0), pixels);
+  editRaster(this.raster, this.color, pixels, "unite");
+  editRaster(this.rasterinv, this.colorinv, pixels, "subtract");
 }
 Annotation.prototype.subtractPath = function(shape) {
   var pixels = getPixelsBoundary(shape);
-  editRaster(this.raster, new Color(0,0,0,0), pixels);
-  editRaster(this.rasterinv, this.color, pixels);
+  editRaster(this.raster, this.color, pixels, "subtract");
+  editRaster(this.rasterinv, this.colorinv, pixels, "unite");
 }
 Annotation.prototype.containsPixel = function(pixel) {
-  var color = this.raster.getPixel(pixel);
-  return color.alpha != 0;
+  var c = this.raster.getPixel(pixel);
+  return c.alpha > 0.5;
 }
 function setRaster(raster, color, mask) {
   var mask = mask.multiply(255);
@@ -209,10 +220,22 @@ function setRaster(raster, color, mask) {
 
   raster.setImageData(imageData, new Point(0, 0));
 }
-function editRaster(raster, color, pixels) {
+function editRaster(raster, color, pixels, rule) {
   var imageData = raster.getImageData();
+  var clear = new Color(0,0,0,0);
   for (var i = 0; i < pixels.length; i++) {
-    setPixelColor(imageData, pixels[i], color);
+    if (rule == "unite") {
+      setPixelColor(imageData, pixels[i], color);
+    } else if (rule == "subtract") {
+      setPixelColor(imageData, pixels[i], clear);
+    } else if (rule == "flip") {
+      var c = getPixelColor(imageData, pixels[i]);
+      if (c.alpha > 0.5) {
+        setPixelColor(imageData, pixels[i], clear);
+      } else {
+        setPixelColor(imageData, pixels[i], color);
+      }
+    }
   }
   raster.setImageData(imageData, new Point(0, 0));
 }
@@ -242,6 +265,7 @@ function getPixelColor(imageData, pixel) {
 }
 function getPixelsInterior(shape) {
   var pixels = [];
+
   var clone = shape.clone();
   clone.strokeWidth = 0;
   clone.fillColor = "red";
@@ -259,8 +283,9 @@ function getPixelsInterior(shape) {
     for (var y = 0; y < imageData.height; y++) {
       var pixel = new Point(x,y);
       var color = getPixelColor(imageData, pixel);
-      if (color.alpha == 1) {
-        pixels.push(pixel + tlPixel);
+      if (color.alpha > 0.5) {
+        pixel += tlPixel;
+        pixels.push(pixel.round());
       }
     }
   }
@@ -268,6 +293,7 @@ function getPixelsInterior(shape) {
 }
 function getPixelsBoundary(path) {
   var pixels = [];
+
   if ( ! path.length) {
     path = path.toPath();
     path.remove();
@@ -283,7 +309,8 @@ function getPixelsBoundary(path) {
     path_pixel.remove();
     background.toPixelSpace(path_pixel);
     for (var i = 0; i < path_pixel.length; i = i + 0.5) {
-      pixels.push(path_pixel.getPointAt(i));
+      var pixel = path_pixel.getPointAt(i);
+      pixels.push(pixel.round());
     }
     return pixels;
   }

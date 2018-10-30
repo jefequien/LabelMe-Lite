@@ -33,20 +33,22 @@ nextButton.onclick = function(){
 //
 var zoomInButton = document.getElementById('zoomIn');
 zoomInButton.onclick = function(){
+    paper.tool.curser.position = null;
     paper.tool.onKeyDown({key: 'e'});
 }
 var zoomOutButton = document.getElementById('zoomOut');
 zoomOutButton.onclick = function(){
+    paper.tool.curser.position = null;
     paper.tool.onKeyDown({key: 'q'});
 }
 var fitScreenButton = document.getElementById('fitScreen');
 fitScreenButton.onclick = function(){
     paper.tool.onKeyDown({key: 'f'});
 }
-var lassoButton = document.getElementById('lasso');
-lassoButton.onclick = function(){
-    paper.tool.onKeyDown({key: 'space'});
-}
+// var lassoButton = document.getElementById('lasso');
+// lassoButton.onclick = function(){
+//     paper.tool.onKeyDown({key: 'space'});
+// }
 
 //
 // Tool buttons

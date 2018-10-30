@@ -2,16 +2,10 @@
 
 var editTool = new Tool();
 editTool.onMouseMove = function(event) {
-  if (event.type) {
-    // Event is a real event
-    this.recursionDepth = 0;
-  }
-
   this.curser.position = event.point;
   this.snapCurser();
 
   if (this.points.length == 0) {
-    this.setMode();
 
     // Path from boundary to curser
     var path = this.getPathToBoundary(this.curser.position);
@@ -79,11 +73,7 @@ editTool.onMouseDown = function(event) {
     var line = new Path(p0, p1);
     line.remove();
     this.onMouseDown({point: line.getPointAt(1)});
-
-    this.recursionDepth += 1;
-    if (this.recursionDepth < 10) {
-      this.onMouseDown({point: p1});
-    }
+    this.onMouseDown({point: p1});
 
   } else {
     this.points.push(this.curser.clone());

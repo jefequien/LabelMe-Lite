@@ -63,7 +63,9 @@ brushTool.onKeyDown = function(event) {
   }
   else if (event.key == 'u') {
     var success = this.annotation.undo();
-    if ( ! success) {
+    if (success) {
+      brushTool.switch(this.annotation);
+    } else {
       selectTool.switch();
     }
   }
