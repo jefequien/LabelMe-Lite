@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Pixel level segmentation application">
+    <meta name="author" content="Jeffrey Hu">
+    <title>LabelMeLite</title>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.4.2/css/all.css" integrity="sha384-/rXc/GQVaYpyDdyxK+ecHPVYJSN9bmVFBvjA/9eOB+pb3F2w2N6fc5qB9Ew5yIns" crossorigin="anonymous">
+
+    <!-- Fancytree -->
+    <script src="//code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script src="//code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
+    <link href="vendor/fancytree/skin-bootstrap/ui.fancytree.css" rel="stylesheet">
+    <script src="vendor/fancytree/jquery.fancytree-all.min.js"></script>
+
+    <!-- Custom CSS -->
+    <link href="stylesheets/game.css" rel="stylesheet">
+
+</head>
+<body>
+
+    <!-- Canvas -->
+    <canvas id="toolCanvas"></canvas>
+
+    <!-- Annotations --> 
+    <div id="annotationPanel" class="panel">
+        <div class="panel-heading">
+          <h3 class="panel-title">Annotations</h3>
+        </div>
+        <div class="panel-body">
+          <div id="tree" class="panel-body fancytree-fade-expander"></div> 
+        </div>
+    </div>
+
+    <div id="questionPanel" class="panel text-center">
+        <h3>Please label the following category.</h3>
+        <h5>Category: person</h5>
+        <!-- <button type="button" class="btn btn-circle" id="helpCategory"><i class="fa fa-question"></i></button> -->
+
+        <button type="button" class="btn btn-circle" id="prevImage"><i class="glyphicon glyphicon-circle-arrow-left"></i></button>
+        <button type="button" class="btn btn-circle" id="nextImage"><i class="glyphicon glyphicon-circle-arrow-right"></i></button>
+    </div>
+    <!-- Buttons --> 
+    <div id="buttonPanel" class="panel">
+        <div class="panel-body">
+          <div id="navButtons" class="btn-group btn-matrix">
+            <button type="button" class="btn btn-square" id="up"><i class="glyphicon glyphicon-arrow-up"></i></button>
+            <button type="button" class="btn btn-square" id="down"><i class="glyphicon glyphicon-arrow-down"></i></button>
+            <button type="button" class="btn btn-square" id="left"><i class="glyphicon glyphicon-arrow-left"></i></button>
+            <button type="button" class="btn btn-square" id="right"><i class="glyphicon glyphicon-arrow-right"></i></button>
+            <button type="button" class="btn btn-square" id="zoomOut"><i class="glyphicon glyphicon-zoom-out"></i></button>
+            <button type="button" class="btn btn-square" id="zoomIn"><i class="glyphicon glyphicon-zoom-in"></i></button>
+            <button type="button" class="btn btn-square" id="focus"><i class="fa fa-arrows-alt"></i></button>
+            <button type="button" class="btn btn-square" id="hide"><i class="fa fa-eye-slash"></i></button>
+          </div>
+
+          <div id="toolButtons" class="btn-group btn-matrix">
+            <button type="button" class="btn btn-square" id="selectTool"><i class="fa fa-mouse-pointer"></i></button>
+            <button type="button" class="btn btn-square" id="editTool"><i class="fa fa-pencil-alt"></i></button>
+            <button type="button" class="btn btn-square" id="newTool"><i class="fa fa-plus"></i></button>
+            <button type="button" class="btn btn-square" id="brushTool"><i class="fa fa-paint-brush"></i></button>
+          </div>
+        </div>
+    </div>
+
+    <!-- Settings --> 
+    <div id="settingsPanel" class="panel">
+        <div class="panel-body">
+          <button type="button" class="btn btn-circle" id="help" data-toggle="modal" data-target="#exampleModalLong">
+            <i class="fa fa-question"></i>
+          </button>
+          <button type="button" class="btn btn-circle" id="downloadImg">
+            <i class="glyphicon glyphicon-download-alt"></i>
+          </button>
+          <button type="button" class="btn btn-circle" id="downloadAnn">
+            <i class="glyphicon glyphicon-download-alt"></i>
+          </button>
+        </div>
+    </div>
+
+    <!-- Settings Modal --> 
+    <div class="modal fade" id="exampleModalLong" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3 class="modal-title" id="exampleModalLongTitle">Instructions</h3>
+          </div>
+          <div class="modal-body">
+            <p> Welcome to <b>LabelMe-Lite</b>, a newly developed in-browser annotation tool by the MIT Computer Vision Group that leverages crowd-sourcing and state-of-the-art computer vision networks in the annotation process. We break up the complex task of densely annotating an image into manageable pieces and leave you, the human annotator, with the crucial task of refining the boundary and determining whether the annotation is correct or not.</p>
+
+            <p> All annotations begin as a prediction from a computer vision neural network. <b>Please do not click through the annotations with minimal modifications.</b> Nearly every annotation can be improved and any mistake you spot, especially along the edges, is a mistake by our algorithms and extremely important to us. </p>
+
+            <h4>Instructions:</h4>
+            <p> You are currently annotating a bundle. Each bundle consists of 30 tasks for a single category. 
+            For each task, please annotate exactly one instance of the category. If initially, more than one instance is highlighted, please correct the annotation to cover only one instance. If the category is not present, please delete the annotation and press next.</p>
+
+            <p> In each bundle, we have embedded 2-4 tests. Tests are tasks for which we have ground truth for. To pass a test, >90% of pixels close the the boundary must the same as our test. If you fail two tests, the entire bundle will be rejected. </p>
+
+            <p> For examples and specific questions for each category, please click the question mark next to the category name. </p>
+
+            <h4>Controls:</h4>
+            <table>
+              <tr>
+                <th>Key</th>
+                <th>Action</th> 
+              </tr>
+              <tr>
+                <td>'wasd' or arrow keys</td>
+                <td>Move the image. Controls may appear inverted at first but they make more intuitive sense when zoomed in. </td> 
+              </tr>
+              <tr>
+                <td>'q'</td>
+                <td>Zoom out</td> 
+              </tr>
+              <tr>
+                <td>'e'</td>
+                <td>Zoom in</td> 
+              </tr>
+              <tr>
+                <td>'f'</td>
+                <td>Focus on either the selected annotation or the image as a whole</td> 
+              </tr>
+              <tr>
+                <td>'h'</td>
+                <td>Hide/show all annotations.</td> 
+              </tr>
+              <tr>
+                <td>'backspace'</td>
+                <td>Delete the current selected annotation.</td> 
+              </tr>
+              <tr>
+                <td>'z'</td>
+                <td>Undo the current tool.</td> 
+              </tr>
+              <tr>
+                <td>'u'</td>
+                <td>Undo the current annotation.</td> 
+              </tr>
+            </table>
+
+            <br>
+            <p>Label-Lite implements 4 tools: Select tool, Edit tool, Brush tool, and New Tool. </p>
+            <p> More instructions. </p>
+
+
+            <h4>FAQ:</h4>
+            <p><b>How long should each annotation take?</b>
+            After mastering the keyboard shortcuts, we expected each annotation to take around 10 seconds. Of course, certain categories are more complex than others. We try and break up difficult categories into smaller pieces so all tasks take the same amount of time.</p>
+            <p><b>How many of these jobs can we expect?</b>
+            We are aiming to densely annotate 1 million images. With ~60 tasks per image, you can expect 2 million tasks. Of course, this is all contingent on high quality work on your part. Previous attempts at crowdsourcing annotations are plagued by low quality unusable annotations. We hope that our combination of  and an intuitive annotation tool can overcome these problems. </p>
+
+            <h4>Author's Note:</h4>
+            <p>If you are a fellow researcher and would like to support this tool and project. Collecting a dataset is an expensive proposition. If you would like to support this project and get early access to the dataset, please reach out to me at @. </p>
+
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Custom Javascript -->
+    <script type="text/javascript" src="components/numjs/dist/numjs.min.js"></script>
+    <script type="text/javascript" src="javascripts/opencv.js"></script>
+    <script type="text/javascript" src="components/google-closure-library-compiler/compiled.js"></script>
+    <script type="text/javascript" src="components/paper/dist/paper-full.js"></script>
+    
+    <script type="text/paperscript" src="javascripts/tool/selectTool.js" canvas="toolCanvas"></script>
+    <script type="text/paperscript" src="javascripts/tool/brushTool.js" canvas="toolCanvas"></script>
+    <script type="text/paperscript" src="javascripts/tool/editTool.js" canvas="toolCanvas"></script>
+    <script type="text/paperscript" src="javascripts/tool/newTool.js" canvas="toolCanvas"></script>
+    <script type="text/paperscript" src="javascripts/tool/annotations.js" canvas="toolCanvas"></script>
+    <script type="text/paperscript" src="javascripts/tool/background.js" canvas="toolCanvas"></script>
+    <script type="text/paperscript" src="javascripts/tool/tree.js" canvas="toolCanvas"></script>
+
+    <script type="text/javascript" src="javascripts/tool/tool_utils.js"></script>
+    <script type="text/javascript" src="javascripts/tool/intelligent_scissors.js"></script>
+    <script type="text/javascript" src="javascripts/tool/intelligent_brush.js"></script>
+    <script type="text/javascript" src="javascripts/endpoints.js"></script>
+    <script type="text/javascript" src="javascripts/buttons.js"></script>
+    <script type="text/javascript" src="javascripts/main.js"></script>
+
+</body>
+
+</html>

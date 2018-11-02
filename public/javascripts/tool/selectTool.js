@@ -3,72 +3,97 @@
 var selectTool = new Tool();
 selectTool.onMouseMove = function(event) {
   this.curser.position = event.point;
-  // Highlight one annotation. Unhighlight everything else.
-  var annotation = this.getAnnotationAt(this.curser.position);
-  for (var i = 0; i < annotations.length; i++) {
-    if (annotations[i] == annotation) {
-      annotations[i].highlight();
+
+  if (this.annotation) {
+    for (var i = 0; i < annotations.length; i++) {
+      annotations[i].hide();
+    }
+    if (this.annotation.boundary.contains(this.curser.position)) {
+      this.annotation.highlight();
     } else {
+      this.annotation.unhighlight();
+    }
+  } else {
+    var mouseOver = this.getAnnotationAt(this.curser.position);
+    for (var i = 0; i < annotations.length; i++) {
       annotations[i].unhighlight();
+    }
+    if (mouseOver) {
+      mouseOver.highlight();
     }
   }
 }
-selectTool.onMouseDown = function(event) {
-  this.downAnnotation = this.getAnnotationAt(this.curser.position);
-}
 selectTool.onMouseUp = function(event) {
-  this.upAnnotation = this.getAnnotationAt(this.curser.position);
   if (this.isDragging) {
     this.isDragging = false;
   } else {
-    if (this.downAnnotation == this.upAnnotation) {
-      if (this.upAnnotation) {
-        editTool.switch(this.upAnnotation);
-      }
-    }
+    this.onMouseClick(event);
   }
 }
 selectTool.onMouseDrag = function(event) {
   background.move(event.delta);
   this.isDragging = true;
 }
+selectTool.onMouseClick = function(event) {
+  if (this.annotation) {
+    if (this.annotation.boundary.contains(this.curser.position)) {
+      editTool.switch(this.annotation);
+      return;
+    } else {
+      this.annotation = null;
+    }
+  } else {
+    var mouseOver = this.getAnnotationAt(this.curser.position);
+    this.annotation = mouseOver;
+    if (this.annotation) {
+      background.focus(this.annotation);
+    }
+  }
+  this.refreshTool();
+}
 selectTool.onKeyDown = function(event) {
   onKeyDownShared(event)
-  // Escape keys
+
   if (event.key == 'escape') {
     background.focus();
   }
   else if (event.key == 'backspace') {
-    background.focus();
+    this.annotation.delete();
+    this.annotation = null;
   }
-  else if (event.key == 'z') {
-    background.focus();
+  else if (event.key == 'u') {
+    if (this.annotation) {
+      this.annotation.undo();
+    }
   }
-
-  // Tool keys
-  else if (event.key == 'v') {
-    brush.toggleVisualize();
-  }
+  this.refreshTool();
+}
+selectTool.refreshTool = function() {
+  selectTool.onMouseMove({point: selectTool.curser.position});
 }
 selectTool.deactivate = function() {
   if (this.curser) {
     this.curser.remove();
   }
+  if (this.button) {
+    this.button.className = this.button.className.replace(" active", "");
+  }
 }
-selectTool.switch = function() {
+selectTool.switch = function(annotation) {
   this.toolName = "selectTool";
   console.log("Switching to", this.toolName);
+  var lastCurserPosition = background.canvas_center;
   paper.tool.deactivate();
-  this.curser = new Shape.Circle(background.canvas_center);
   this.activate();
 
-  for (var i = 0; i < annotations.length; i++) {
-    annotations[i].unhighlight();
-    annotations[i].unhide();
-  }
+  this.curser = new Shape.Circle(lastCurserPosition);
+  this.button = selectToolButton;
+  this.button.className += " active";
 
-  this.downAnnotation = null;
-  this.upAnnotation = null;
+  this.annotation = annotation;
+  if (this.annotation) {
+    background.focus(annotation);
+  }
 }
 selectTool.getAnnotationAt = function(point) {
   for (var i = 0; i < annotations.length; i++) {
@@ -80,77 +105,79 @@ selectTool.getAnnotationAt = function(point) {
 }
 
 function onKeyDownShared(event) {
-  // Common keys
-  if (event.key == 'left' || event.key == 'a') {
-    background.move(new Point(100, 0));
-  }
-  else if (event.key == 'right' || event.key == 'd') {
-    background.move(new Point(-100, 0));
-  }
-  else if (event.key == 'up' || event.key == 'w') {
-    background.move(new Point(0, 100));
-  }
-  else if (event.key == 'down' || event.key == 's') {
-    background.move(new Point(0, -100));
-  }
-  else if (event.key == 'q') {
-    background.scale(0.8, paper.tool.curser.position);
-  }
-  else if (event.key == 'e') {
-    background.scale(1.25, paper.tool.curser.position);
-  }
-  else if (event.key == 'f') {
-    if (paper.tool.annotation) {
-      paper.tool.annotation.updateBoundary();
-    }
-    background.focus(paper.tool.annotation);
-  }
-  else if (event.key == 'h') {
-    // Hide everything
-    var allHidden = true;
-    for (var i = 0; i < annotations.length; i++) {
-      if ( ! annotations[i].hidden) {
-        annotations[i].hide();
-        allHidden = false;
-      }
-    }
-    if (allHidden) {
-      // If everything was hidden.
-      if (paper.tool.annotation) {
-        paper.tool.annotation.unhide();
-      } else {
-        for (var i = 0; i < annotations.length; i++) {
-          annotations[i].unhide();
-        }
-      }
-    }
-  }
+  commonKeys(event);
 
-  // Switch tool keys
-  else if (event.key == '1' || event.key == 'escape') {
+  // Tool keys
+  if (event.key == '1' || event.key == 'escape') {
     selectTool.switch();
   }
   else if (event.key == '2' || event.key == 'l') {
-    var target = paper.tool.annotation;
-    if ( ! target) {
-      target = selectTool.getAnnotationAt(paper.tool.curser.position);
-    }
-    if (target) {
-      editTool.switch(target);
+    if (paper.tool.annotation) {
+      editTool.switch(paper.tool.annotation);
     }
   }
   else if (event.key == '3' || event.key == 'b') {
-    var target = paper.tool.annotation;
-    if ( ! target) {
-      target = selectTool.getAnnotationAt(paper.tool.curser.position);
-    }
-    if (target) {
-      brushTool.switch(target);
+    if (paper.tool.annotation) {
+      brushTool.switch(paper.tool.annotation);
     }
   }
   else if (event.key == '4' || event.key == 'n') {
     newTool.switch();
   }
+}
+
+function commonKeys(event) {
+  var button = {};
+  if (event.key == 'left' || event.key == 'a') {
+    background.move(new Point(100, 0));
+    button = leftButton;
+  }
+  else if (event.key == 'right' || event.key == 'd') {
+    background.move(new Point(-100, 0));
+    button = rightButton;
+  }
+  else if (event.key == 'up' || event.key == 'w') {
+    background.move(new Point(0, 100));
+    button = upButton;
+  }
+  else if (event.key == 'down' || event.key == 's') {
+    background.move(new Point(0, -100));
+    button = downButton;
+  }
+  else if (event.key == 'q') {
+    background.scale(0.8, paper.tool.curser.position);
+    button = zoomOutButton;
+  }
+  else if (event.key == 'e') {
+    background.scale(1.25, paper.tool.curser.position);
+    button = zoomInButton;
+  }
+  else if (event.key == 'f') {
+    if (background.lastFocus != paper.tool.annotation) {
+      background.focus(paper.tool.annotation);
+    } else {
+      background.focus();
+    }
+    button = focusButton;
+  }
+  else if (event.key == 'h') {
+    var allInvisible = true;
+    for (var i = 0; i < annotations.length; i++) {
+      if (annotations[i].visible) {
+        annotations[i].setInvisible();
+        allInvisible = false;
+      }
+    }
+    if (allInvisible) {
+      for (var i = 0; i < annotations.length; i++) {
+        annotations[i].setVisible();
+      }
+    }
+    button = hideButton;
+    $('#hide').find('i').toggleClass('fa fa-eye-slash').toggleClass('fa fa-eye');
+  }
+  button.className += " active";
+  setTimeout(function(){ button.className = button.className.replace(" active", ""); }, 100);
 }
 
 window.paper = paper;

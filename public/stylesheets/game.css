@@ -1,0 +1,134 @@
+body {
+    margin: 0;
+}
+
+canvas {
+    position: absolute;
+    z-index: 0;
+    height:100%;
+    width:100%;
+    padding: 0px;
+    background: #696969;
+    background-image: url(/images/dark_grid.jpg);
+    background-size: 800px;
+}
+table, th, td {
+    border: 1px solid black;
+    padding: 3px
+}
+
+#annotationPanel {
+    position: absolute;
+    z-index: 2;
+    top: 20%; left: 80%;
+    height: 60%;
+    width: 15%;
+}
+
+#questionPanel {
+    position: absolute;
+    z-index: 2;
+    top: 5%; left: 20%;
+    width: 60%;
+    color: white;
+}
+#prevImage {
+    position: absolute;
+    top: 30%; left: 10px;
+    height:40%;
+}
+#nextImage {
+    position: absolute;
+    top: 30%; right: 10px;
+    height:40%;
+}
+
+#buttonPanel {
+    position: absolute;
+    z-index: 2;
+    top: 20%; right: 80%;
+    height: 60%;
+}
+
+#settingsPanel {
+    position: absolute;
+    z-index: 2;
+    top: 0%; right:0%;
+    background: none;
+    border: none;
+}
+
+.panel {
+    border-color: #414a4c;
+    border-width: 4px;
+    background: black;
+}
+
+.panel-heading {
+    color:white;
+    background-color: #414a4c;
+}
+
+.panel-body {
+  padding: 10px;
+}
+
+#navButtons {
+    float:left;
+}
+
+#toolButtons {
+    float:left;
+    clear:left;
+    padding-top: 20px;
+}
+
+.glyphicon, .fa {
+    font-size: 18px;
+    color:white;
+}
+
+.btn {
+   background:black;
+   border-width: 2px;
+   border-color:#414a4c;
+}
+.btn-square{ 
+   height:50px;
+   width:50px;
+}
+.btn-circle {
+   width: 40px;
+   height: 40px;
+   border-radius: 20px;
+   background: none;
+   border-width: 0px;
+}
+.btn:hover, .active {
+  background-color: #666;
+  color: white;
+}
+.btn:focus {
+    outline:0;
+}
+
+
+.btn-matrix > .btn:nth-child(2n+3) {
+  clear: left;
+  margin-left: 0;
+}
+.btn-matrix > .btn:nth-child(n+3) {
+  margin-top: -1px;
+}
+.btn-matrix > .btn:first-child {
+  border-bottom-left-radius: 0;
+}
+.btn-matrix > .btn:nth-child(2) {
+  border-top-right-radius: 4px !important;
+}
+.btn-matrix > .btn:nth-last-child(2) {
+  border-bottom-left-radius: 4px !important;
+}
+.btn-matrix > .btn:last-child {
+  border-top-right-radius: 0;
+}

@@ -128,6 +128,7 @@ editTool.onKeyDown = function(event) {
   }
 }
 editTool.deactivate = function() {
+  this.button.className = this.button.className.replace(" active", "");
   this.curser.remove();
   this.line.remove();
   this.bp0.remove();
@@ -145,9 +146,14 @@ editTool.deactivate = function() {
 editTool.switch = function(annotation) {
   this.toolName = "editTool";
   console.log("Switching to", this.toolName);
+  var lastCurserPosition = paper.tool.curser.position;
   paper.tool.deactivate();
-  this.curser = new Shape.Circle(paper.tool.curser.position, 4);
   this.activate();
+
+  this.button = editToolButton;
+  this.button.className += " active";
+  this.curser = new Shape.Circle(lastCurserPosition);
+  this.curser.radius = 4;
 
   this.annotation = annotation;
   if (background.lastFocus != this.annotation) {
@@ -157,8 +163,7 @@ editTool.switch = function(annotation) {
   for (var i = 0; i < annotations.length; i++) {
     annotations[i].hide();
   }
-  this.annotation.unhide();
-
+  
   this.points = [];
   this.segments = [];
   this.line = new Path();
@@ -328,7 +333,7 @@ editTool.getPathToBoundary = function(end) {
     if (start) {
       return new Path.Line(start, end);
     } else {
-      return null;
+      return new Path.Line(end, end);
     }
 
   } else {

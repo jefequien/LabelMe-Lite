@@ -2,7 +2,6 @@
 
 
 function main() {
-    selectTool.switch();
 
     var image_url = getImageURL();
     background.setImage(image_url);
@@ -12,6 +11,7 @@ function main() {
     getAnnotations(function(res) {
         loadAnnotations(res.annotations);
     });
+    selectTool.switch();
 }
 
 window.onload = function() {

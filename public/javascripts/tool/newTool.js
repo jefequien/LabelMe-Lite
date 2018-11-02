@@ -30,6 +30,11 @@ newTool.onMouseDown = function(event) {
     }
   }
 }
+newTool.onMouseUp = function(event) {
+  if (this.annotation) {
+    selectTool.switch();
+  }
+}
 newTool.onKeyDown = function(event) {
   onKeyDownShared(event);
   
@@ -48,6 +53,7 @@ newTool.onKeyDown = function(event) {
   }
 }
 newTool.deactivate = function() {
+  this.button.className = this.button.className.replace(" active", "");
   this.curser.remove();
   this.line.remove();
 
@@ -63,22 +69,22 @@ newTool.deactivate = function() {
 newTool.switch = function () {
   this.toolName = "newTool";
   console.log("Switching to", this.toolName);
+  var lastCurserPosition = paper.tool.curser.position;
   paper.tool.deactivate();
-  this.curser = new Shape.Circle(paper.tool.curser.position);
   this.activate();
 
-  for (var i = 0; i < annotations.length; i++) {
-    annotations[i].hide();
-  }
+  this.curser = new Shape.Circle(lastCurserPosition);
+  this.button = newToolButton;
+  this.button.className += " active";
 
   this.line = new Path();
   this.points = [];
   this.segments = [];
-  this.enforceStyles();
 
-  this.requestName();
   this.refreshTool();
   this.interval = setInterval(this.refreshTool, 300);
+
+  this.requestName();
 }
 newTool.refreshTool = function() {
   newTool.onMouseMove({point: newTool.curser.position});
@@ -91,10 +97,9 @@ newTool.createAnnotation = function(segments) {
   }
   path.remove();
 
-  var annotation = new Annotation(this.name);
-  annotation.unite(path);
-  annotation.updateBoundary();
-  selectTool.switch();
+  this.annotation = new Annotation(this.name);
+  this.annotation.unite(path);
+  this.annotation.updateBoundary();
 }
 newTool.undo = function() {
   var success = false;
@@ -130,6 +135,10 @@ newTool.snapCurser = function() {
   }
 }
 newTool.enforceStyles = function() {
+  for (var i = 0; i < annotations.length; i++) {
+    annotations[i].hide();
+  }
+
   var radius = 4;
   this.curser.radius = radius;
   this.curser.fillColor = "red";

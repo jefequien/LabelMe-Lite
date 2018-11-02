@@ -10,6 +10,10 @@ router.get('/amt', function(req, res, next) {
   res.render('amt', { title: 'Express' });
 });
 
+router.get('/game', function(req, res, next) {
+  res.render('game', { title: 'Game interface' });
+});
+
 router.get('/', function(req, res, next) {
   res.redirect('tool?proj_name=ade20k_val_predictions&file_name=validation/ADE_val_00001519.jpg');
   // res.render('index', { title: 'Express' });

@@ -91,6 +91,7 @@ brushTool.onKeyDown = function(event) {
   }
 }
 brushTool.deactivate = function() {
+  this.button.className = this.button.className.replace(" active", "");
   this.curser.remove();
   this.smartBrush.remove();
   this.annotation.updateBoundary();
@@ -98,9 +99,14 @@ brushTool.deactivate = function() {
 brushTool.switch = function(annotation) {
   this.toolName = "brushTool";
   console.log("Switching to", this.toolName);
+  var lastCurserPosition = paper.tool.curser.position;
   paper.tool.deactivate();
-  this.curser = new Shape.Circle(paper.tool.curser.position, 1);
   this.activate();
+
+  this.button = brushToolButton;
+  this.button.className += " active";
+  this.curser = new Shape.Circle(lastCurserPosition);
+  this.curser.radius = 1;
 
   this.annotation = annotation;
   this.annotation.updateRasterInv();
@@ -111,7 +117,7 @@ brushTool.switch = function(annotation) {
   for (var i = 0; i < annotations.length; i++) {
     annotations[i].hide();
   }
-  this.annotation.unhide();
+  this.annotation.unhighlight();
 
   // Compute toolSize
   var scale = background.image.bounds.height/background.image.height; // Points per pixel

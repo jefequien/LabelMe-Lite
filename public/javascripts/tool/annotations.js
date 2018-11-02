@@ -27,6 +27,7 @@ function Annotation(name, mask){
   tree.addAnnotation(this);
 
   this.unhighlight();
+  this.visible = true;
   console.timeEnd(name);
 }
 Annotation.prototype.updateRaster = function() {
@@ -80,13 +81,15 @@ Annotation.prototype.updateMask = function() {
   this.mask = nj.uint8(mask).reshape(this.raster.height, this.raster.width);
 }
 Annotation.prototype.delete = function() {
-  this.raster.remove();
-  this.rasterinv.remove();
-  this.boundary.remove();
-  annotations.splice(annotations.indexOf(this), 1);
-  tree.deleteAnnotation(this);
-  this.deleted = true;
-  console.log("Deleted annotation.");
+  if (confirm('Are you sure you want to delete the annotation of ' + this.name +'?')) {
+    this.raster.remove();
+    this.rasterinv.remove();
+    this.boundary.remove();
+    annotations.splice(annotations.indexOf(this), 1);
+    tree.deleteAnnotation(this);
+    this.deleted = true;
+    console.log("Deleted annotation.");
+  }
 }
 Annotation.prototype.undo = function() {
   if (this.boundaryHistory.length > 1) {
@@ -149,13 +152,22 @@ Annotation.prototype.unhighlight = function() {
   tree.setActive(this, false);
 }
 Annotation.prototype.hide = function() {
-  this.hidden = true;
+  this.highlighted = false;
+  this.raster.opacity = 0;
+  this.rasterinv.opacity = 0;
+  this.boundary.strokeColor = this.color;
+  this.boundary.strokeWidth = 0;
+
+  tree.setActive(this, false);
+}
+Annotation.prototype.setInvisible = function() {
+  this.visible = false;
   this.raster.visible = false;
   this.rasterinv.visible = false;
   this.boundary.visible = false;
 }
-Annotation.prototype.unhide = function() {
-  this.hidden = false;
+Annotation.prototype.setVisible = function() {
+  this.visible = true;
   this.raster.visible = true;
   this.rasterinv.visible = true;
   this.boundary.visible = true;

@@ -93,6 +93,7 @@ router.get('/annotations', function(req, res) {
         var catId = anns[i]["category_id"];
         var segm = anns[i]["segmentation"];
         var score = anns[i]["score"];
+        var iscrowd = anns[i]["iscrowd"];
         
         var name = catId;
         if (coco.cats[catId]) {
@@ -103,6 +104,9 @@ router.get('/annotations', function(req, res) {
             if (score < 0.5) {
                 continue;
             }
+        }
+        if (iscrowd == 1) {
+            name = name + " (crowd)";
         }
 
         var ann = {};

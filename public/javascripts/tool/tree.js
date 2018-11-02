@@ -66,7 +66,7 @@ $("#tree").fancytree({
             node.setTitle(name);
           }
         }
-        editTool.switch(annotation);
+        selectTool.switch(annotation);
         return false;
       }
     }).on("mouseenter", ".fancytree-title", function(event){
@@ -100,7 +100,8 @@ tree.deleteAnnotation = function (annotation) {
 }
 tree.addAnnotation = function (annotation) {
   var key = String(annotation.id);
-  tree.getRootNode().addChildren({"title": annotation.name, "key": key});
+  var root = tree.getRootNode();
+  root.addChildren({"title": annotation.name, "key": key});
 }
 tree.setActive = function (annotation, isActive) {
   var key = String(annotation.id);

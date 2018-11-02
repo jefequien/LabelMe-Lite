@@ -4,27 +4,35 @@
 
 function Background() {
   this.canvas = document.getElementById('toolCanvas');
-  this.canvas_center = new Point(this.canvas.width/2, this.canvas.height/2);
-  this.focus_height = 400;
-  this.focus_width = 600;
+  this.canvas_center = new Point(this.canvas.width/2, this.canvas.height/2 + 50);
+  this.focus_height = 500;
+  this.focus_width = 700;
   this.focus_max_scale = 5; // Points per pixel
 
-  var rect = new Path.Rectangle(new Point(0,0), new Point(500, 400));
-  rect.position = this.canvas_center;
-  rect.strokeColor = "black";
-  rect.strokeWidth = 5;
+  var defaultImage = new Path.Rectangle(new Point(0,0), new Point(600, 400));
+  this.image = defaultImage.rasterize();
+  defaultImage.remove();
 
-  this.image = rect.rasterize();
   this.image.sendToBack();
-  rect.remove();
+  this.image.position = this.canvas_center;
+  this.border = new Path.Rectangle(this.image.bounds);
+  this.border.strokeColor = "silver";
+  this.border.strokeWidth = 20;
 }
 Background.prototype.setImage = function(image) {
   var raster = new Raster(image);
   raster.position = this.canvas_center;
   raster.onLoad = function() {
     background.image.remove();
+    background.border.remove();
+
     background.image = raster;
+    background.border = new Path.Rectangle(background.image.bounds);
+    background.border.strokeColor = "silver";
+    background.border.strokeWidth = 20;
+
     background.image.sendToBack();
+    background.border.sendToBack();
     for (var i = 0; i < annotations.length; i++) {
       background.align(annotations[i]);
     }
