@@ -74,16 +74,16 @@ editTool.onMouseDown = function(event) {
     editTool.switch(this.annotation);
 
     // Continue after editting annotation
-    var p0 = this.annotation.boundary.getNearestPoint(badPart.firstSegment.point);
-    var p1 = event.point;
-    var line = new Path(p0, p1);
-    line.remove();
-    this.onMouseDown({point: line.getPointAt(1)});
+    // var p0 = this.annotation.boundary.getNearestPoint(badPart.firstSegment.point);
+    // var p1 = event.point;
+    // var line = new Path(p0, p1);
+    // line.remove();
+    // this.onMouseDown({point: line.getPointAt(1)});
 
-    this.recursionDepth += 1;
-    if (this.recursionDepth < 10) {
-      this.onMouseDown({point: p1});
-    }
+    // this.recursionDepth += 1;
+    // if (this.recursionDepth < 10) {
+    //   this.onMouseDown({point: p1});
+    // }
 
   } else {
     this.points.push(this.curser.clone());
@@ -156,14 +156,11 @@ editTool.switch = function(annotation) {
   this.curser.radius = 4;
 
   this.annotation = annotation;
-  if (background.lastFocus != this.annotation) {
-    background.focus(this.annotation);
-  }
 
   for (var i = 0; i < annotations.length; i++) {
     annotations[i].hide();
   }
-  
+
   this.points = [];
   this.segments = [];
   this.line = new Path();

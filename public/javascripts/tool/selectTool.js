@@ -82,7 +82,7 @@ selectTool.deactivate = function() {
 selectTool.switch = function(annotation) {
   this.toolName = "selectTool";
   console.log("Switching to", this.toolName);
-  var lastCurserPosition = background.canvas_center;
+  var lastCurserPosition = background.canvasCenter;
   paper.tool.deactivate();
   this.activate();
 
@@ -114,11 +114,15 @@ function onKeyDownShared(event) {
   else if (event.key == '2' || event.key == 'l') {
     if (paper.tool.annotation) {
       editTool.switch(paper.tool.annotation);
+    } else {
+      alert("Edit tool: Please select an annotation to edit first.");
     }
   }
   else if (event.key == '3' || event.key == 'b') {
     if (paper.tool.annotation) {
       brushTool.switch(paper.tool.annotation);
+    } else {
+      alert("Brush tool: Please select an annotation to edit first.");
     }
   }
   else if (event.key == '4' || event.key == 'n') {
@@ -145,7 +149,7 @@ function commonKeys(event) {
     button = downButton;
   }
   else if (event.key == 'q') {
-    background.scale(0.8, paper.tool.curser.position);
+    background.scale(0.8);
     button = zoomOutButton;
   }
   else if (event.key == 'e') {

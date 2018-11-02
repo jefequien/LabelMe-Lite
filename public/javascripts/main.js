@@ -9,6 +9,7 @@ function main() {
     brush.setImage(image_url);
 
     getAnnotations(function(res) {
+        console.log("Received annotations");
         loadAnnotations(res.annotations);
     });
     selectTool.switch();

@@ -4,24 +4,39 @@
 
 function Background() {
   this.canvas = document.getElementById('toolCanvas');
-  this.canvas_center = new Point(this.canvas.width/2, this.canvas.height/2 + 50);
-  this.focus_height = 500;
-  this.focus_width = 700;
-  this.focus_max_scale = 5; // Points per pixel
+  this.canvasCenter = new Point(this.canvas.width/2, this.canvas.height/2 + 50);
 
-  var defaultImage = new Path.Rectangle(new Point(0,0), new Point(600, 400));
+  var tl = this.canvasCenter - new Point(350, 220);
+  var br = this.canvasCenter + new Point(350, 220);
+  this.focusRect = new Rectangle(tl, br);
+  this.focusMaxScale = 5; // Points per pixel
+
+  var defaultImage = new Path.Rectangle(this.focusRect);
   this.image = defaultImage.rasterize();
   defaultImage.remove();
 
   this.image.sendToBack();
-  this.image.position = this.canvas_center;
   this.border = new Path.Rectangle(this.image.bounds);
   this.border.strokeColor = "silver";
   this.border.strokeWidth = 20;
+
+  this.addGestures();
+}
+Background.prototype.addGestures = function() {
+  this.canvas.addEventListener('wheel', function(e) {
+    e.preventDefault();
+    if (e.ctrlKey) {
+      var scale = -0.01 * e.deltaY + 1;
+      background.scale(scale);
+    } else {
+      var delta = new Point(e.deltaX, e.deltaY);
+      background.move(delta);
+    }
+  });
 }
 Background.prototype.setImage = function(image) {
   var raster = new Raster(image);
-  raster.position = this.canvas_center;
+  raster.position = this.canvasCenter;
   raster.onLoad = function() {
     background.image.remove();
     background.border.remove();
@@ -50,18 +65,43 @@ Background.prototype.setTempImage = function(imageData) {
 Background.prototype.removeTempImage = function() {
   this.tempImage.remove();
 }
-Background.prototype.move = function(delta) {
-  paper.project.activeLayer.translate(delta);
-}
 Background.prototype.scale = function(scale, point) {
   if (point == null || (point.x == 0 && point.y == 0)) {
-    point = this.canvas_center;
+    point = this.canvasCenter;
   }
   paper.project.activeLayer.scale(scale, point);
+  this.snapImage();
+}
+Background.prototype.move = function(delta, noSnap) {
+  paper.project.activeLayer.translate(delta);
+  if ( ! noSnap) {
+    this.snapImage();
+  }
+}
+Background.prototype.snapImage = function() {
+  var tl = this.image.bounds.topLeft;
+  var br = this.image.bounds.bottomRight;
+
+  if (tl.x > this.focusRect.bottomRight.x) {
+    var delta = new Point(this.focusRect.bottomRight.x - tl.x, 0);
+    this.move(delta, true);
+  }
+  if (tl.y > this.focusRect.bottomRight.y) {
+    var delta = new Point(0, this.focusRect.bottomRight.y - tl.y);
+    this.move(delta, true);
+  }
+  if (br.x < this.focusRect.topLeft.x) {
+    var delta = new Point(this.focusRect.topLeft.x - br.x, 0);
+    this.move(delta, true);
+  }
+  if (br.y < this.focusRect.topLeft.y) {
+    var delta = new Point(0, this.focusRect.topLeft.y - br.y);
+    this.move(delta, true);
+  }
 }
 Background.prototype.center = function(point) {
-    var x = this.canvas_center.x;
-    var y = this.canvas_center.y;
+    var x = this.canvasCenter.x;
+    var y = this.canvasCenter.y;
     var dx = x - point.x;
     var dy = y - point.y;
     this.move(new Point(dx,dy));
@@ -75,15 +115,19 @@ Background.prototype.focus = function(annotation) {
     }
   }
 
-  var scale = Math.min(this.focus_height/target.height, this.focus_width/target.width);
+  var scale = Math.min(this.focusRect.height/target.height, this.focusRect.width/target.width);
   this.center(target.center);
   this.scale(scale);
   // Enforce max scale
   var scale = this.image.bounds.height / this.image.height;
-  if (scale > this.focus_max_scale) {
-    this.scale((this.image.height * this.focus_max_scale) / this.image.bounds.height)
+  if (scale > this.focusMaxScale) {
+    this.scale((this.image.height * this.focusMaxScale) / this.image.bounds.height);
   }
-
+}
+Background.prototype.focusPoint = function(point) {
+  var scale = (this.image.height / this.image.bounds.height) * this.focusMaxScale;
+  this.scale(scale, point);
+  this.center(point);
 }
 Background.prototype.align = function(annotation) {
   var img_bounds = this.image.bounds;
@@ -135,5 +179,6 @@ Background.prototype.toPointSpace = function(shape) {
 //
 // Exports
 //
+
 window.background = new Background();
 paper.view._context.imageSmoothingEnabled = false; // Pixelates background

@@ -110,9 +110,6 @@ brushTool.switch = function(annotation) {
 
   this.annotation = annotation;
   this.annotation.updateRasterInv();
-  if (background.lastFocus != this.annotation) {
-    background.focus(this.annotation);
-  }
 
   for (var i = 0; i < annotations.length; i++) {
     annotations[i].hide();
