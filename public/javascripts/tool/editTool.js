@@ -121,7 +121,7 @@ editTool.onKeyDown = function(event) {
     editTool.switch(this.annotation);
   }
   else if (event.key == 'space') {
-    scissors.toggle();
+    // scissors.toggle();
   }
   else if (event.key == 'v') {
     scissors.toggleVisualize();
