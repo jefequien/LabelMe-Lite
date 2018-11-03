@@ -34,7 +34,7 @@ selectTool.onMouseDrag = function(event) {
   background.move(event.delta);
   this.isDragging = true;
 }
-selectTool.onMouseClick = function(event) {
+selectTool.onMouseUp = function(event) {
   if (this.annotation) {
     if (this.annotation.boundary.contains(this.curser.position)) {
       editTool.switch(this.annotation);

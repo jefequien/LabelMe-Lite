@@ -10,6 +10,7 @@ function Background() {
   var br = this.canvasCenter + new Point(350, 220);
   this.focusRect = new Rectangle(tl, br);
   this.focusMaxScale = 5; // Points per pixel
+  this.focusMinScale = 0.4; // Points per pixel
 
   var defaultImage = new Path.Rectangle(this.focusRect);
   this.image = defaultImage.rasterize();
@@ -65,15 +66,17 @@ Background.prototype.setTempImage = function(imageData) {
 Background.prototype.removeTempImage = function() {
   this.tempImage.remove();
 }
-Background.prototype.scale = function(scale, point) {
+Background.prototype.move = function(delta, noSnap) {
+  paper.project.activeLayer.translate(delta);
+  if ( ! noSnap) {
+    this.snapImage();
+  }
+}
+Background.prototype.scale = function(scale, point, noSnap) {
   if (point == null || (point.x == 0 && point.y == 0)) {
     point = this.canvasCenter;
   }
   paper.project.activeLayer.scale(scale, point);
-  this.snapImage();
-}
-Background.prototype.move = function(delta, noSnap) {
-  paper.project.activeLayer.translate(delta);
   if ( ! noSnap) {
     this.snapImage();
   }
@@ -81,7 +84,6 @@ Background.prototype.move = function(delta, noSnap) {
 Background.prototype.snapImage = function() {
   var tl = this.image.bounds.topLeft;
   var br = this.image.bounds.bottomRight;
-
   if (tl.x > this.focusRect.bottomRight.x) {
     var delta = new Point(this.focusRect.bottomRight.x - tl.x, 0);
     this.move(delta, true);
@@ -97,6 +99,14 @@ Background.prototype.snapImage = function() {
   if (br.y < this.focusRect.topLeft.y) {
     var delta = new Point(0, this.focusRect.topLeft.y - br.y);
     this.move(delta, true);
+  }
+
+  var scale = this.image.bounds.height / this.image.height;
+  if (scale > this.focusMaxScale) {
+    this.scale(this.focusMaxScale / scale, this.canvasCenter, true);
+  }
+  if (scale < this.focusMinScale) {
+    this.scale(this.focusMinScale / scale, this.canvasCenter, true);
   }
 }
 Background.prototype.center = function(point) {
@@ -114,15 +124,9 @@ Background.prototype.focus = function(annotation) {
       target = annotation.boundary.bounds;
     }
   }
-
   var scale = Math.min(this.focusRect.height/target.height, this.focusRect.width/target.width);
   this.center(target.center);
   this.scale(scale);
-  // Enforce max scale
-  var scale = this.image.bounds.height / this.image.height;
-  if (scale > this.focusMaxScale) {
-    this.scale((this.image.height * this.focusMaxScale) / this.image.bounds.height);
-  }
 }
 Background.prototype.focusPoint = function(point) {
   var scale = (this.image.height / this.image.bounds.height) * this.focusMaxScale;
