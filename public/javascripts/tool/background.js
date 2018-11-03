@@ -10,7 +10,7 @@ function Background() {
   var br = this.canvasCenter + new Point(350, 220);
   this.focusRect = new Rectangle(tl, br);
   this.focusMaxScale = 5; // Points per pixel
-  this.focusMinScale = 0.4; // Points per pixel
+  this.focusMinScale = 0.1; // Points per pixel
 
   var defaultImage = new Path.Rectangle(this.focusRect);
   this.image = defaultImage.rasterize();
@@ -27,7 +27,7 @@ Background.prototype.addGestures = function() {
   this.canvas.addEventListener('wheel', function(e) {
     e.preventDefault();
     if (e.ctrlKey) {
-      var scale = -0.01 * e.deltaY + 1;
+      var scale = Math.abs(-0.01 * e.deltaY + 1);
       background.scale(scale);
     } else {
       var delta = new Point(e.deltaX, e.deltaY);
