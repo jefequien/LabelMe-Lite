@@ -88,6 +88,10 @@ table, th, td {
     color:white;
 }
 
+#toolSize {
+  width: 100px;
+}
+
 .btn {
    background:black;
    border-width: 2px;

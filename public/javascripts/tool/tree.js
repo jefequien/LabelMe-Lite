@@ -66,7 +66,8 @@ $("#tree").fancytree({
             node.setTitle(name);
           }
         }
-        selectTool.switch(annotation);
+        background.focus(annotation);
+        editTool.switch(annotation);
         return false;
       }
     }).on("mouseenter", ".fancytree-title", function(event){
@@ -159,7 +160,7 @@ tree.getAnnotationById = function(id) {
 }
 
 function requestName() {
-  var name = prompt("Please enter an object name.", "");
+  var name = prompt("Change object name.", "");
   if (name == null || name == "") {
     return null;
   }

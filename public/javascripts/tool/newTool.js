@@ -20,7 +20,7 @@ newTool.onMouseDown = function(event) {
     if (this.points.length >= 2) {
     // Create new annotation
       this.segments.push(this.line.clone());
-      this.createAnnotation(this.segments);
+      this.createAnnotation();
     }
 
   } else {
@@ -77,6 +77,10 @@ newTool.switch = function () {
   this.button = newToolButton;
   this.button.className += " active";
 
+  for (var i = 0; i < annotations.length; i++) {
+    annotations[i].hide();
+  }
+
   this.line = new Path();
   this.points = [];
   this.segments = [];
@@ -89,11 +93,11 @@ newTool.switch = function () {
 newTool.refreshTool = function() {
   newTool.onMouseMove({point: newTool.curser.position});
 }
-newTool.createAnnotation = function(segments) {
+newTool.createAnnotation = function() {
   // Join segments to form one path
   var path = new Path();
-  for (var i = 0; i < segments.length; i++) {
-    path.join(segments[i]);
+  for (var i = 0; i < this.segments.length; i++) {
+    path.join(this.segments[i].clone());
   }
   path.remove();
 
@@ -135,10 +139,6 @@ newTool.snapCurser = function() {
   }
 }
 newTool.enforceStyles = function() {
-  for (var i = 0; i < annotations.length; i++) {
-    annotations[i].hide();
-  }
-
   var radius = 4;
   this.curser.radius = radius;
   this.curser.fillColor = "red";
@@ -159,9 +159,15 @@ newTool.requestName = function() {
     selectTool.switch();
   }
 }
-newTool.getPath = function(start, end) {
-  if (scissors.active) {
 
+//
+// Path finding functions
+//
+newTool.getPath = function(start, end) {
+  if ( ! scissors.active) {
+    var path = new Path.Line(start, end);
+    return path;
+  } else {
     // Try pixels along line
     var path = new Path.Line(start, end);
     path.remove();
@@ -185,10 +191,9 @@ newTool.getPath = function(start, end) {
       }
     }
   }
-
-  // Default
-  var path = new Path.Line(start, end);
-  return path;
 }
 
+//
+// Exports
+//
 window.newTool = newTool;

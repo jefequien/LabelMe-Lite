@@ -1,93 +1,131 @@
 
 
 var editTool = new Tool();
-editTool.onMouseMove = function(event) {
-  if (event.type) {
-    // Event is a real event
-    this.recursionDepth = 0;
-  }
 
+editTool.onMouseMove = function(event) {
   this.curser.position = event.point;
   this.snapCurser();
 
-  if (this.points.length == 0) {
-    this.setMode();
+  // Set this.selectedBoundary
+  if ( ! this.selectedBoundary.fixed) {
+    this.selectedBoundary.segments = [];
+    this.selectedBoundaryPixels = [];
+    for (var i = 0; i < this.annotation.boundary.children.length; i++) {
+      var child = this.annotation.boundary.children[i];
+      if (child.contains(this.curser.position)) {
+        if (Math.abs(child.area) < Math.abs(this.selectedBoundary.area) || this.selectedBoundary.segments.length == 0) {
+          this.selectedBoundary.segments = child.segments;
+        }
+      }
+    }
+  }
 
-    // Path from boundary to curser
-    var path = this.getPathToBoundary(this.curser.position);
+  // Set this.bp0 and this.line
+  if (this.points.length == 0) {
+    var path = this.getPathToBoundary(this.curser.position, this.selectedBoundary);
     path.remove();
     this.bp0.position = path.firstSegment.point;
     this.line.segments = path.segments;
-
-    this.bl.segments = [];
-    this.bp1.visible = false;
   } else {
-    // Path from last point to curser
     var lastPoint = this.points[this.points.length-1].position;
     var path = this.getPath(lastPoint, this.curser.position);
     path.remove();
     this.line.segments = path.segments;
+  }
 
-    // Path from boundary crossing to bp0
-    this.bl.segments = [];
-    this.bp1.visible = false;
+  // Set this.segments
+  if (this.segments.length >= 1){
+    var path = this.getPathToBoundary(this.points[0].position, this.selectedBoundary);
+    path.remove();
+    this.segments[0].segments = path.segments;
+  }
+  for (var i = 1; i < this.segments.length; i++) {
+    var p0 = (i == 0) ? this.bp0.position : this.points[i-1].position;
+    var p1 = this.points[i].position;
+    var path = this.getPath(p0, p1);
+    path.remove();
+    this.segments[i].segments = path.segments;
+  }
 
-    var intersections = this.line.getIntersections(this.annotation.boundary);
-    intersections.sort(function(a, b) { 
-      a = lastPoint.getDistance(a.point);
-      b = lastPoint.getDistance(b.point);
-      return a - b;
-    });
-
-    for (var i = 0; i < intersections.length; i++) {
-      var point = intersections[i].point;
-      var bl = this.getPathUsingBoundary(point, this.bp0.position);
-      if (bl != null) {
-        bl.remove();
-        this.bl.segments = bl.segments;
-        this.bp1.position = point;
-        this.bp1.visible = true;
-        break;
-      }
+  // Set this.bp1
+  var intersections = this.line.getIntersections(this.selectedBoundary);
+  intersections.sort(function(a, b) {
+    a = lastPoint.getDistance(a.point);
+    b = lastPoint.getDistance(b.point);
+    return a - b;
+  });
+  this.bp1.isSet = false;
+  for (var i = 0; i < intersections.length; i++) {
+    var d = this.line.getLocationOf(intersections[i].point).offset;
+    if (d != 0) {
+      this.bp1.position = intersections[i].point;
+      this.bp1.isSet = true;
+      break;
     }
   }
+  if ( ! this.bp1.isSet) {
+    this.bp1.position = this.selectedBoundary.getNearestPoint(this.curser.position);
+    if (this.selectedBoundary.segments.length == 0) {
+      this.bp1.position = this.bp0.position;
+    }
+  }
+
+  // Set this.bl
+  var path = this.getPathUsingBoundary(this.bp1.position, this.bp0.position, this.selectedBoundary);
+  path.remove();
+  this.bl.segments = path.segments;
+
+  // Set this.selectedArea
+  this.selectedArea.segments = [];
+  for (var i = 0; i < this.segments.length; i++) {
+    this.selectedArea.join(this.segments[i].clone());
+  }
+  if (this.bp1.intersects(this.line)) {
+    var goodPart = this.line.clone();
+    var badPart = goodPart.splitAt(goodPart.getLocationOf(this.bp1.position));
+    if (badPart) {
+      badPart.remove();
+    }
+    this.selectedArea.join(goodPart);
+  } else {
+    this.selectedArea.join(this.line.clone());
+    this.selectedArea.add(this.bp1.position);
+  }
+  this.selectedArea.join(this.bl.clone());
+
+  this.setMode();
   this.enforceStyles();
 }
 editTool.onMouseDown = function(event) {
   this.onMouseMove(event);
-  if (this.curser.intersects(this.points[0])) {
-    if (this.points.length >= 2) {
-      // Edit without using boundary
-      this.segments.push(this.line.clone());
-      this.segments.shift();
-      this.editAnnotation(this.segments);
-      editTool.switch(this.annotation);
+  if ( ! this.selectedBoundary.fixed) {
+    if (this.selectedBoundary.segments.length != 0) {
+      this.selectedBoundary.fixed = true;
+      this.selectedBoundaryPixels = [];
+      var pixels = background.getBoundaryPixels(this.selectedBoundary);
+      for (var i = 0; i < pixels.length; i++) {
+        this.selectedBoundaryPixels.push([pixels[i].x, pixels[i].y]);
+      }
     }
-  } else if (this.bp1.visible) {
-    // Edit using boundary
-    var goodPart = this.line.clone();
-    var badPart = goodPart.splitAt(goodPart.getLocationOf(this.bp1.position));
-    badPart.remove();
-
-    this.segments.push(goodPart);
-    this.editAnnotation(this.segments, this.bl);
-    editTool.switch(this.annotation);
-
-    // Continue after editting annotation
-    // var p0 = this.annotation.boundary.getNearestPoint(badPart.firstSegment.point);
-    // var p1 = event.point;
-    // var line = new Path(p0, p1);
-    // line.remove();
-    // this.onMouseDown({point: line.getPointAt(1)});
-
-    // this.recursionDepth += 1;
-    // if (this.recursionDepth < 10) {
-    //   this.onMouseDown({point: p1});
-    // }
-
-  } else {
+  }
+  else {
     this.points.push(this.curser.clone());
     this.segments.push(this.line.clone());
+  }
+
+  // Edit
+  if (this.bp1.isSet) {
+    this.editAnnotation();
+    editTool.switch(this.annotation);
+
+  } else if (this.curser.loopedBack) {
+    this.selectedArea.segments = [];
+    for (var i = 1; i < this.segments.length; i++) {
+      this.selectedArea.join(this.segments[i].clone());
+    }
+
+    this.editAnnotation();
+    editTool.switch(this.annotation);
   }
 }
 editTool.onKeyDown = function(event) {
@@ -99,29 +137,25 @@ editTool.onKeyDown = function(event) {
       selectTool.switch();
     }
   }
-  if (event.key == 'u') {
-    var success = this.annotation.undo();
-    if (success) {
-      editTool.switch(this.annotation);
-    } else {
-      selectTool.switch();
-    }
+  else if (event.key == 'u') {
+    this.annotation.undo();
+    editTool.switch(this.annotation);
   }
   else if (event.key == 'backspace') {
-    // Undo. Then delete.
-    var success = this.undo();
-    if ( ! success) {
+    if (this.selectedBoundary.fixed) {
+      this.deleteSelectedBoundary();
+      editTool.switch(this.annotation);
+    } else {
       this.annotation.delete();
       selectTool.switch();
     }
   }
   else if (event.key == 'c') {
-    this.segments.push(this.line);
-    this.cutAnnotation(this.segments);
+    this.cutAnnotation();
     editTool.switch(this.annotation);
   }
   else if (event.key == 'space') {
-    // scissors.toggle();
+    scissors.toggle();
   }
   else if (event.key == 'v') {
     scissors.toggleVisualize();
@@ -129,11 +163,14 @@ editTool.onKeyDown = function(event) {
 }
 editTool.deactivate = function() {
   this.button.className = this.button.className.replace(" active", "");
+
   this.curser.remove();
-  this.line.remove();
   this.bp0.remove();
   this.bp1.remove();
+  this.line.remove();
   this.bl.remove();
+  this.selectedBoundary.remove();
+  this.selectedArea.remove();
 
   for (var i = 0; i < this.points.length; i++) {
     this.points[i].remove();
@@ -147,87 +184,112 @@ editTool.switch = function(annotation) {
   this.toolName = "editTool";
   console.log("Switching to", this.toolName);
   var lastCurserPosition = paper.tool.curser.position;
+  if (annotation == null) {
+    alert(this.toolName + ": Please select an annotation to edit first.");
+    selectTool.switch();
+    return;
+  }
   paper.tool.deactivate();
   this.activate();
 
   this.button = editToolButton;
   this.button.className += " active";
-  this.curser = new Shape.Circle(lastCurserPosition);
-  this.curser.radius = 4;
+  this.curser = new Shape.Circle(lastCurserPosition, 1);
 
   this.annotation = annotation;
-
   for (var i = 0; i < annotations.length; i++) {
     annotations[i].hide();
   }
 
   this.points = [];
   this.segments = [];
-  this.line = new Path();
-  this.bl = new Path();
-  this.curser.bringToFront();
   this.bp0 = this.curser.clone();
   this.bp1 = this.curser.clone();
+  this.line = new Path();
+  this.bl = new Path();
+  this.selectedBoundary = new Path({closed: true});
+  this.selectedBoundaryPixels = [];
+  this.selectedArea = new Path();
+
+  this.selectedBoundary.fixed = false;
+  this.curser.loopedBack = false;
 
   this.refreshTool();
   this.interval = setInterval(this.refreshTool, 300);
-  if (this.annotation.deleted) {
-    selectTool.switch();
-  }
 }
 editTool.refreshTool = function() {
   paper.tool.onMouseMove({point: paper.tool.curser.position});
 }
-editTool.editAnnotation = function(segments, bl) {
-  // Join segments
-  var allSegments = new Path();
-  for (var i = 0; i < segments.length; i++) {
-    allSegments.join(segments[i]);
-  }
 
-  var fullPath = allSegments.clone();
-  if (bl) {
-    fullPath.join(bl);
-  }
-
+//
+// Edit Actions
+//
+editTool.editAnnotation = function() {
   if (this.mode == "unite") {
-    this.annotation.unite(fullPath);
+    this.annotation.unite(this.selectedArea);
   } else {
-    this.annotation.subtract(fullPath);
-    this.annotation.unitePath(allSegments);
+    this.annotation.subtract(this.selectedArea);
+
+    // Keep edge pixels
+    var pixels = background.getBoundaryPixels(this.selectedArea);
+    var edgePixels = [];
+    for (var i = 0; i < pixels.length; i++) {
+      var point = background.getPoint(pixels[i]);
+      if (this.annotation.boundary.contains(point)) {
+        edgePixels.push(pixels[i]);
+      }
+    }
+    this.annotation.unitePixels(edgePixels);
+    this.annotation.subtractPath(this.bl);
   }
 
   this.annotation.updateBoundary();
-  allSegments.remove();
-  fullPath.remove();
+  this.refreshTool();
 }
-editTool.cutAnnotation = function(segments) {
-  // Join segments
-  var path = new Path();
-  for (var i = 0; i < segments.length; i++) {
-    path.join(segments[i]);
+editTool.deleteSelectedBoundary = function() {
+  if (this.selectedBoundary.clockwise == this.annotation.boundary.clockwise) {
+    this.annotation.subtract(this.selectedBoundary);
+  } else {
+    this.annotation.unite(this.selectedBoundary);
   }
 
-  var onePixel = this.annotation.raster.bounds.height / this.annotation.raster.height;
+  this.selectedBoundary.fixed = false;
+  this.annotation.updateBoundary();
+  this.refreshTool();
+}
+editTool.cutAnnotation = function() {
+  var path = new Path();
+  for (var i = 0; i < this.segments.length; i++) {
+    path.join(this.segments[i].clone());
+  }
+  path.join(this.line.clone());
+  path.remove();
+
   this.annotation.subtractPath(path);
-  path.translate(new Point(onePixel, 0));
+  var delta = new Point(background.getPixelHeight(), 0);
+  path.translate(delta);
   this.annotation.subtractPath(path);
 
   this.annotation.updateBoundary();
-  path.remove();
+  this.refreshTool();
 }
 editTool.undo = function() {
-  var success = false;
   if (this.points.length > 0) {
     this.points.pop().remove();
-    success = true;
-  }
-  if (this.segments.length > 0) {
     this.segments.pop().remove();
-    success = true;
+    this.refreshTool();
+    return true;
+  } else if (this.selectedBoundary.fixed) {
+    this.selectedBoundary.fixed = false;
+    this.refreshTool();
+    return true;
   }
-  return success;
+  return false;
 }
+
+// 
+// Styles
+//
 editTool.snapCurser = function() {
   // Snap to annotation bounds
   var ann_bounds = this.annotation.raster.bounds;
@@ -237,56 +299,19 @@ editTool.snapCurser = function() {
     this.curser.position = rect.getNearestPoint(this.curser.position);
   }
   // Snap to first point
-  if (this.points.length > 1) {
-    if (this.curser.intersects(this.points[0])) {
-      this.curser.position = this.points[0].position;
-      this.segments[0].visible = false;
-      this.bp0.visible = false;
-    } else {
-      this.segments[0].visible = true;
-      this.bp0.visible = true;
-    }
-  }
-}
-editTool.enforceStyles = function() {
-  // Curser and annotation styles
-  if (this.mode == "unite") {
-    this.curser.fillColor = "#00FF00";
+  if (this.points.length >= 2 && this.curser.intersects(this.points[0])) {
+    this.curser.position = this.points[0].position;
+    this.curser.loopedBack = true;
   } else {
-    this.curser.fillColor = "red";
-  }
-  if (this.annotation.boundary.contains(this.curser.position)) {
-    this.annotation.highlight();
-  } else {
-    this.annotation.unhighlight();
-  }
-  this.annotation.boundary.strokeColor = "gold";
-  this.annotation.boundary.strokeWidth = 3;
-
-  // Other styles
-  this.bp0.fillColor = "gold";
-  this.bp0.strokeColor = "black";
-  this.bp0.strokeWidth = 2;
-  this.bp1.style = this.bp0.style;
-  this.line.strokeColor = "black";
-  this.line.strokeWidth = 3;
-  this.bl.style = this.line.style;
-  this.bl.dashArray = [10, 4];
-
-  // Keep points the same size regardless of scaling.
-  var r = 8 / (this.curser.bounds.height);
-  this.curser.scale(r);
-  this.bp0.scale(r);
-  this.bp1.scale(r);
-  for (var i = 0; i < this.points.length; i++) {
-    this.points[i].scale(r);
-    this.points[i].fillColor = this.curser.fillColor;
+    this.curser.loopedBack = false;
   }
 }
 editTool.setMode = function() {
-  var modePoint = this.curser.position;
-  if (this.points.length >= 1) {
-    modePoint = this.points[0].position;
+  var modePoint = null;
+  if (this.segments.length == 0) {
+    modePoint = this.line.getPointAt(1);
+  } else {
+    modePoint = this.segments[0].getPointAt(1);
   }
   if ( ! this.annotation.boundary.contains(modePoint)) {
     this.mode = "unite";
@@ -294,6 +319,71 @@ editTool.setMode = function() {
     this.mode = "subtract";
   }
 }
+editTool.enforceStyles = function() {
+  // Point styles
+  var r = 8;
+  var strokeWidth = 3;
+
+  var allPoints = this.points.concat([this.bp0, this.bp1, this.curser]);
+  for (var i = 0; i < allPoints.length; i++) {
+    var p = allPoints[i];
+    p.scale(r / p.bounds.height);
+    if (this.mode == "unite") {
+      p.fillColor = "#00FF00";
+    } else {
+      p.fillColor = "red";
+    }
+  }
+  this.bp0.fillColor = "gold";
+  this.bp0.strokeColor = "black";
+  this.bp0.strokeWidth = 0.5;
+  this.bp1.style = this.bp0.style;
+
+  this.bp0.visible = this.selectedBoundary.fixed;
+  this.line.visible = this.selectedBoundary.fixed;
+  this.curser.visible = this.selectedBoundary.fixed;
+  this.bp1.visible = this.bp1.isSet;
+  if (this.segments.length > 0) {
+    this.segments[0].visible = ! this.curser.loopedBack;
+    this.bp0.visible = ! this.curser.loopedBack;
+  }
+
+  this.annotation.highlight();
+  this.selectedBoundary.strokeColor = "gold";
+  this.selectedBoundary.strokeWidth = 3;
+
+  // Other styles
+  this.line.strokeColor = "black";
+  this.line.strokeWidth = 3;
+
+  this.bl.strokeColor = "black";
+  this.bl.strokeWidth = 3;
+  this.bl.dashArray = [10, 4];
+
+  for (var i = 0; i < this.segments.length; i++) {
+    this.segments[i].strokeColor = "black";
+    this.segments[i].strokeWidth = 3;
+  }
+
+  // this.selectedArea
+  this.selectedArea.opacity = 0.3;
+  if (this.mode == "unite") {
+    this.selectedArea.fillColor = "#00FF00";
+  } else {
+    this.selectedArea.fillColor = "red";
+  }
+
+  this.selectedBoundary.bringToFront();
+  this.selectedArea.bringToFront();
+  this.bl.bringToFront();
+  this.bp0.bringToFront();
+  this.bp1.bringToFront();
+  this.curser.bringToFront();
+}
+
+//
+// Path finding functions
+//
 editTool.getPath = function(start, end) {
   if (scissors.active) {
     // Try pixels along line
@@ -307,7 +397,7 @@ editTool.getPath = function(start, end) {
 
       var pixelList = scissors.getPath([p0.x, p0.y], [p1.x, p1.y]);
       if (pixelList != null) {
-        var newPath = new Path({"segments": pixelList})
+        var newPath = new Path({"segments": pixelList});
         background.toPointSpace(newPath);
 
         // Smooth out path
@@ -320,69 +410,68 @@ editTool.getPath = function(start, end) {
     }
   }
 
-  // Default
   var path = new Path.Line(start, end);
   return path;
 }
-editTool.getPathToBoundary = function(end) {
-  if ( ! scissors.active) {
-    var start = this.annotation.boundary.getNearestPoint(end);
-    if (start) {
-      return new Path.Line(start, end);
-    } else {
-      return new Path.Line(end, end);
-    }
-
-  } else {
+editTool.getPathToBoundary = function(point, boundary) {
+  if (scissors.active) {
     // Try pixels along line
-    var path = new Path.Line(start, end);
+    var start = boundary.getNearestPoint(point);
+    var path = new Path.Line(start, point);
     background.toPixelSpace(path);
     path.remove();
 
     for (var i = 0; i < path.length; i+=20) {
       var p1 = path.getPointAt(path.length-i);
+      if (this.selectedBoundaryPixels.length == 0) {
+        break;
+      } 
 
-      var pixelList = scissors.getPath(this.annotation.boundaryPixels, [p1.x, p1.y]);
+      var pixelList = scissors.getPath(this.selectedBoundaryPixels, [p1.x, p1.y]);
       if (pixelList != null) {
         var newPath = new Path({"segments": pixelList})
         background.toPointSpace(newPath);
 
         // Smooth out path
-        newPath.add(end);
+        newPath.add(point);
         newPath.removeSegment(newPath.segments.length - 2);
         return newPath;
       }
     }
   }
 
-}
-editTool.getPathUsingBoundary = function(point0, point1) {
-  var point0 = this.annotation.boundary.getNearestPoint(point0);
-  var point1 = this.annotation.boundary.getNearestPoint(point1);
-
-  var boundaries = this.annotation.boundary.children;
-  for (var i = 0; i < boundaries.length; i++) {
-    var path = boundaries[i].clone();
-    path.remove();
-    var p0 = path.getLocationOf(point0);
-    var p1 = path.getLocationOf(point1);
-    if (p0 != null && p1 != null) {
-      path.splitAt(p0);
-      var other = path.splitAt(p1);
-      if (other) {
-        other.reverse();
-        other.remove();
-      } else {
-        // p0 == p1
-        return new Path.Line(point0, point1);
-      }
-
-      // Return the shorter path
-      path = (path.length < other.length) ? path : other;
-      return new Path(path.pathData);
-    }
+  var start = boundary.getNearestPoint(point);
+  if (start) {
+    return new Path.Line(start, point);
+  } else {
+    return new Path.Line(point, point);
   }
-  return null;
+}
+editTool.getPathUsingBoundary = function(point0, point1, boundary) {
+  var point0 = boundary.getNearestPoint(point0);
+  var point1 = boundary.getNearestPoint(point1);
+  var path = boundary.clone();
+
+  var p0 = path.getLocationOf(point0);
+  var p1 = path.getLocationOf(point1);
+  path.splitAt(p0);
+  var other = path.splitAt(p1);
+  if (other) {
+    other.reverse();
+    if (path.length < other.length) {
+      other.remove();
+      return path;
+    } else {
+      path.remove();
+      return other;
+    }
+  } else {
+    path.remove();
+    return new Path(point0, point1);
+  }
 }
 
+//
+// Exports
+//
 window.editTool = editTool;

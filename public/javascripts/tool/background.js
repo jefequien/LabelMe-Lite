@@ -6,11 +6,12 @@ function Background() {
   this.canvas = document.getElementById('toolCanvas');
   this.canvasCenter = new Point(this.canvas.width/2, this.canvas.height/2 + 50);
 
-  var tl = this.canvasCenter - new Point(350, 220);
-  var br = this.canvasCenter + new Point(350, 220);
+  var tl = this.canvasCenter - new Point(300, 200);
+  var br = this.canvasCenter + new Point(300, 200);
   this.focusRect = new Rectangle(tl, br);
-  this.focusMaxScale = 5; // Points per pixel
-  this.focusMinScale = 0.1; // Points per pixel
+  this.focusMaxScale = 5;
+  this.maxScale = 10;
+  this.minScale = 0.2;
 
   var defaultImage = new Path.Rectangle(this.focusRect);
   this.image = defaultImage.rasterize();
@@ -72,14 +73,28 @@ Background.prototype.move = function(delta, noSnap) {
     this.snapImage();
   }
 }
-Background.prototype.scale = function(scale, point, noSnap) {
-  if (point == null || (point.x == 0 && point.y == 0)) {
-    point = this.canvasCenter;
-  }
-  paper.project.activeLayer.scale(scale, point);
+Background.prototype.moveTo = function(center, noSnap) {
+    var dx = this.canvasCenter.x - center.x;
+    var dy = this.canvasCenter.y - center.y;
+    this.move(new Point(dx,dy), noSnap);
+}
+Background.prototype.scale = function(deltaScale, noSnap) {
+  paper.project.activeLayer.scale(deltaScale, this.canvasCenter);
   if ( ! noSnap) {
     this.snapImage();
   }
+  console.log("Current Scale:", this.getCurrentScale());
+}
+Background.prototype.scaleTo = function(scale, noSnap) {
+  var currentScale = this.getCurrentScale();
+  this.scale(scale / currentScale, noSnap);
+}
+Background.prototype.getCurrentScale = function() {
+  var scale = Math.min(this.image.bounds.height / this.focusRect.height, this.image.bounds.width / this.focusRect.width);
+  return scale;
+}
+Background.prototype.getPixelHeight = function() {
+  return this.image.bounds.height / this.image.height;
 }
 Background.prototype.snapImage = function() {
   var tl = this.image.bounds.topLeft;
@@ -101,20 +116,12 @@ Background.prototype.snapImage = function() {
     this.move(delta, true);
   }
 
-  var scale = this.image.bounds.height / this.image.height;
-  if (scale > this.focusMaxScale) {
-    this.scale(this.focusMaxScale / scale, this.canvasCenter, true);
+  var currentScale = this.getCurrentScale();
+  if (currentScale > this.maxScale) {
+    this.scaleTo(this.maxScale, true);
+  } else if (currentScale < this.minScale) {
+    this.scaleTo(this.minScale, true);
   }
-  if (scale < this.focusMinScale) {
-    this.scale(this.focusMinScale / scale, this.canvasCenter, true);
-  }
-}
-Background.prototype.center = function(point) {
-    var x = this.canvasCenter.x;
-    var y = this.canvasCenter.y;
-    var dx = x - point.x;
-    var dy = y - point.y;
-    this.move(new Point(dx,dy));
 }
 Background.prototype.focus = function(annotation) {
   this.lastFocus = annotation;
@@ -124,14 +131,13 @@ Background.prototype.focus = function(annotation) {
       target = annotation.boundary.bounds;
     }
   }
-  var scale = Math.min(this.focusRect.height/target.height, this.focusRect.width/target.width);
-  this.center(target.center);
-  this.scale(scale);
+  var scale = Math.min(this.image.bounds.height/target.height, this.image.bounds.width/target.width);
+  this.moveTo(target.center);
+  this.scaleTo(Math.min(this.focusMaxScale, scale));
 }
 Background.prototype.focusPoint = function(point) {
-  var scale = (this.image.height / this.image.bounds.height) * this.focusMaxScale;
-  this.scale(scale, point);
-  this.center(point);
+  this.moveTo(point);
+  this.scaleTo(this.focusMaxScale);
 }
 Background.prototype.align = function(annotation) {
   var img_bounds = this.image.bounds;
@@ -142,6 +148,9 @@ Background.prototype.align = function(annotation) {
   annotation.scale(img_scale / ann_scale, img_bounds.topLeft);
 }
 
+//
+// Point to Pixel
+//
 Background.prototype.getPixel = function(point) {
   var bounds = this.image.bounds;
   var size = this.image.size;
@@ -179,10 +188,85 @@ Background.prototype.toPointSpace = function(shape) {
   shape.translate(tl);
 }
 
+//
+// Shape to Pixel
+//
+Background.prototype.getAllPixels = function(shape) {
+  var pixels0 = this.getBoundaryPixels(shape);
+  var pixels1 = this.getInteriorPixels(shape);
+  var pixels = removeDuplicatePixels(pixels0.concat(pixels1));
+  return pixels;
+}
+Background.prototype.getInteriorPixels = function(shape) {
+  var clone = shape.clone();
+  clone.strokeWidth = 0;
+  clone.fillColor = "red";
+  clone.opacity = 1;
+
+  background.toPixelSpace(clone);
+  clone.translate(new Point(0.5, 0.5)); // Align for rasterize.
+  var raster = clone.rasterize();
+
+  var pixels = [];
+  for (var x = 0; x < raster.width; x++) {
+    for (var y = 0; y < raster.height; y++) {
+      var pixel = new Point(x,y);
+      var c = raster.getPixel(pixel);
+      if (c.alpha > 0.5) {
+        pixels.push(pixel + raster.bounds.topLeft);
+      }
+    }
+  }
+
+  clone.remove();
+  raster.remove();
+  pixels = removeDuplicatePixels(pixels);
+  return pixels;
+}
+Background.prototype.getBoundaryPixels = function(path) {
+  var pixels = [];
+  // Shape
+  if ( ! path.length) {
+    path = path.toPath();
+    path.remove();
+  }
+  // CompoundPath
+  if (path.children) {
+    for (var i = 0; i < path.children.length; i++) {
+      pixels = pixels.concat(background.getBoundaryPixels(path.children[i]));
+    }
+    pixels = removeDuplicatePixels(pixels);
+    return pixels;
+  }
+  // Path
+  var path_pixel = path.clone();
+  path_pixel.remove();
+  background.toPixelSpace(path_pixel);
+  for (var i = 0; i < path_pixel.length; i = i + 0.1) {
+    var pixel = path_pixel.getPointAt(i);
+    pixels.push(pixel);
+  }
+  pixels = removeDuplicatePixels(pixels);
+  return pixels;
+}
+
+function removeDuplicatePixels(pixels) {
+  var pixelsUnique = [];
+  var pixelsSet = new Set();
+  for (var i = 0; i < pixels.length; i++) {
+    var pixel = pixels[i].round();
+    var str = JSON.stringify(pixel);
+    if ( ! pixelsSet.has(str)) {
+      pixelsUnique.push(pixel);
+      pixelsSet.add(str);
+    }
+  }
+  return pixelsUnique;
+}
+
 
 //
 // Exports
 //
-
 window.background = new Background();
 paper.view._context.imageSmoothingEnabled = false; // Pixelates background

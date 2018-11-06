@@ -50,13 +50,11 @@ rightButton.onclick = function(){
 var zoomOutButton = document.getElementById('zoomOut');
 zoomOutButton.title = "Zoom out: 'q'";
 zoomOutButton.onclick = function(){
-    paper.tool.curser.position = null;
     paper.tool.onKeyDown({key: 'q'});
 }
 var zoomInButton = document.getElementById('zoomIn');
 zoomInButton.title = "Zoom in: 'e'";
 zoomInButton.onclick = function(){
-    paper.tool.curser.position = null;
     paper.tool.onKeyDown({key: 'e'});
 }
 var focusButton = document.getElementById('focus');

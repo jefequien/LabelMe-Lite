@@ -5,23 +5,19 @@ var brushTool = new Tool();
 
 brushTool.onMouseMove = function(event) {
   this.curser.position = event.point;
-  this.updateSmartBrush();
   // Set mode
-  var pixel = background.getPixel(this.curser.position);
-  if (this.annotation.containsPixel(pixel)) {
+  if (this.annotation.containsPoint(this.curser.position)) {
     this.mode = "unite";
   } else {
     this.mode = "subtract";
   }
   this.enforceStyles();
+  this.updateSmartBrush();
 }
 brushTool.onMouseDrag = function(event) {
   this.curser.position = event.point;
-  this.updateSmartBrush();
   this.enforceStyles();
-  if (this.annotation.rasterinv.visible == false) {
-    this.annotation.raster.opacity = Math.max(this.annotation.raster.opacity, 0.5);
-  }
+  this.updateSmartBrush();
 
   this.editAnnotation();
 }
@@ -30,7 +26,7 @@ brushTool.onMouseDown = function(event) {
 }
 brushTool.editAnnotation = function() {
   var shape = this.curser;
-  if (this.smartBrush.visible) {
+  if (brush.active) {
     shape = this.smartBrush;
   }
 
@@ -62,12 +58,8 @@ brushTool.onKeyDown = function(event) {
     this.refreshTool();
   }
   else if (event.key == 'u') {
-    var success = this.annotation.undo();
-    if (success) {
-      brushTool.switch(this.annotation);
-    } else {
-      selectTool.switch();
-    }
+    this.annotation.undo();
+    brushTool.switch(this.annotation);
   }
   else if (event.key == 'backspace') {
     this.annotation.delete();
@@ -75,15 +67,6 @@ brushTool.onKeyDown = function(event) {
   }
   else if (event.key == 'space') {
     brush.toggle();
-    if ( ! brush.active) {
-      this.curser.visible = true;
-      this.smartBrush.visible = false;
-      this.smartBrush.selected = false;
-    } else {
-      this.curser.visible = false;
-      this.smartBrush.visible = true;
-      this.smartBrush.selected = true;
-    }
     this.refreshTool();
   }
   else if (event.key == 'v') {
@@ -100,6 +83,11 @@ brushTool.switch = function(annotation) {
   this.toolName = "brushTool";
   console.log("Switching to", this.toolName);
   var lastCurserPosition = paper.tool.curser.position;
+  if (annotation == null) {
+    alert(this.toolName + ": Please select an annotation to edit first.");
+    selectTool.switch();
+    return;
+  }
   paper.tool.deactivate();
   this.activate();
 
@@ -110,32 +98,26 @@ brushTool.switch = function(annotation) {
 
   this.annotation = annotation;
   this.annotation.updateRasterInv();
-
   for (var i = 0; i < annotations.length; i++) {
     annotations[i].hide();
   }
-  this.annotation.unhighlight();
 
-  // Compute toolSize
-  var scale = background.image.bounds.height/background.image.height; // Points per pixel
-  var annSize = Math.min(this.annotation.boundary.bounds.height, this.annotation.boundary.bounds.width) / scale;
-  this.toolSize = Math.max(1, 2 * Math.sqrt(annSize));
+  var annSize = Math.min(this.annotation.boundary.bounds.height, this.annotation.boundary.bounds.width);
+  this.toolSize = Math.max(1, Math.sqrt(annSize / background.getPixelHeight()));
 
   this.smartBrush = new Path();
   this.smartBrush.visible = false;
 
   this.refreshTool();
-  if (this.annotation.deleted) {
-    selectTool.switch();
-  }
 }
 brushTool.refreshTool = function() {
   brushTool.onMouseMove({point: brushTool.curser.position});
 }
 brushTool.enforceStyles = function() {
   // Curser and annotation styles
-  var scale = background.image.bounds.height/background.image.height // Points per pixel
-  this.curser.scale((this.toolSize * scale) / this.curser.bounds.height);
+  var curserSize = this.toolSize * background.getPixelHeight();
+  this.curser.scale(curserSize / this.curser.bounds.height);
+
   if (this.mode == "unite") {
     this.curser.fillColor = "#00FF00";
     this.annotation.raster.opacity = 0.8;
@@ -146,6 +128,17 @@ brushTool.enforceStyles = function() {
     this.annotation.rasterinv.opacity = 0.8;
   }
   this.annotation.boundary.strokeWidth = 0;
+
+
+  if ( ! brush.active) {
+    this.curser.visible = true;
+    this.smartBrush.visible = false;
+    this.smartBrush.selected = false;
+  } else {
+    this.curser.visible = false;
+    this.smartBrush.visible = true;
+    this.smartBrush.selected = true;
+  }
 }
 
 
