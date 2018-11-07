@@ -361,6 +361,9 @@ editTool.enforceStyles = function() {
   this.bp0.strokeColor = "black";
   this.bp0.strokeWidth = 0.5;
   this.bp1.style = this.bp0.style;
+  if ( ! this.selectedBoundary.fixed) {
+    this.bp0.strokeWidth = 0;
+  }
 
   // Line styles
   this.selectedBoundary.strokeColor = "gold";

@@ -193,8 +193,7 @@ Background.prototype.toPointSpace = function(shape) {
 Background.prototype.getAllPixels = function(shape) {
   var pixels0 = this.getBoundaryPixels(shape);
   var pixels1 = this.getInteriorPixels(shape);
-  var pixels = removeDuplicatePixels(pixels0.concat(pixels1));
-  return pixels;
+  return pixels0.concat(pixels1);
 }
 Background.prototype.getInteriorPixels = function(shape) {
   var clone = shape.clone();
@@ -205,21 +204,22 @@ Background.prototype.getInteriorPixels = function(shape) {
   background.toPixelSpace(clone);
   clone.translate(new Point(0.5, 0.5)); // Align for rasterize.
   var raster = clone.rasterize();
+  var tl = raster.bounds.topLeft;
 
   var pixels = [];
-  for (var x = 0; x < raster.width; x++) {
-    for (var y = 0; y < raster.height; y++) {
-      var pixel = new Point(x,y);
-      var c = raster.getPixel(pixel);
-      if (c.alpha > 0.5) {
-        pixels.push(pixel + raster.bounds.topLeft);
+  raster.opacity = 0.01;
+  var imageData = raster.getImageData();
+  var mask = imageDataToMask(imageData);
+  for (var x = 0; x < mask.shape[1]; x++) {
+    for (var y = 0; y < mask.shape[0]; y++) {
+      if (mask.get(y,x) != 0) {
+        pixels.push(new Point(x,y) + tl);
       }
     }
   }
 
   clone.remove();
   raster.remove();
-  pixels = removeDuplicatePixels(pixels);
   return pixels;
 }
 Background.prototype.getBoundaryPixels = function(path) {
@@ -229,7 +229,6 @@ Background.prototype.getBoundaryPixels = function(path) {
     for (var i = 0; i < path.children.length; i++) {
       pixels = pixels.concat(background.getBoundaryPixels(path.children[i]));
     }
-    pixels = removeDuplicatePixels(pixels);
     return pixels;
   }
   // Shape
@@ -245,24 +244,8 @@ Background.prototype.getBoundaryPixels = function(path) {
     var pixel = path_pixel.getPointAt(i);
     pixels.push(pixel);
   }
-  pixels = removeDuplicatePixels(pixels);
   return pixels;
 }
-
-function removeDuplicatePixels(pixels) {
-  var pixelsUnique = [];
-  var pixelsSet = new Set();
-  for (var i = 0; i < pixels.length; i++) {
-    var pixel = pixels[i].round();
-    var str = JSON.stringify(pixel);
-    if ( ! pixelsSet.has(str)) {
-      pixelsUnique.push(pixel);
-      pixelsSet.add(str);
-    }
-  }
-  return pixelsUnique;
-}
-
 
 //
 // Exports

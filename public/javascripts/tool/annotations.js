@@ -213,6 +213,7 @@ Annotation.prototype.subtractPixels = function(pixels) {
   editRaster(this.rasterinv, this.colorinv, pixels, "unite");
 }
 Annotation.prototype.flipPixels = function(pixels) {
+  pixels = removeDuplicatePixels(pixels);
   editRaster(this.raster, this.color, pixels, "flip");
   editRaster(this.rasterinv, this.colorinv, pixels, "flip");
 }
@@ -278,6 +279,20 @@ function getPixelColor(imageData, pixel) {
   color.alpha = imageData.data[p+3] / 255;
   return color;
 }
+function removeDuplicatePixels(pixels) {
+  var pixelsUnique = [];
+  var pixelsSet = new Set();
+  for (var i = 0; i < pixels.length; i++) {
+    var pixel = pixels[i].round();
+    var str = JSON.stringify(pixel);
+    if ( ! pixelsSet.has(str)) {
+      pixelsUnique.push(pixel);
+      pixelsSet.add(str);
+    }
+  }
+  return pixelsUnique;
+}
+
 
 //
 // Utils
@@ -295,7 +310,8 @@ function findBoundariesOpenCV(imageData) {
   var boundaries = [];
   for (var i = 0; i < contours.size(); i++) {
     var cnt = contours.get(i);
-    if (cv.contourArea(cnt) > 0) {
+     // Area must be > two pixel
+    if (cv.contourArea(cnt) > 4) {
       var bnd = [];
       for (var j = 0; j < cnt.rows; j++) {
         bnd.push([cnt.data32S[j*2], cnt.data32S[j*2+1]])
