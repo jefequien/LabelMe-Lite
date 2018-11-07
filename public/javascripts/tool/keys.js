@@ -1,9 +1,6 @@
 
 
-function onKeyDownShared(event) {
-  commonKeys(event);
-
-  // Tool keys
+function toolKeys(event) {
   if (event.key == '1' || event.key == 'escape') {
     selectTool.switch();
   }
@@ -16,44 +13,71 @@ function onKeyDownShared(event) {
   else if (event.key == '4' || event.key == 'n') {
     newTool.switch();
   }
+
+  if (event.key == '9') {
+    var toolSize = paper.tool.toolSize - 0.5;
+    toolSize = Math.max(toolSlider.min, Math.min(toolSlider.max, toolSize));
+
+    paper.tool.toolSize = toolSize;
+    toolSlider.value = paper.tool.toolSize;
+    paper.tool.refreshTool();
+  }
+  else if (event.key == '0') {
+    var toolSize = paper.tool.toolSize + 0.5;
+    toolSize = Math.max(toolSlider.min, Math.min(toolSlider.max, toolSize));
+
+    paper.tool.toolSize = toolSize;
+    toolSlider.value = paper.tool.toolSize;
+    paper.tool.refreshTool();
+  }
+  else if (event.key == 'r') {
+    paper.tool.toolSize = parseInt(toolSlider.defaultValue);
+    toolSlider.value = parseInt(toolSlider.defaultValue);
+    paper.tool.refreshTool();
+  }
 }
 
-function commonKeys(event) {
-  var button = {};
+function movementKeys(event) {
   if (event.key == 'left' || event.key == 'a') {
     background.move(new Point(100, 0));
-    button = leftButton;
+    flashButton(leftButton);
   }
   else if (event.key == 'right' || event.key == 'd') {
     background.move(new Point(-100, 0));
-    button = rightButton;
+    flashButton(rightButton);
   }
   else if (event.key == 'up' || event.key == 'w') {
     background.move(new Point(0, 100));
-    button = upButton;
+    flashButton(upButton);
   }
   else if (event.key == 'down' || event.key == 's') {
     background.move(new Point(0, -100));
-    button = downButton;
+    flashButton(downButton);
   }
-  else if (event.key == 'q') {
+}
+
+function commonKeys(event) {
+  if (event.key == 'q') {
     background.scale(0.8);
-    button = zoomOutButton;
+    flashButton(zoomOutButton);
   }
   else if (event.key == 'e') {
     background.scale(1.25);
-    button = zoomInButton;
+    flashButton(zoomInButton);
   }
   else if (event.key == 'f') {
+    flashButton(focusButton);
     // Toggle focus on annotation
     if (background.lastFocus != paper.tool.annotation) {
       background.focus(paper.tool.annotation);
     } else {
       background.focus();
     }
-    button = focusButton;
   }
   else if (event.key == 'h') {
+    flashButton(hideButton);
+    $('#hide').find('i').toggleClass('fa fa-eye-slash').toggleClass('fa fa-eye');
+
     // Toggle hide all
     var allInvisible = true;
     for (var i = 0; i < annotations.length; i++) {
@@ -67,9 +91,30 @@ function commonKeys(event) {
         annotations[i].setVisible();
       }
     }
-    button = hideButton;
-    $('#hide').find('i').toggleClass('fa fa-eye-slash').toggleClass('fa fa-eye');
   }
+  else if (event.key == 'c') {
+    if (paper.tool.annotation) {
+      paper.tool.annotation.changeColor();
+    } else {
+      var i = Math.floor(Math.random() * Math.floor(annotations.length));
+      annotations[i].changeColor();
+    }
+    flashButton(colorButton);
+  }
+  else if (event.key == 'backspace') {
+    flashButton(deleteButton);
+    if (paper.tool.annotation) {
+      var deleted = paper.tool.annotation.delete();
+      if (deleted) {
+        selectTool.switch();
+      }
+    } else {
+      alert("Nothing to delete.");
+    }
+  }
+}
+
+function flashButton(button) {
   button.className += " active";
   setTimeout(function(){ button.className = button.className.replace(" active", ""); }, 100);
 }
@@ -77,4 +122,9 @@ function commonKeys(event) {
 //
 // Exports
 //
+function onKeyDownShared(event) {
+  movementKeys(event);
+  toolKeys(event);
+  commonKeys(event);
+}
 window.onKeyDownShared = onKeyDownShared;

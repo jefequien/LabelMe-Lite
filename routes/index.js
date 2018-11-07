@@ -15,7 +15,7 @@ router.get('/game', function(req, res, next) {
 });
 
 router.get('/', function(req, res, next) {
-  res.redirect('tool?proj_name=ade20k_val_predictions&file_name=validation/ADE_val_00001519.jpg');
+  res.redirect('game?proj_name=predictions_maskrcnnc_ade20k_val&file_name=validation/ADE_val_00000908.jpg');
   // res.render('index', { title: 'Express' });
 });
 

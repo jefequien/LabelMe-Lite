@@ -4,14 +4,13 @@ var selectTool = new Tool();
 selectTool.onMouseMove = function(event) {
   this.curser.position = event.point;
 
-  var mouseOver = this.getAnnotationAt(this.curser.position);
+  // Enfoce styles
+  this.annotation = this.getAnnotationAt(this.curser.position);
   for (var i = 0; i < annotations.length; i++) {
-    if (annotations[i] != mouseOver) {
+    if (annotations[i] != this.annotation) {
       annotations[i].unhighlight();
     } else {
-      if ( ! mouseOver.highlighted) {
-        mouseOver.highlight();
-      }
+      this.annotation.highlight();
     }
   }
 }
@@ -27,19 +26,20 @@ selectTool.onMouseDrag = function(event) {
   this.isDragging = true;
 }
 selectTool.onMouseClick = function(event) {
-  var mouseOver = this.getAnnotationAt(this.curser.position);
-  if (mouseOver) {
-    if (background.lastFocus != mouseOver) {
-      background.focus(mouseOver);
+  this.onMouseMove(event);
+  if (this.annotation) {
+    if (background.lastFocus != this.annotation) {
+      background.focus(this.annotation);
     }
-    editTool.switch(mouseOver);
+    editTool.switch(this.annotation);
   }
 }
 selectTool.onKeyDown = function(event) {
-  onKeyDownShared(event)
   if (event.key == 'escape') {
     background.focus();
+    return;
   }
+  onKeyDownShared(event);
 }
 selectTool.refreshTool = function() {
   selectTool.onMouseMove({point: selectTool.curser.position});
@@ -56,12 +56,17 @@ selectTool.switch = function() {
   this.toolName = "selectTool";
   console.log("Switching to", this.toolName);
   var lastCurserPosition = background.canvasCenter;
+  var lastToolSize = parseInt(toolSlider.value);
   paper.tool.deactivate();
   this.activate();
 
-  this.curser = new Shape.Circle(lastCurserPosition);
   this.button = selectToolButton;
   this.button.className += " active";
+  this.curser = new Shape.Circle(lastCurserPosition, 1);
+  this.toolSize = lastToolSize;
+
+  this.annotation = null;
+  this.refreshTool();
 }
 selectTool.getAnnotationAt = function(point) {
   for (var i = 0; i < annotations.length; i++) {

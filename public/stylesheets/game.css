@@ -21,8 +21,15 @@ table, th, td {
     position: absolute;
     z-index: 2;
     top: 20%; left: 80%;
-    height: 60%;
+    height: 70%;
     width: 15%;
+}
+
+#buttonPanel {
+    position: absolute;
+    z-index: 2;
+    top: 20%; right: 80%;
+    height: 70%;
 }
 
 #questionPanel {
@@ -41,13 +48,6 @@ table, th, td {
     position: absolute;
     top: 30%; right: 10px;
     height:40%;
-}
-
-#buttonPanel {
-    position: absolute;
-    z-index: 2;
-    top: 20%; right: 80%;
-    height: 60%;
 }
 
 #settingsPanel {
@@ -75,27 +75,25 @@ table, th, td {
 
 #navButtons {
     float:left;
+    clear:left;
 }
 
 #toolButtons {
     float:left;
     clear:left;
-    padding-top: 20px;
+    padding-bottom: 20px;
 }
 
-.glyphicon, .fa {
-    font-size: 24px;
-    color:white;
-}
-
-#toolSize {
-  width: 100px;
+.glyphicon, .fa, .fi{
+  font-size: 24px;
+  color:white;
 }
 
 .btn {
-   background:black;
+   background: black;
    border-width: 2px;
    border-color:#414a4c;
+   display: flex;
 }
 .btn-square{ 
    height:50px;
@@ -107,6 +105,10 @@ table, th, td {
    border-radius: 20px;
    background: none;
    border-width: 0px;
+}
+.btn-slider {
+  height:50px;
+  width: 100px;
 }
 .btn:hover, .active {
   background-color: #666;

@@ -39,6 +39,18 @@ function rleToMask(rle) {
   return mask;
 }
 
+function imageDataToMask(imageData) {
+  var mask = [];
+  for (var i = 0; i < imageData.data.length; i = i+4) {
+    if (imageData.data[i] == 0) {
+      mask.push(0);
+    } else {
+      mask.push(1);
+    }
+  }
+  return nj.uint8(mask).reshape(imageData.height, imageData.width);
+}
+
 function getImageData(image) {
     var cv = document.createElement('canvas');
     var ctx = cv.getContext('2d');

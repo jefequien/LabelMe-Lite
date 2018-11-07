@@ -36,9 +36,7 @@ newTool.onMouseUp = function(event) {
   }
 }
 newTool.onKeyDown = function(event) {
-  onKeyDownShared(event);
-  
-  if (event.key == 'z' || event.key == 'backspace') {
+  if (event.key == 'z') {
     // Undo. Then, quit.
     var success = this.undo();
     if (! success) {
@@ -51,6 +49,7 @@ newTool.onKeyDown = function(event) {
   if (event.key == 'v') {
     scissors.toggleVisualize();
   }
+  onKeyDownShared(event);
 }
 newTool.deactivate = function() {
   this.button.className = this.button.className.replace(" active", "");
@@ -70,16 +69,14 @@ newTool.switch = function () {
   this.toolName = "newTool";
   console.log("Switching to", this.toolName);
   var lastCurserPosition = paper.tool.curser.position;
+  var lastToolSize = paper.tool.toolSize;
   paper.tool.deactivate();
   this.activate();
 
-  this.curser = new Shape.Circle(lastCurserPosition);
   this.button = newToolButton;
   this.button.className += " active";
-
-  for (var i = 0; i < annotations.length; i++) {
-    annotations[i].hide();
-  }
+  this.curser = new Shape.Circle(lastCurserPosition, 1);
+  this.toolSize = lastToolSize;
 
   this.line = new Path();
   this.points = [];
@@ -139,19 +136,24 @@ newTool.snapCurser = function() {
   }
 }
 newTool.enforceStyles = function() {
-  var radius = 4;
-  this.curser.radius = radius;
-  this.curser.fillColor = "red";
+  var pointHeight = this.toolSize * 3;
+  var lineWidth = this.toolSize;
 
-  this.line.strokeColor = 'blue';
-  this.line.strokeWidth = 3;
-
-  // Keep points at the same size.
-  var r = radius / (this.curser.bounds.height/2);
-  this.curser.scale(r);
-  for (var i = 0; i < this.points.length; i++) {
-    this.points[i].scale(r);
+  // Annotation styles
+  for (var i = 0; i < annotations.length; i++) {
+    annotations[i].hide();
   }
+
+  // Point styles
+  this.curser.fillColor = "red";
+  this.curser.scale(pointHeight / this.curser.bounds.height);
+  for (var i = 0; i < this.points.length; i++) {
+    this.points[i].scale(pointHeight / this.points[i].bounds.height);
+  }
+
+  // Line styles
+  this.line.strokeColor = "blue";
+  this.line.strokeWidth = lineWidth;
 }
 newTool.requestName = function() {
   this.name = prompt("Please enter object name.", "");

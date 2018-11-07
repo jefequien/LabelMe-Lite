@@ -4,37 +4,25 @@
 
 function Background() {
   this.canvas = document.getElementById('toolCanvas');
-  this.canvasCenter = new Point(this.canvas.width/2, this.canvas.height/2 + 50);
+  this.setFocusRect();
+  this.addGestures();
 
-  var tl = this.canvasCenter - new Point(300, 200);
-  var br = this.canvasCenter + new Point(300, 200);
-  this.focusRect = new Rectangle(tl, br);
   this.focusMaxScale = 5;
   this.maxScale = 10;
   this.minScale = 0.2;
 
-  var defaultImage = new Path.Rectangle(this.focusRect);
-  this.image = defaultImage.rasterize();
-  defaultImage.remove();
-
-  this.image.sendToBack();
+  this.image = new Path.Rectangle(this.focusRect).rasterize();
   this.border = new Path.Rectangle(this.image.bounds);
   this.border.strokeColor = "silver";
   this.border.strokeWidth = 20;
-
-  this.addGestures();
 }
-Background.prototype.addGestures = function() {
-  this.canvas.addEventListener('wheel', function(e) {
-    e.preventDefault();
-    if (e.ctrlKey) {
-      var scale = Math.abs(-0.01 * e.deltaY + 1);
-      background.scale(scale);
-    } else {
-      var delta = new Point(e.deltaX, e.deltaY);
-      background.move(delta);
-    }
-  });
+Background.prototype.setFocusRect = function() {
+  var h = this.canvas.height;
+  var w = this.canvas.width;
+  this.canvasCenter = new Point(w/2, h/2 + 50);
+  var tl = this.canvasCenter - new Point(w/4, h/3);
+  var br = this.canvasCenter + new Point(w/4, h/3);
+  this.focusRect = new Rectangle(tl, br);
 }
 Background.prototype.setImage = function(image) {
   var raster = new Raster(image);
@@ -56,17 +44,6 @@ Background.prototype.setImage = function(image) {
     background.focus();
   }
 }
-Background.prototype.setTempImage = function(imageData) {
-  if (this.tempImage) {
-    this.tempImage.remove();
-  }
-  this.tempImage = this.image.clone();
-  this.tempImage.setImageData(imageData, new Point(0,0));
-  this.tempImage.insertAbove(this.image);
-}
-Background.prototype.removeTempImage = function() {
-  this.tempImage.remove();
-}
 Background.prototype.move = function(delta, noSnap) {
   paper.project.activeLayer.translate(delta);
   if ( ! noSnap) {
@@ -83,14 +60,13 @@ Background.prototype.scale = function(deltaScale, noSnap) {
   if ( ! noSnap) {
     this.snapImage();
   }
-  console.log("Current Scale:", this.getCurrentScale());
 }
 Background.prototype.scaleTo = function(scale, noSnap) {
   var currentScale = this.getCurrentScale();
   this.scale(scale / currentScale, noSnap);
 }
 Background.prototype.getCurrentScale = function() {
-  var scale = Math.min(this.image.bounds.height / this.focusRect.height, this.image.bounds.width / this.focusRect.width);
+  var scale = Math.max(this.image.bounds.height / this.focusRect.height, this.image.bounds.width / this.focusRect.width);
   return scale;
 }
 Background.prototype.getPixelHeight = function() {
@@ -146,6 +122,29 @@ Background.prototype.align = function(annotation) {
   var ann_scale = ann_bounds.height / annotation.raster.height;
   annotation.translate(img_bounds.topLeft - ann_bounds.topLeft);
   annotation.scale(img_scale / ann_scale, img_bounds.topLeft);
+}
+Background.prototype.setTempImage = function(imageData) {
+  if (this.tempImage) {
+    this.tempImage.remove();
+  }
+  this.tempImage = this.image.clone();
+  this.tempImage.setImageData(imageData, new Point(0,0));
+  this.tempImage.insertAbove(this.image);
+}
+Background.prototype.removeTempImage = function() {
+  this.tempImage.remove();
+}
+Background.prototype.addGestures = function() {
+  this.canvas.addEventListener('wheel', function(e) {
+    e.preventDefault();
+    if (e.ctrlKey) {
+      var scale = Math.abs(-0.01 * e.deltaY + 1);
+      background.scale(scale);
+    } else {
+      var delta = new Point(e.deltaX, e.deltaY);
+      background.move(delta);
+    }
+  });
 }
 
 //
@@ -225,11 +224,6 @@ Background.prototype.getInteriorPixels = function(shape) {
 }
 Background.prototype.getBoundaryPixels = function(path) {
   var pixels = [];
-  // Shape
-  if ( ! path.length) {
-    path = path.toPath();
-    path.remove();
-  }
   // CompoundPath
   if (path.children) {
     for (var i = 0; i < path.children.length; i++) {
@@ -237,6 +231,11 @@ Background.prototype.getBoundaryPixels = function(path) {
     }
     pixels = removeDuplicatePixels(pixels);
     return pixels;
+  }
+  // Shape
+  if ( ! path.getPointAt) {
+    path = path.toPath();
+    path.remove();
   }
   // Path
   var path_pixel = path.clone();
@@ -268,5 +267,8 @@ function removeDuplicatePixels(pixels) {
 //
 // Exports
 //
+function onResize(event) {
+  background.setFocusRect();
+}
 window.background = new Background();
 paper.view._context.imageSmoothingEnabled = false; // Pixelates background
