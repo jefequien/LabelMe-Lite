@@ -104,12 +104,6 @@ editTool.onMouseDown = function(event) {
   this.onMouseMove(event);
   if ( ! this.selectedBoundary.fixed) {
     this.selectedBoundary.fixed = true;
-    this.selectedBoundaryPixels = [];
-    var pixels = background.getBoundaryPixels(this.selectedBoundary);
-    for (var i = 0; i < pixels.length; i++) {
-      this.selectedBoundaryPixels.push([pixels[i].x, pixels[i].y]);
-    }
-
     if (this.selectedBoundary.segments.length == 0) {
       this.points.push(this.curser.clone());
       this.segments.push(this.line.clone());
@@ -140,7 +134,6 @@ editTool.onMouseDown = function(event) {
     continuePoint = editTool.annotation.boundary.getNearestPoint(continuePoint);
     editTool.onMouseDown({point: continuePoint});
     editTool.onMouseMove(event);
-
   }
 }
 editTool.onKeyDown = function(event) {
@@ -278,18 +271,7 @@ editTool.editAnnotation = function() {
   if (this.mode == "unite") {
     this.annotation.unite(this.selectedArea);
   } else {
-    this.annotation.subtract(this.selectedArea);
-
-    // Keep edge pixels
-    var pixels = background.getBoundaryPixels(this.selectedArea);
-    var edgePixels = [];
-    for (var i = 0; i < pixels.length; i++) {
-      var point = background.getPoint(pixels[i]);
-      if (this.annotation.boundary.contains(point)) {
-        edgePixels.push(pixels[i]);
-      }
-    }
-    this.annotation.unitePixels(edgePixels);
+    this.annotation.subtractInterior(this.selectedArea);
     this.annotation.subtractPath(this.bl);
   }
 
@@ -397,9 +379,12 @@ editTool.enforceStyles = function() {
 
   // Annotation styles
   for (var i = 0; i < annotations.length; i++) {
-    annotations[i].hide();
+    if (annotations[i] != this.annotation) {
+      annotations[i].hide();
+    } else {
+      this.annotation.highlight();
+    }
   }
-  this.annotation.highlight();
   this.annotation.raster.opacity = 0.2;
   this.annotation.boundary.strokeWidth = lineWidth;
 
@@ -498,7 +483,7 @@ editTool.getPath = function(start, end) {
   return path;
 }
 editTool.getPathToBoundary = function(point, boundary) {
-  if (scissors.active) {
+  if (scissors.active && this.selectedBoundary.fixed) {
     // Try pixels along line
     var start = boundary.getNearestPoint(point);
     var path = new Path.Line(start, point);
@@ -507,9 +492,17 @@ editTool.getPathToBoundary = function(point, boundary) {
 
     for (var i = 0; i < path.length; i+=20) {
       var p1 = path.getPointAt(path.length-i);
-      if (this.selectedBoundaryPixels.length == 0) {
+      if (this.selectedBoundary.segments.length == 0) {
         break;
-      } 
+      }
+
+      // Get boundary pixels
+      if (this.selectedBoundaryPixels.length == 0) {
+        var pixels = background.getBoundaryPixels(this.selectedBoundary);
+        for (var i = 0; i < pixels.length; i++) {
+          this.selectedBoundaryPixels.push([pixels[i].x, pixels[i].y]);
+        }
+      }
 
       var pixelList = scissors.getPath(this.selectedBoundaryPixels, [p1.x, p1.y]);
       if (pixelList != null) {

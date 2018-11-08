@@ -204,6 +204,14 @@ Annotation.prototype.subtractPath = function(shape) {
   var pixels = background.getBoundaryPixels(shape);
   this.subtractPixels(pixels);
 }
+Annotation.prototype.uniteInterior = function(shape) {
+  var pixels = background.getInteriorPixels(shape);
+  this.unitePixels(pixels);
+}
+Annotation.prototype.subtractInterior = function(shape) {
+  var pixels = background.getInteriorPixels(shape);
+  this.subtractPixels(pixels);
+}
 Annotation.prototype.unitePixels = function(pixels) {
   editRaster(this.raster, this.color, pixels, "unite");
   editRaster(this.rasterinv, this.colorinv, pixels, "subtract");

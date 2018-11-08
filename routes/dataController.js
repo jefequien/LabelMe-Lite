@@ -113,7 +113,7 @@ router.get('/annotations', function(req, res) {
         if (iscrowd == 1) {
             name = name + " (crowd)";
         }
-	console.log(name)
+        
         var ann = {};
         ann["category"] = name;
         ann["segmentation"] = segm;
