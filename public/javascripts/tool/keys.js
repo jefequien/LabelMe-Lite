@@ -17,7 +17,7 @@ function toolKeys(event) {
     flashButton(escapeToolButton);
   }
   if (event.key == 'h') {
-    alert("Help modal for " + paper.tool.toolName + " coming soon.");
+    alert("The help section for " + paper.tool.toolName + " is coming soon.");
   }
 
   if (event.key == '9') {
