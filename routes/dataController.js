@@ -113,12 +113,13 @@ router.get('/annotations', function(req, res) {
         if (iscrowd == 1) {
             name = name + " (crowd)";
         }
-
+	console.log(name)
         var ann = {};
         ann["category"] = name;
         ann["segmentation"] = segm;
         annotations.push(ann);
     }
+    
     // No CORS access
     var img_url = "http://places.csail.mit.edu/scaleplaces/datasets/" + path.join(getImDir(dataset_name), file_name);
 
@@ -142,7 +143,7 @@ router.get('/bundles', function(req, res) {
 function getImDir(dataset_name) {
     if (dataset_name.includes('ade')) {
         return "ade20k/images/";
-    } else if (dataset_name.includes('coco') || proj_name.includes('2017')) {
+    } else if (dataset_name.includes('coco')) {
         return "coco/images/";
     } else if (dataset_name.includes('places')) {
         return "places/images/";
