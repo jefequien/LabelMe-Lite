@@ -9,12 +9,19 @@ function main() {
     brush.setImage(image_url);
 
     getAnnotations(function(res) {
-        loadAnnotations(res.annotations);
+        load(res);
     });
     selectTool.switch();
 }
 
+function load(res) {
+    $('#datasetName span').text(res["proj_name"]);
+    $('#imageFileName span').text(res["file_name"]);
+    $('#annotationSource span').text(res["proj_name"]);
+    loadAnnotations(res.annotations);
+}
+
 window.onload = function() {
-    $("#questionDiv").load("html/question.html"); 
+    // $("#questionDiv").load("html/question.html"); 
     main();
 }

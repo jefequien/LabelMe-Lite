@@ -4,30 +4,35 @@ var newTool = new Tool();
 newTool.onMouseMove = function(event) {
   this.curser.position = event.point;
   this.snapCurser();
-  this.enforceStyles();
 
+  // Set this.line
   if (this.points.length == 0) {
     this.line.segments = [];
   } else {
-    var path = this.getPath(this.points[this.points.length-1].position, this.curser.position);
+    var lastPoint = this.points[this.points.length-1].position;
+    var path = this.getPath(lastPoint, this.curser.position);
     path.remove();
     this.line.segments = path.segments;
   }
+
+  // Set this.segments
+  for (var i = 1; i < this.segments.length; i++) {
+    var p0 = this.points[i-1].position;
+    var p1 = this.points[i].position;
+    var path = this.getPath(p0, p1);
+    path.remove();
+    this.segments[i].segments = path.segments;
+  }
+
+  this.enforceStyles();
 }
 newTool.onMouseDown = function(event) {
   this.onMouseMove(event);
-  if (this.curser.intersects(this.points[0])) {
-    if (this.points.length >= 2) {
-    // Create new annotation
-      this.segments.push(this.line.clone());
-      this.createAnnotation();
-    }
+  this.points.push(this.curser.clone());
+  this.segments.push(this.line.clone());
 
-  } else {
-    this.points.push(this.curser.clone());
-    if (this.points.length > 1) {
-      this.segments.push(this.line.clone());
-    }
+  if (this.curser.loopedBack) {
+    this.createAnnotation();
   }
 }
 newTool.onMouseUp = function(event) {
@@ -37,16 +42,16 @@ newTool.onMouseUp = function(event) {
 }
 newTool.onKeyDown = function(event) {
   if (event.key == 'z') {
-    // Undo. Then, quit.
-    var success = this.undo();
-    if (! success) {
+    var undoed = this.undo();
+    if (! undoed) {
       selectTool.switch();
     }
   }
-  if (event.key == 'space') {
+  if (event.key == 't') {
     scissors.toggle();
+    this.refreshTool();
   }
-  if (event.key == 'v') {
+  if (event.key == 'space') {
     scissors.toggleVisualize();
   }
   onKeyDownShared(event);
@@ -64,6 +69,7 @@ newTool.deactivate = function() {
   }
 
   clearInterval(this.interval);
+  this.interval = null;
 }
 newTool.switch = function () {
   this.toolName = "newTool";
@@ -78,17 +84,28 @@ newTool.switch = function () {
   this.curser = new Shape.Circle(lastCurserPosition, 1);
   this.toolSize = lastToolSize;
 
+  this.annotation = null;
+
   this.line = new Path();
   this.points = [];
   this.segments = [];
 
-  this.refreshTool();
-  this.interval = setInterval(this.refreshTool, 300);
+  this.curser.loopedBack = false;
 
-  this.requestName();
+  this.refreshTool();
+
+  setTimeout(this.requestName(), 100);
 }
 newTool.refreshTool = function() {
   newTool.onMouseMove({point: newTool.curser.position});
+  if (scissors.active) {
+    if (newTool.interval == null) {
+      newTool.interval = setInterval(newTool.refreshTool, 300);
+    }
+  } else {
+    clearInterval(newTool.interval);
+    newTool.interval = null;
+  }
 }
 newTool.createAnnotation = function() {
   // Join segments to form one path
@@ -124,15 +141,9 @@ newTool.snapCurser = function() {
   // Snap to first point
   if (this.points.length >= 2 && this.curser.intersects(this.points[0])) {
     this.curser.position = this.points[0].position;
-    this.curser.visible = false;
-    for (var i = 0; i < this.points.length; i++) {
-      this.points[i].visible = false;
-    }
+    this.curser.loopedBack = true;
   } else {
-    this.curser.visible = true;
-    for (var i = 0; i < this.points.length; i++) {
-      this.points[i].visible = true;
-    }
+    this.curser.loopedBack = false;
   }
 }
 newTool.enforceStyles = function() {
@@ -150,15 +161,23 @@ newTool.enforceStyles = function() {
   for (var i = 0; i < this.points.length; i++) {
     this.points[i].scale(pointHeight / this.points[i].bounds.height);
   }
+  
+  // Visibility
+  this.curser.visible = ! this.curser.loopedBack;
+  for (var i = 0; i < this.points.length; i++) {
+    this.points[i].visible = ! this.curser.loopedBack;
+  }
 
   // Line styles
   this.line.strokeColor = "blue";
   this.line.strokeWidth = lineWidth;
 }
 newTool.requestName = function() {
-  this.name = prompt("Please enter object name.", "");
-  if (this.name == null || this.name == "") {
+  var name = prompt("Please enter object name.", "");
+  if (name == null || name == "") {
     selectTool.switch();
+  } else {
+    newTool.name = name;
   }
 }
 
@@ -166,14 +185,11 @@ newTool.requestName = function() {
 // Path finding functions
 //
 newTool.getPath = function(start, end) {
-  if ( ! scissors.active) {
-    var path = new Path.Line(start, end);
-    return path;
-  } else {
+  if (scissors.active) {
     // Try pixels along line
     var path = new Path.Line(start, end);
-    path.remove();
     background.toPixelSpace(path);
+    path.remove();
 
     for (var i = 0; i < path.length; i+=20) {
       var p0 = path.firstSegment.point;
@@ -181,7 +197,7 @@ newTool.getPath = function(start, end) {
 
       var pixelList = scissors.getPath([p0.x, p0.y], [p1.x, p1.y]);
       if (pixelList != null) {
-        var newPath = new Path({"segments": pixelList})
+        var newPath = new Path({"segments": pixelList});
         background.toPointSpace(newPath);
 
         // Smooth out path
@@ -193,6 +209,9 @@ newTool.getPath = function(start, end) {
       }
     }
   }
+
+  var path = new Path.Line(start, end);
+  return path;
 }
 
 //

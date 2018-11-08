@@ -4,7 +4,7 @@ function toolKeys(event) {
   if (event.key == '1' || event.key == 'escape') {
     selectTool.switch();
   }
-  else if (event.key == '2' || event.key == 'l') {
+  else if (event.key == '2') {
     editTool.switch(paper.tool.annotation);
   }
   else if (event.key == '3' || event.key == 'b') {
@@ -12,6 +12,12 @@ function toolKeys(event) {
   }
   else if (event.key == '4' || event.key == 'n') {
     newTool.switch();
+  }
+  if (event.key == 'escape') {
+    flashButton(escapeToolButton);
+  }
+  if (event.key == 'h') {
+    alert("Help modal for " + paper.tool.toolName + " coming soon.");
   }
 
   if (event.key == '9') {
@@ -74,9 +80,9 @@ function commonKeys(event) {
       background.focus();
     }
   }
-  else if (event.key == 'h') {
-    flashButton(hideButton);
-    $('#hide').find('i').toggleClass('fa fa-eye-slash').toggleClass('fa fa-eye');
+  else if (event.key == 'v') {
+    flashButton(visibleButton);
+    $('#visible').find('i').toggleClass('fa fa-eye-slash').toggleClass('fa fa-eye');
 
     // Toggle hide all
     var allInvisible = true;

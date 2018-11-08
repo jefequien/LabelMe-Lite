@@ -37,7 +37,6 @@ selectTool.onMouseClick = function(event) {
 selectTool.onKeyDown = function(event) {
   if (event.key == 'escape') {
     background.focus();
-    return;
   }
   onKeyDownShared(event);
 }

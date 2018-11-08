@@ -310,12 +310,11 @@ function findBoundariesOpenCV(imageData) {
   var boundaries = [];
   for (var i = 0; i < contours.size(); i++) {
     var cnt = contours.get(i);
-     // Area must be > two pixel
-    if (cv.contourArea(cnt) > 4) {
-      var bnd = [];
-      for (var j = 0; j < cnt.rows; j++) {
-        bnd.push([cnt.data32S[j*2], cnt.data32S[j*2+1]])
-      }
+    var bnd = [];
+    for (var j = 0; j < cnt.rows; j++) {
+      bnd.push([cnt.data32S[j*2], cnt.data32S[j*2+1]])
+    }
+    if (bnd.length > 4) {
       boundaries.push(bnd);
     }
     cnt.delete();

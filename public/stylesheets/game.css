@@ -25,11 +25,20 @@ table, th, td {
     width: 15%;
 }
 
+ul.fancytree-container {
+  height: 400px;
+  width: 100%;
+  overflow: auto;
+  position: relative;
+}
+
 #buttonPanel {
     position: absolute;
     z-index: 2;
     top: 20%; right: 80%;
     height: 70%;
+    width:130px;
+    text-align: center;
 }
 
 #questionPanel {
@@ -38,6 +47,7 @@ table, th, td {
     top: 5%; left: 20%;
     width: 60%;
     color: white;
+    text-align: center;
 }
 #prevImage {
     position: absolute;
@@ -73,27 +83,24 @@ table, th, td {
   padding: 10px;
 }
 
-#navButtons {
-    float:left;
-    clear:left;
-}
 
-#toolButtons {
-    float:left;
-    clear:left;
-    padding-bottom: 20px;
-}
-
+/*
+* Button Styles
+*/
 .glyphicon, .fa, .fi{
-  font-size: 24px;
+  font-size: 20px;
   color:white;
+}
+
+.btn-group {
+  padding-bottom: 20px;
 }
 
 .btn {
    background: black;
    border-width: 2px;
    border-color:#414a4c;
-   display: flex;
+   padding:0px;
 }
 .btn-square{ 
    height:50px;
@@ -106,9 +113,18 @@ table, th, td {
    background: none;
    border-width: 0px;
 }
+.btn-small {
+   width: 40px;
+   height: 40px;
+}
+.btn-small > .glyphicon {
+  font-size: 14px;
+}
 .btn-slider {
   height:50px;
   width: 100px;
+  padding:6px;
+  display: flex;
 }
 .btn:hover, .active {
   background-color: #666;
@@ -117,7 +133,6 @@ table, th, td {
 .btn:focus {
     outline:0;
 }
-
 
 .btn-matrix > .btn:nth-child(2n+3) {
   clear: left;

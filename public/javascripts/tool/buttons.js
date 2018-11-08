@@ -40,10 +40,10 @@ focusButton.title = "Focus: 'f'";
 focusButton.onclick = function() {
     paper.tool.onKeyDown({key: 'f'});
 }
-var hideButton = document.getElementById('hide');
-hideButton.title = "Hide: 'h'";
-hideButton.onclick = function() {
-    paper.tool.onKeyDown({key: 'h'});
+var visibleButton = document.getElementById('visible');
+visibleButton.title = "Hide/show: 'v'";
+visibleButton.onclick = function() {
+    paper.tool.onKeyDown({key: 'v'});
 }
 var colorButton = document.getElementById('color');
 colorButton.title = "Change colors: 'c'";
@@ -89,7 +89,7 @@ selectToolButton.onclick = function() {
     paper.tool.onKeyDown({key: '1'});
 }
 var editToolButton = document.getElementById('editTool');
-editToolButton.title = "Edit tool: '2'";
+editToolButton.title = "Edit tool: 'click' or '2'";
 editToolButton.onclick = function() {
     paper.tool.onKeyDown({key: '2'});
 }
@@ -103,6 +103,17 @@ newToolButton.title = "New tool: 'n' or '4'";
 newToolButton.onclick = function() {
     paper.tool.onKeyDown({key: '4'});
 }
+var helpToolButton = document.getElementById('helpTool');
+helpToolButton.title = "Tool Help: 'h'";
+helpToolButton.onclick = function() {
+    paper.tool.onKeyDown({key: 'h'});
+}
+var escapeToolButton = document.getElementById('escapeTool');
+escapeToolButton.title = "Escape tool: 'esc'";
+escapeToolButton.onclick = function() {
+    paper.tool.onKeyDown({key: 'escape'});
+}
+
 var toolSlider = document.getElementById('toolSlider');
 toolSlider.value = 3;
 toolSlider.defaultValue = 3;

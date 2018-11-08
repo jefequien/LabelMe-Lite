@@ -28,7 +28,15 @@ $("#tree").fancytree({
 
       source: [],
 
-      extensions: ["edit", "glyph", "wide"],
+      extensions: ["dnd","edit", "glyph", "wide"],
+      dnd: {
+        focusOnClick: true,
+        dragStart: function(node, data) { return true; },
+        dragEnter: function(node, data) { return true; },
+        dragDrop: function(node, data) {
+          data.otherNode.moveTo(node, data.hitMode);
+        }
+      },
       glyph: {
         map: {
           dragHelper: "glyphicon glyphicon-play",
@@ -40,34 +48,42 @@ $("#tree").fancytree({
       },
       toggleEffect: { effect: "drop", options: {direction: "left"}, duration: 400 },
       wide: {
-        iconWidth: "0.4em",     // Adjust this if @fancy-icon-width != "16px"
-        iconSpacing: "0.3em", // Adjust this if @fancy-icon-spacing != "3px"
+        iconWidth: "1em",     // Adjust this if @fancy-icon-width != "16px"
+        iconSpacing: "0.5em", // Adjust this if @fancy-icon-spacing != "3px"
         levelOfs: "1.5em"     // Adjust this if ul padding != "16px"
       },
       click: function(event, data) {
-        data.node.setExpanded(!data.node.isExpanded());
-        return false;
+        // data.node.setExpanded(!data.node.isExpanded());
+        // return false;
       },
       dblclick: function(event, data){
         var node = data.node;
         annotation = tree.getAnnotationById(node.key);
+        if (paper.tool.annotation == annotation) {
+          // Change name.
+          var name = requestName();
+          if (name != null) {
+            node.setTitle(name);
+          }
+        }
         background.focus(annotation);
         editTool.switch(annotation);
         return false;
       }
-    }).on("mousemove", ".fancytree-node", function(event){
+    }).on("mouseenter", ".fancytree-title", function(event){
+      // Highlight annotation when mouse is over cell
       var node = $.ui.fancytree.getNode(event);
-      node.setActive(true);
-      node.setFocus(true);
-
       if (paper.tool == selectTool) {
-        selectTool.annotation = tree.getAnnotationById(node.key);
-        for (var i = 0; i < annotations.length; i++) {
-          annotations[i].hide();
-        }
-        selectTool.annotation.highlight();
+        annotation = tree.getAnnotationById(node.key);
+        annotation.highlight();
       }
-      return false;
+    }).on("mouseleave", ".fancytree-title", function(event){
+      // Unhighlight annotation when mouse leaves cell
+      var node = $.ui.fancytree.getNode(event);
+      if (paper.tool == selectTool) {
+        annotation = tree.getAnnotationById(node.key);
+        annotation.unhighlight();
+      }
     });
 
 
@@ -93,7 +109,6 @@ tree.setActive = function (annotation, isActive) {
   var node = tree.getNodeByKey(key);
   if (node != null) {
     node.setActive(isActive);
-    node.setFocus(isActive);
   }
 }
 tree.containsAnnotation = function (annotation) {

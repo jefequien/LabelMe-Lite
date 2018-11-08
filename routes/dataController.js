@@ -7,12 +7,12 @@ var router = express.Router();
 var DATA_DIR = path.join(__dirname, "../data");
 
 router.get('/images', function(req, res) {
-    var proj_name = req.query.proj_name;
+    var dataset_name = req.query.dataset;
     var file_name = req.query.file_name;
 
-    var im_dir = path.join(DATA_DIR, getImDir(proj_name));
+    var im_dir = path.join(DATA_DIR, getImDir(datasetName));
     if (im_dir == null) {
-        res.status(404).send('Project name not found');
+        res.status(404).send('Dataset name not found');
         return;
     }
 
@@ -133,12 +133,12 @@ router.get('/bundles', function(req, res) {
     res.sendFile(file_path);
 });
 
-function getImDir(proj_name) {
-    if (proj_name.includes('ade')) {
+function getImDir(dataset_name) {
+    if (dataset_name.includes('ade')) {
         return "ade20k/images/";
-    } else if (proj_name.includes('coco') || proj_name.includes('2017')) {
+    } else if (dataset_name.includes('coco') || proj_name.includes('2017')) {
         return "coco/images/";
-    } else if (proj_name.includes('places')) {
+    } else if (dataset_name.includes('places')) {
         return "places/images/";
     } else {
         return null;

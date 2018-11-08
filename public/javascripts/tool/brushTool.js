@@ -79,11 +79,13 @@ brushTool.onKeyDown = function(event) {
     this.invertedMode = ! this.invertedMode;
     this.refreshTool();
   }
-  else if (event.key == 'space') {
+  
+  // Smart tool
+  if (event.key == 't') {
     brush.toggle();
     this.refreshTool();
   }
-  else if (event.key == 'v') {
+  else if (event.key == 'space') {
     brush.toggleVisualize();
   }
   onKeyDownShared(event);
@@ -131,6 +133,7 @@ brushTool.enforceStyles = function() {
   for (var i = 0; i < annotations.length; i++) {
     annotations[i].hide();
   }
+  this.annotation.highlight();
   this.annotation.boundary.strokeWidth = 0;
   if (this.mode == "unite") {
     this.annotation.raster.opacity = 0.8;
