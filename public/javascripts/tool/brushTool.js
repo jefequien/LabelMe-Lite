@@ -19,7 +19,10 @@ brushTool.onMouseMove = function(event) {
 }
 
 brushTool.onMouseDrag = function(event) {
+  var fixedMode = this.mode;
   this.onMouseMove(event);
+  this.mode = fixedMode;
+  
   if (this.annotationFixed) {
     this.editAnnotation();
   } else {

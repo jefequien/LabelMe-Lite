@@ -120,15 +120,16 @@ router.get('/annotations', function(req, res) {
         annotations.push(ann);
     }
     
-    // No CORS access
-    var img_url = "http://places.csail.mit.edu/scaleplaces/datasets/" + path.join(getImDir(dataset_name), file_name);
+    var img_url = "http://vision01.csail.mit.edu:3000/data/images?dataset=" + dataset_name + "&file_name=" + file_name;
+    var img_url_backup = "http://places.csail.mit.edu/scaleplaces/datasets/" + path.join(getImDir(dataset_name), file_name); // No CORS access
 
     var response = {};
     response["dataset"] = dataset_name;
     response["file_name"] = file_name;
     response["ann_source"] = ann_source;
-    response["image_url"] = img_url;
     response["annotations"] = annotations;
+    response["image_url"] = img_url;
+    response["image_url_backup"] = img_url_backup;
     res.json(response);
 });
 

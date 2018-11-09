@@ -15,14 +15,6 @@ downloadAnnButton.onclick = function() {
     newTab.document.write('<textarea disabled style="width:100%;height:100%">' + JSON.stringify(out, null, 2) + "</textarea>");
     newTab.document.close();
 }
-var prevButton = document.getElementById('prevImage');
-prevButton.onclick = function() {
-    prevImage();
-}
-var nextButton = document.getElementById('nextImage');
-nextButton.onclick = function() {
-    nextImage();
-}
 
 
 var zoomOutButton = document.getElementById('zoomOut');

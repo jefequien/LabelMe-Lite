@@ -14,21 +14,21 @@ function getImageURL(src) {
     var endpoint = server + "/data/images?" + query;
     return endpoint;
 }
-function nextImage() {
+function getNextImage(callback) {
     var endpoint = base_url + "/data/images/next?" + query;
-    var callback = function(data) {
+    var parse = function(data) {
       json = JSON.parse(data);
-      window.location.href = url + "?" + buildQuery(json);
+      callback(json);
     }
-    get_async(endpoint, callback);
+    get_async(endpoint, parse);
 }
-function prevImage() {
+function getPrevImage(callback) {
     var endpoint = base_url + "/data/images/prev?" + query;
-    var callback = function(data) {
+    var parse = function(data) {
       json = JSON.parse(data);
-      window.location.href = url + "?" + buildQuery(json);
+      callback(json);
     }
-    get_async(endpoint, callback);
+    get_async(endpoint, parse);
 }
 
 function getAnnotations(callback) {

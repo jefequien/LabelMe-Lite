@@ -22,10 +22,10 @@ function next() {
         updateSubmitButton();
 
         clearAnnotations();
+        loadAnnotations([annotation]);
         background.setImage(image_url);
         scissors.setImage(image_url);
         brush.setImage(image_url);
-        loadAnnotations([annotation]);
     }
 }
 
