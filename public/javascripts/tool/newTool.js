@@ -31,6 +31,7 @@ newTool.onMouseClick = function(event) {
   this.onMouseMove(event);
   this.points.push(this.curser.clone());
   this.segments.push(this.line.clone());
+  this.refreshTool();
 
   if (this.curserLoopedBack) {
     this.name = prompt("Please enter a name for this object.", "");
@@ -42,9 +43,15 @@ newTool.onMouseClick = function(event) {
     }
   }
 }
+newTool.onMouseDown = function(event) {
+  this.dragDelta = 0;
+}
 newTool.onMouseDrag = function(event) {
   background.move(event.delta);
-  this.isDragging = true;
+  this.dragDelta += event.delta.length;
+  if (this.dragDelta > 15) {
+    this.isDragging = true;
+  }
 }
 newTool.onMouseUp = function(event) {
   if ( ! this.isDragging) {

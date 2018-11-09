@@ -153,9 +153,15 @@ editTool.onMouseClick = function(event) {
 
   this.onMouseMove(event);
 }
+editTool.onMouseDown = function(event) {
+  this.dragDelta = 0;
+}
 editTool.onMouseDrag = function(event) {
   background.move(event.delta);
-  this.isDragging = true;
+  this.dragDelta += event.delta.length;
+  if (this.dragDelta > 15) {
+    this.isDragging = true;
+  }
 }
 editTool.onMouseUp = function(event) {
   if ( ! this.isDragging) {

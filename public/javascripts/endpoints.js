@@ -4,7 +4,10 @@ var url = href.split('?')[0];
 var query = href.split('?')[1];
 
 var base_url = parseBaseURL(url);
-var params = parseParams(query);
+var params = {};
+if (query) {
+  params = parseParams(query);
+}
 
 //
 // Get Requests

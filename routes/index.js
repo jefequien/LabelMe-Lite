@@ -14,6 +14,10 @@ router.get('/game', function(req, res, next) {
   res.render('game', { title: 'Game interface' });
 });
 
+router.get('/game_amt', function(req, res, next) {
+  res.render('game_amt', { title: 'Game interface for AMT' });
+});
+
 router.get('/', function(req, res, next) {
   res.redirect('game?dataset=ade20k_val&ann_source=pspnet');
   // res.render('index', { title: 'Express' });

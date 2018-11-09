@@ -8,8 +8,8 @@ function loadTool() {
         $('#annotationSource span').text(res.ann_source);
         $('#imageFileName span').text(res.file_name);
         background.setImage(res.image_url);
-        // scissors.setImage(res.image_url);
-        // brush.setImage(res.image_url);
+        scissors.setImage(res.image_url);
+        brush.setImage(res.image_url);
         
         var annotations = [];
         if (res.annotations) {

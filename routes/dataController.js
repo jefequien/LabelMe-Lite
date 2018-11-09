@@ -22,15 +22,17 @@ router.get('/images', function(req, res) {
 
 router.get('/images/next', function(req, res) {
     var dataset_name = req.query.dataset;
-    var file_name = req.query.file_name;
     var ann_source = req.query.ann_source;
 
-    var coco = loadCOCO(dataset_name, ann_source);
+    var ann_fn = dataset_name + "_" + ann_source + "_#.json";
+    var ann_dir = path.join(DATA_DIR, "annotations/");
+    var coco = loadCOCO(path.join(ann_dir, ann_fn));
     if (coco == null) {
         res.status(404).send('Annotation source not found');
         return;
     }
-    var imgId = coco.fnToImgId[file_name];
+    
+    var imgId = coco.fnToImgId[req.query.file_name];
     if (imgId == null) {
         res.status(404).send('File name not found');
         return;
@@ -41,23 +43,25 @@ router.get('/images/next', function(req, res) {
         var img = coco.imgs[0];
     }
     var response = {};
-    response["dataset"] = dataset_name;
     response["file_name"] = img.file_name;
+    response["dataset"] = dataset_name;
     response["ann_source"] = ann_source;
     res.json(response);
 });
 
 router.get('/images/prev', function(req, res) {
     var dataset_name = req.query.dataset;
-    var file_name = req.query.file_name;
     var ann_source = req.query.ann_source;
 
-    var coco = loadCOCO(dataset_name, ann_source);
+    var ann_fn = dataset_name + "_" + ann_source + "_#.json";
+    var ann_dir = path.join(DATA_DIR, "annotations/");
+    var coco = loadCOCO(path.join(ann_dir, ann_fn));
     if (coco == null) {
         res.status(404).send('Annotation source not found');
         return;
     }
-    var imgId = coco.fnToImgId[file_name];
+
+    var imgId = coco.fnToImgId[req.query.file_name];
     if (imgId == null) {
         res.status(404).send('File name not found');
         return;
@@ -68,8 +72,8 @@ router.get('/images/prev', function(req, res) {
         var img = coco.imgs[0];
     }
     var response = {};
-    response["dataset"] = dataset_name;
     response["file_name"] = img.file_name;
+    response["dataset"] = dataset_name;
     response["ann_source"] = ann_source;
     res.json(response);
 });
@@ -77,25 +81,75 @@ router.get('/images/prev', function(req, res) {
 router.get('/annotations', function(req, res) {
     var dataset_name = req.query.dataset;
     var ann_source = req.query.ann_source;
-    var file_name = req.query.file_name;
 
-    var coco = loadCOCO(dataset_name, ann_source);
+    var ann_fn = dataset_name + "_" + ann_source + "_#.json";
+    var ann_dir = path.join(DATA_DIR, "annotations/");
+    var coco = loadCOCO(path.join(ann_dir, ann_fn));
     if (coco == null) {
         res.status(404).send('Annotation source not found');
         return;
     }
 
     var imgId = 0
-    if (file_name != null) {
-        imgId = coco.fnToImgId[file_name];
+    if (req.query.file_name != null) {
+        imgId = coco.fnToImgId[req.query.file_name];
         if (imgId == null) {
             res.status(404).send('File name not found');
             return;
         }
     }
 
-    // Prepare annotations
+    var response = prepareResponse(coco, imgId);
+    response["annotations"] = prepareAnnotations(coco, imgId);
+    response["dataset"] = dataset_name;
+    response["ann_source"] = ann_source;
+    res.json(response);
+});
+
+router.get('/bundles', function(req, res) {
+    var bundle_id = req.query.id;
+
+    var ann_fn = bundle_id + "_#.json";
+    var ann_dir = path.join(DATA_DIR, "bundles/");
+    var coco = loadCOCO(path.join(ann_dir, ann_fn));
+    if (coco == null) {
+        res.status(404).send('Bundle not found');
+        return;
+    }
+
+    var responses = [];
+    for (var imgId in coco.imgs) {
+        var annotations = prepareAnnotations(coco, imgId);
+        for (var i = 0; i < annotations.length; i++) {
+            var response = prepareResponse(coco, imgId);
+            response["annotations"] = [annotations[i]];
+            responses.push(response);
+            if (responses.length == 100) {
+                res.json(responses);
+                return;
+            }
+        }
+    }
+    res.json(responses);
+});
+
+function prepareResponse(coco, imgId) {
     var file_name = coco.imgs[imgId]["file_name"];
+    var dataset_name = coco.imgs[imgId]["dataset_name"];
+    if ( ! dataset_name) {
+        var fn = coco.ann_fn.split('/').reverse()[0];
+        dataset_name = fn.split('_')[0];
+    }
+    var img_url = "http://vision01.csail.mit.edu:3000/data/images?dataset=" + dataset_name + "&file_name=" + file_name;
+    var img_url_backup = "http://places.csail.mit.edu/scaleplaces/datasets/" + path.join(getImDir(dataset_name), file_name); // No CORS access
+
+    var response = {};
+    response["file_name"] = file_name;
+    response["image_url"] = img_url;
+    response["image_url_backup"] = img_url_backup;
+    return response;
+}
+function prepareAnnotations(coco, imgId) {
     var annIds = coco.getAnnIds([imgId]);
     var anns = coco.loadAnns(annIds);
     var annotations = [];
@@ -124,27 +178,8 @@ router.get('/annotations', function(req, res) {
         ann["segmentation"] = segm;
         annotations.push(ann);
     }
-    
-    var img_url = "http://vision01.csail.mit.edu:3000/data/images?dataset=" + dataset_name + "&file_name=" + file_name;
-    var img_url_backup = "http://places.csail.mit.edu/scaleplaces/datasets/" + path.join(getImDir(dataset_name), file_name); // No CORS access
-
-    var response = {};
-    response["dataset"] = dataset_name;
-    response["file_name"] = file_name;
-    response["ann_source"] = ann_source;
-    response["annotations"] = annotations;
-    response["image_url"] = img_url;
-    response["image_url_backup"] = img_url_backup;
-    res.json(response);
-});
-
-router.get('/bundles', function(req, res) {
-    var bundle_id = req.query.id;
-
-    var bundles_dir = path.join(DATA_DIR, "bundles");
-    var file_path = path.join(bundles_dir, bundle_id + ".json");
-    res.sendFile(file_path);
-});
+    return annotations;
+}
 
 function getImDir(dataset_name) {
     if (dataset_name.includes('ade')) {
@@ -159,19 +194,17 @@ function getImDir(dataset_name) {
 }
 
 var COCOs = {};
-function loadCOCO(dataset_name, ann_source) {
-    var proj_name = dataset_name + "_" + ann_source;
-    var coco = COCOs[proj_name];
+function loadCOCO(ann_fn) {
+    var coco = COCOs[ann_fn];
     if (coco) {
         return coco;
     } else {
-        var ann_fn = path.join(DATA_DIR, "annotations/" + proj_name + "_#.json");
         if (fs.existsSync(ann_fn)) {
-            console.time(proj_name);
-            COCOs[proj_name] = new cocoapi.COCO(ann_fn);
-            console.timeEnd(proj_name);
+            console.time(ann_fn);
+            COCOs[ann_fn] = new cocoapi.COCO(ann_fn);
+            console.timeEnd(ann_fn);
         }
-        return COCOs[proj_name];
+        return COCOs[ann_fn];
     }
 }
 

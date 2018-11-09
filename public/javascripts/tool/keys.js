@@ -37,7 +37,7 @@ function toolKeys(event) {
   }
 
   if (event.key == '9') {
-    var toolSize = paper.tool.toolSize - 0.5;
+    var toolSize = paper.tool.toolSize - 1;
     toolSize = Math.max(toolSlider.min, Math.min(toolSlider.max, toolSize));
 
     paper.tool.toolSize = toolSize;
@@ -45,7 +45,7 @@ function toolKeys(event) {
     paper.tool.refreshTool();
   }
   else if (event.key == '0') {
-    var toolSize = paper.tool.toolSize + 0.5;
+    var toolSize = paper.tool.toolSize + 1;
     toolSize = Math.max(toolSlider.min, Math.min(toolSlider.max, toolSize));
 
     paper.tool.toolSize = toolSize;

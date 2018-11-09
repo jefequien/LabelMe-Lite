@@ -45,16 +45,16 @@ $("#tree").fancytree({
         levelOfs: "1.5em"     // Adjust this if ul padding != "16px"
       },
       click: function(event, data) {
-        data.node.setExpanded(!data.node.isExpanded());
-        return false;
-      },
-      dblclick: function(event, data){
         var node = data.node;
         var annotation = tree.getAnnotationById(node.key);
         if (annotation) {
           background.focus(annotation);
           editTool.switch(annotation);
         }
+        return false;
+      },
+      dblclick: function(event, data){
+        data.node.setExpanded( ! data.node.isExpanded());
         return false;
       }
     }).on("mousemove", ".fancytree-node", function(event){

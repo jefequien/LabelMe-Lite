@@ -1,6 +1,6 @@
 
 
-function COCO(annotation_file) {
+function COCO(ann_fn) {
     this.dataset = {};
     this.anns = {};
     this.cats = {};
@@ -9,9 +9,10 @@ function COCO(annotation_file) {
     this.catToImgs = {};
     this.fnToImgId = {};
 
-    if (annotation_file) {
+    this.ann_fn = ann_fn;
+    if (ann_fn) {
         var fs = require('fs');
-        var json = fs.readFileSync(annotation_file);
+        var json = fs.readFileSync(ann_fn);
         var dataset = JSON.parse(json);
         this.dataset = dataset;
         this.createIndex();

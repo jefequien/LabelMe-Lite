@@ -44,6 +44,7 @@ brushTool.onMouseUp = function(event) {
     }
   }
   this.isDragging = false;
+  this.refreshTool();
 }
 brushTool.onKeyDown = function(event) {
   if (event.key == 'space') {
@@ -143,18 +144,20 @@ brushTool.setMode = function() {
   }
 }
 brushTool.enforceStyles = function() {
-  var curserHeight = this.toolSize * this.toolSize / 2 * background.getPixelHeight();
+  var curserHeight = this.toolSize * this.toolSize / 5 * background.getPixelHeight();
 
   // this.annotation styles
   if (this.annotation) {
     this.annotation.highlight();
-    this.annotation.boundary.strokeWidth = 0;
-    if (this.mode == "unite") {
-      this.annotation.raster.opacity = 0.8;
-      this.annotation.rasterinv.opacity = 0;
-    } else {
-      this.annotation.raster.opacity = 0;
-      this.annotation.rasterinv.opacity = 0.8;
+    if (this.annotationFixed) {
+      this.annotation.boundary.strokeWidth = 0;
+      if (this.mode == "unite") {
+        this.annotation.raster.opacity = 0.8;
+        this.annotation.rasterinv.opacity = 0;
+      } else {
+        this.annotation.raster.opacity = 0;
+        this.annotation.rasterinv.opacity = 0.8;
+      }
     }
   }
 

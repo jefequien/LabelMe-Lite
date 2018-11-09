@@ -25,9 +25,15 @@ selectTool.onMouseClick = function(event) {
     editTool.switch(this.annotation);
   }
 }
-selectTool.onMouseDrag = function(event) {
+editTool.onMouseDown = function(event) {
+  this.dragDelta = 0;
+}
+editTool.onMouseDrag = function(event) {
   background.move(event.delta);
-  this.isDragging = true;
+  this.dragDelta += event.delta.length;
+  if (this.dragDelta > 15) {
+    this.isDragging = true;
+  }
 }
 selectTool.onMouseUp = function(event) {
   if ( ! this.isDragging) {
