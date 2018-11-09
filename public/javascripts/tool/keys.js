@@ -2,22 +2,22 @@
 
 function toolKeys(event) {
   if (event.key == '1' || event.key == 'escape') {
-    if (paper.tool.toolName != "selectTool") {
+    if (paper.tool != selectTool) {
       selectTool.switch();
     }
   }
   else if (event.key == '2') {
-    if (paper.tool.toolName != "editTool") {
+    if (paper.tool != editTool) {
       editTool.switch(paper.tool.annotation);
     }
   }
   else if (event.key == '3' || event.key == 'b') {
-    if (paper.tool.toolName != "brushTool") {
+    if (paper.tool != brushTool) {
       brushTool.switch(paper.tool.annotation);
     }
   }
   else if (event.key == '4' || event.key == 'n') {
-    if (paper.tool.toolName != "newTool") {
+    if (paper.tool != newTool) {
       newTool.switch();
     }
   }
@@ -161,6 +161,9 @@ function commonKeys(event) {
     } else {
       alert("Select an annotation to delete first.");
     }
+  }
+  else if (event.key == 'space') {
+    return; // Prevent default
   }
 }
 

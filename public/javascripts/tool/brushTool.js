@@ -15,6 +15,7 @@ brushTool.onMouseMove = function(event) {
   this.setMode();
   this.enforceStyles();
   this.updateSmartBrush();
+  this.writeHints();
 }
 
 brushTool.onMouseDrag = function(event) {
@@ -46,12 +47,6 @@ brushTool.onKeyDown = function(event) {
     editTool.switch(this.annotation);
     return;
   }
-  else if (event.key == 'escape') {
-    if (this.annotationFixed) {
-      brushTool.switch();
-      return;
-    }
-  }
   else if (event.key == 'z') {
     if (this.annotationFixed) {
       brushTool.switch();
@@ -79,7 +74,7 @@ brushTool.deactivate = function() {
   this.smartBrush.remove();
 }
 brushTool.switch = function(annotation) {
-  this.toolName = "brushTool";
+  this.toolName = "Brush Tool";
   console.log("Switching to", this.toolName);
   var lastCurserPosition = paper.tool.curser.position;
   var lastToolSize = paper.tool.toolSize;
@@ -145,7 +140,7 @@ brushTool.setMode = function() {
   }
 }
 brushTool.enforceStyles = function() {
-  var curserHeight = this.toolSize * this.toolSize * background.getPixelHeight();
+  var curserHeight = this.toolSize * this.toolSize / 2 * background.getPixelHeight();
 
   // this.annotation styles
   if (this.annotation) {
@@ -215,6 +210,17 @@ brushTool.updateSmartBrush = function() {
     this.smartBrush.visible = false;
     this.smartBrush.selected = false;
   }
+}
+
+brushTool.writeHints = function() {
+  var hints = [];
+  if ( ! this.annotationFixed) {
+    hints.push("Click on an annotation to begin editing.");
+  }
+  hints.push("Press '9' or '0' to change brush size.");
+  // hints.push("Press 'esc' to quit.");
+  $('#toolName').text(this.toolName);
+  $('#toolMessage').text(hints[0]);
 }
 
 

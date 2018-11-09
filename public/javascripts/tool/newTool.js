@@ -25,6 +25,7 @@ newTool.onMouseMove = function(event) {
   }
 
   this.enforceStyles();
+  this.writeHints();
 }
 newTool.onMouseClick = function(event) {
   this.onMouseMove(event);
@@ -47,7 +48,6 @@ newTool.onMouseDrag = function(event) {
 }
 newTool.onMouseUp = function(event) {
   if ( ! this.isDragging) {
-    console.log(event);
     this.onMouseClick(event);
   }
   this.isDragging = false;
@@ -78,7 +78,7 @@ newTool.deactivate = function() {
   this.interval = null;
 }
 newTool.switch = function () {
-  this.toolName = "newTool";
+  this.toolName = "New Tool";
   console.log("Switching to", this.toolName);
   var lastCurserPosition = paper.tool.curser.position;
   var lastToolSize = paper.tool.toolSize;
@@ -115,6 +115,7 @@ newTool.undoTool = function() {
   if (this.points.length > 0) {
     this.points.pop().remove();
     this.segments.pop().remove();
+    this.refreshTool();
     return true;
   }
   return false;
@@ -208,6 +209,26 @@ newTool.getPath = function(start, end) {
 
   var path = new Path.Line(start, end);
   return path;
+}
+
+newTool.writeHints = function() {
+  var hints = [];
+  if (this.points.length == 0) {
+    hints.push("Click to begin new annotation."); 
+  }
+  if (this.points.length <= 2) {
+    hints.push("Click to drop points."); 
+  }
+  if (this.points.length <= 3) {
+    hints.push("Close loop to create new annotation.");
+  }
+  if (this.points.length <= 5) {
+    hints.push("Press 'z' to remove points.");
+  }
+  hints.push("Press 'esc' to quit.");
+
+  $('#toolName').text(this.toolName);
+  $('#toolMessage').text(hints[0]);
 }
 
 //

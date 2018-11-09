@@ -33,6 +33,7 @@ editTool.onMouseMove = function(event) {
     path.remove();
     this.bp0.position = path.firstSegment.point;
     this.line.segments = path.segments;
+
   } else {
     var lastPoint = this.points[this.points.length-1].position;
     var path = this.getPath(lastPoint, this.curser.position);
@@ -41,7 +42,7 @@ editTool.onMouseMove = function(event) {
   }
 
   // Set this.segments
-  if (this.segments.length >= 1){
+  if (this.segments.length >= 1) {
     var path = this.getPathToBoundary(this.points[0].position, this.selectedBoundary);
     path.remove();
     this.segments[0].segments = path.segments;
@@ -106,6 +107,7 @@ editTool.onMouseMove = function(event) {
 
   this.setMode();
   this.enforceStyles();
+  this.writeHints();
 }
 editTool.onMouseClick = function(event) {
   this.onMouseMove(event);
@@ -166,12 +168,6 @@ editTool.onKeyDown = function(event) {
     brushTool.switch(this.annotation);
     return; // Prevent default
   }
-  else if (event.key == 'escape') {
-    if (this.selectedBoundaryFixed) {
-      editTool.switch(this.annotation);
-      return; // Prevent default
-    }
-  }
   else if (event.key == 'backspace') {
     if (this.selectedBoundaryFixed) {
       this.deleteSelectedBoundary();
@@ -228,7 +224,7 @@ editTool.deactivate = function() {
   this.interval = null;
 }
 editTool.switch = function(annotation) {
-  this.toolName = "editTool";
+  this.toolName = "Edit Tool";
   console.log("Switching to", this.toolName);
   var lastCurserPosition = paper.tool.curser.position;
   var lastToolSize = paper.tool.toolSize;
@@ -379,7 +375,7 @@ editTool.setMode = function() {
 }
 editTool.enforceStyles = function() {
   var pointHeight = this.toolSize * 1.5;
-  var lineWidth = this.toolSize / 2;
+  var lineWidth = this.toolSize * 0.8;
 
   // this.annotation styles
   if (this.annotation) {
@@ -420,7 +416,7 @@ editTool.enforceStyles = function() {
 
   // Line styles
   this.selectedBoundary.strokeColor = "gold";
-  this.selectedBoundary.strokeWidth = lineWidth * 2;
+  this.selectedBoundary.strokeWidth = lineWidth * 1.5;
   this.line.strokeColor = "black";
   this.line.strokeWidth = lineWidth;
   this.bl.strokeColor = "black";
@@ -569,6 +565,29 @@ editTool.getPathUsingBoundary = function(point0, point1, boundary) {
     shorter.remove();
     return longer;
   }
+}
+
+editTool.writeHints = function() {
+  var hints = [];
+  if ( ! this.annotationFixed) {
+    hints.push("Click on an annotation to begin editing.");
+  }
+  if ( ! this.selectedBoundaryFixed) {
+    hints.push("Select segment to edit.");
+  }
+  if (this.points.length <= 1) {
+    hints.push("Click to drop points."); 
+  }
+  if (this.points.length <= 3) {
+    hints.push("Close loop to edit.");
+  }
+  if (this.points.length <= 5) {
+    hints.push("Press 'z' to remove points.");
+  }
+  hints.push("Press 'esc' to quit.");
+
+  $('#toolName').text(this.toolName);
+  $('#toolMessage').text(hints[0]);
 }
 
 //

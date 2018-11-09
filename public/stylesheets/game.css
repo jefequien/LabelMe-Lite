@@ -68,14 +68,20 @@ ul.fancytree-container {
     border: none;
 }
 
+#helpPanel {
+  position: absolute;
+  z-index: 2;
+  top: 0px; left: 0px;
+}
+
 .panel {
     border-color: #414a4c;
     border-width: 4px;
     background: black;
+    color:white;
 }
 
 .panel-heading {
-    color:white;
     background-color: #414a4c;
 }
 

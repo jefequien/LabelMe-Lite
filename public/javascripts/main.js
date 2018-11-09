@@ -2,11 +2,11 @@
 
 
 function main() {
+    selectTool.switch();
 
     getAnnotations(function(res) {
         load(res);
     });
-    selectTool.switch();
 }
 
 function load(res) {

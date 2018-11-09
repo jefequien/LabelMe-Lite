@@ -4,7 +4,7 @@ var selectTool = new Tool();
 selectTool.onMouseMove = function(event) {
   this.curser.position = event.point;
 
-  // Enfoce styles
+  // Enforce styles
   this.annotation = this.getAnnotationAt(this.curser.position);
   for (var i = 0; i < annotations.length; i++) {
     if (annotations[i] != this.annotation) {
@@ -13,6 +13,8 @@ selectTool.onMouseMove = function(event) {
       this.annotation.highlight();
     }
   }
+
+  this.writeHints();
 }
 selectTool.onMouseClick = function(event) {
   this.onMouseMove(event);
@@ -54,8 +56,9 @@ selectTool.deactivate = function() {
   }
 }
 selectTool.switch = function(annotation) {
-  this.toolName = "selectTool";
+  this.toolName = "Select Tool";
   console.log("Switching to", this.toolName);
+
   var lastCurserPosition = (paper.tool.curser) ? paper.tool.curser.position : background.canvasCenter;
   var lastToolSize = parseInt(toolSlider.value);
   paper.tool.deactivate();
@@ -76,6 +79,14 @@ selectTool.getAnnotationAt = function(point) {
     }
   }
   return null;
+}
+
+selectTool.writeHints = function() {
+  var hints = [];
+  hints.push("Click on an annotation to begin editing.");
+  
+  $('#toolName').text(this.toolName);
+  $('#toolMessage').text(hints[0]);
 }
 
 window.paper = paper;
