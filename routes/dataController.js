@@ -76,21 +76,26 @@ router.get('/images/prev', function(req, res) {
 
 router.get('/annotations', function(req, res) {
     var dataset_name = req.query.dataset;
-    var file_name = req.query.file_name;
     var ann_source = req.query.ann_source;
+    var file_name = req.query.file_name;
 
     var coco = loadCOCO(dataset_name, ann_source);
     if (coco == null) {
         res.status(404).send('Annotation source not found');
         return;
     }
-    var imgId = coco.fnToImgId[file_name];
-    if (imgId == null) {
-        res.status(404).send('File name not found');
-        return;
+
+    var imgId = 0
+    if (file_name != null) {
+        imgId = coco.fnToImgId[file_name];
+        if (imgId == null) {
+            res.status(404).send('File name not found');
+            return;
+        }
     }
 
     // Prepare annotations
+    var file_name = coco.imgs[imgId]["file_name"];
     var annIds = coco.getAnnIds([imgId]);
     var anns = coco.loadAnns(annIds);
     var annotations = [];

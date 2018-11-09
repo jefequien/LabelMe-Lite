@@ -50,22 +50,27 @@ $("#tree").fancytree({
       },
       dblclick: function(event, data){
         var node = data.node;
-        annotation = tree.getAnnotationById(node.key);
-        background.focus(annotation);
-        editTool.switch(annotation);
+        var annotation = tree.getAnnotationById(node.key);
+        if (annotation) {
+          background.focus(annotation);
+          editTool.switch(annotation);
+        }
         return false;
       }
     }).on("mousemove", ".fancytree-node", function(event){
       var node = $.ui.fancytree.getNode(event);
-      node.setActive(true);
-      node.setFocus(true);
-
-      if (paper.tool == selectTool) {
-        selectTool.annotation = tree.getAnnotationById(node.key);
-        for (var i = 0; i < annotations.length; i++) {
-          annotations[i].hide();
+      var annotation = tree.getAnnotationById(node.key);
+      if (annotation) {
+        node.setActive(true);
+        node.setFocus(true);
+        if (paper.tool == selectTool) {
+          for (var i = 0; i < annotations.length; i++) {
+            if (annotations[i] != annotation) {
+              annotations[i].hide();
+            }
+          }
+          annotation.highlight();
         }
-        selectTool.annotation.highlight();
       }
       return false;
     });
@@ -82,11 +87,15 @@ tree.deleteAnnotation = function (annotation) {
     }
     node.remove();
   }
+  if (annotations.length == 0) {
+    tree.setMessage("No annotations.");
+  }
 }
 tree.addAnnotation = function (annotation) {
   var key = String(annotation.id);
   var root = tree.getRootNode();
   root.addChildren({"title": annotation.name, "key": key});
+  tree.removeMessage();
 }
 tree.setActive = function (annotation, isActive) {
   var key = String(annotation.id);
@@ -141,6 +150,21 @@ tree.getAnnotationById = function(id) {
     if (annotations[i].id == id) {
       return annotations[i];
     }
+  }
+}
+
+tree.setMessage = function(message) {
+  var node = tree.getNodeByKey("");
+  if (! node) {
+    tree.getRootNode().addChildren({"title": "", "key": ""});
+  }
+  var node = tree.getNodeByKey("");
+  node.setTitle(message);
+}
+tree.removeMessage = function() {
+  var node = tree.getNodeByKey("");
+  if (node) {
+    node.remove();
   }
 }
 

@@ -37,7 +37,7 @@ Annotation.prototype.updateRaster = function() {
 }
 Annotation.prototype.updateRasterInv = function() {
   var maskinv = nj.add(nj.multiply(this.mask, -1), 1);
-  setRaster(this.rasterinv, this.colorinv, maskinv);
+  setRasterOld(this.rasterinv, this.colorinv, maskinv);
 }
 Annotation.prototype.updateMask = function() {
   var imageData = this.raster.getImageData();
@@ -64,8 +64,13 @@ Annotation.prototype.updateBoundary = function() {
   this.redoHistory = [];
   sortAnnotations();
 }
-Annotation.prototype.delete = function() {
-  if (confirm('Are you sure you want to delete the annotation of ' + this.name +'?')) {
+Annotation.prototype.delete = function(noConfirm) {
+  var confirmed = true;
+  if ( ! noConfirm) {
+    confirmed = confirm('Are you sure you want to delete the annotation of ' + this.name +'?');
+  }
+
+  if (confirmed) {
     this.raster.remove();
     this.rasterinv.remove();
     this.boundary.remove();
@@ -240,6 +245,26 @@ Annotation.prototype.containsPixel = function(pixel) {
   return c.alpha > 0.5;
 }
 function setRaster(raster, color, mask) {
+  var cv = document.createElement('canvas');
+  var ctx = cv.getContext('2d');
+  var imageData = ctx.getImageData(0,0,mask.shape[1], mask.shape[0]);
+
+  var list = mask.tolist();
+  for (var y = 0; y < list.length; y++) {
+    for (var x = 0; x < list[y].length; x++) {
+      b = list[y][x];
+      if (b != 0) {
+        var p = (y * list[y].length + x) * 4;
+        imageData.data[p] = color.red * 255;
+        imageData.data[p+1] = color.green * 255;
+        imageData.data[p+2] = color.blue * 255;
+        imageData.data[p+3] = color.alpha * 255;
+      }
+    }
+  }
+  raster.setImageData(imageData, new Point(0, 0));
+}
+function setRasterOld(raster, color, mask) {
   var mask = mask.multiply(255);
   var r = nj.multiply(mask, color.red);
   var g = nj.multiply(mask, color.green);
@@ -345,6 +370,8 @@ function findBoundariesOpenCV(imageData) {
 //
 function loadAnnotations(anns) {
   console.log("Loading annotations...");
+  tree.setMessage("Loading annotations...");
+
   setTimeout(function(anns) {
     console.time("Load");
 
@@ -359,7 +386,13 @@ function loadAnnotations(anns) {
       annotation.updateBoundary();
       console.timeEnd(category);
     }
-  console.timeEnd("Load");
+    if (annotations.length == 0) {
+      tree.setMessage("No annotations.");
+    } else {
+      tree.removeMessage();
+    }
+
+    console.timeEnd("Load");
   }, 100, anns);
 }
 
@@ -399,11 +432,10 @@ function sortAnnotations() {
 }
 
 function clearAnnotations() {
-  for (var i = 0; i < annotations.length; i++) {
-    annotations[i].delete();
+  while (annotations.length > 0) {
+    annotations[0].delete(true);
   }
-  annotations = [];
-  selectTool.switch();
+  tree.removeMessage();
 }
 
 //

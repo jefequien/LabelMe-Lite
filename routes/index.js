@@ -15,7 +15,7 @@ router.get('/game', function(req, res, next) {
 });
 
 router.get('/', function(req, res, next) {
-  res.redirect('game?dataset=ade20k_val&ann_source=maskrcnnc&file_name=validation/ADE_val_00000910.jpg');
+  res.redirect('game?dataset=ade20k_val&ann_source=pspnet');
   // res.render('index', { title: 'Express' });
 });
 

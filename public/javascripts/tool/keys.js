@@ -123,7 +123,6 @@ function commonKeys(event) {
   }
   else if (event.key == 'h') {
     flashButton(hideButton);
-    $('#hide').find('i').toggleClass('fa fa-eye-slash').toggleClass('fa fa-eye');
 
     // Toggle hide all
     var allInvisible = true;
@@ -133,10 +132,14 @@ function commonKeys(event) {
         allInvisible = false;
       }
     }
+
     if (allInvisible) {
       for (var i = 0; i < annotations.length; i++) {
         annotations[i].setVisible();
       }
+      $('#hide').find('i').addClass('fa-eye-slash').removeClass('fa-eye');
+    } else {
+      $('#hide').find('i').addClass('fa-eye').removeClass('fa-eye-slash');
     }
   }
   else if (event.key == 'c') {
