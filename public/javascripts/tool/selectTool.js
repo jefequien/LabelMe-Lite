@@ -14,17 +14,6 @@ selectTool.onMouseMove = function(event) {
     }
   }
 }
-selectTool.onMouseUp = function(event) {
-  if (this.isDragging) {
-    this.isDragging = false;
-  } else {
-    this.onMouseClick(event);
-  }
-}
-selectTool.onMouseDrag = function(event) {
-  background.move(event.delta);
-  this.isDragging = true;
-}
 selectTool.onMouseClick = function(event) {
   this.onMouseMove(event);
   if (this.annotation) {
@@ -34,8 +23,21 @@ selectTool.onMouseClick = function(event) {
     editTool.switch(this.annotation);
   }
 }
+selectTool.onMouseDrag = function(event) {
+  background.move(event.delta);
+  this.isDragging = true;
+}
+selectTool.onMouseUp = function(event) {
+  if ( ! this.isDragging) {
+    this.onMouseClick(event);
+  }
+  this.isDragging = false;
+}
 selectTool.onKeyDown = function(event) {
   if (event.key == 'escape') {
+    background.focus();
+  }
+  else if (event.key == 'z') {
     background.focus();
   }
   onKeyDownShared(event);
@@ -51,10 +53,10 @@ selectTool.deactivate = function() {
     this.button.className = this.button.className.replace(" active", "");
   }
 }
-selectTool.switch = function() {
+selectTool.switch = function(annotation) {
   this.toolName = "selectTool";
   console.log("Switching to", this.toolName);
-  var lastCurserPosition = background.canvasCenter;
+  var lastCurserPosition = (paper.tool.curser) ? paper.tool.curser.position : background.canvasCenter;
   var lastToolSize = parseInt(toolSlider.value);
   paper.tool.deactivate();
   this.activate();
@@ -64,7 +66,7 @@ selectTool.switch = function() {
   this.curser = new Shape.Circle(lastCurserPosition, 1);
   this.toolSize = lastToolSize;
 
-  this.annotation = null;
+  this.annotation = annotation;
   this.refreshTool();
 }
 selectTool.getAnnotationAt = function(point) {

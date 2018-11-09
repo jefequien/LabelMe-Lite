@@ -16,6 +16,7 @@
     <!-- Icons -->
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.4.2/css/all.css" integrity="sha384-/rXc/GQVaYpyDdyxK+ecHPVYJSN9bmVFBvjA/9eOB+pb3F2w2N6fc5qB9Ew5yIns" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/foundicons/3.0.0/foundation-icons.min.css" integrity="sha256-Q9c+RVayp4Y4gEKE3jaABDEwnMlDf6cFEWEQSzFaOB8=" crossorigin="anonymous" />
+    <link href="https://unpkg.com/ionicons@4.2.2/dist/css/ionicons.min.css" rel="stylesheet">
 
     <!-- JQuery -->
     <script src="//code.jquery.com/jquery-3.3.1.min.js"></script>
@@ -65,7 +66,7 @@
             <button type="button" class="btn btn-square" id="newTool"><i class="fa fa-plus"></i></button>
             <button type="button" class="btn btn-square" id="brushTool"><i class="fa fa-paint-brush"></i></button>
             <button type="button" class="btn btn-square" id="helpTool"><i class="fa fa-question"></i></button>
-            <button type="button" class="btn btn-square" id="escapeTool"><i class="fa fa-times"></i></button>
+            <button type="button" class="btn btn-square" id="undoTool"><i class="fa fa-undo"></i></button>
             <div class="btn btn-slider">
               <input type="range" min="1" max="10" step="0.5" id="toolSlider">
             </div>
@@ -74,8 +75,10 @@
           <div class="btn-group btn-matrix">
             <button type="button" class="btn btn-square" id="zoomOut"><i class="glyphicon glyphicon-zoom-out"></i></button>
             <button type="button" class="btn btn-square" id="zoomIn"><i class="glyphicon glyphicon-zoom-in"></i></button>
+            <button type="button" class="btn btn-square" id="undoAnn"><i class="fa ion-ios-undo"></i></i></button>
+            <button type="button" class="btn btn-square" id="redoAnn"><i class="fa ion-ios-redo"></i></i></i></button>
             <button type="button" class="btn btn-square" id="focus"><i class="fa fi-arrows-out"></i></button>
-            <button type="button" class="btn btn-square" id="visible"><i class="fa fa-eye-slash"></i></button>
+            <button type="button" class="btn btn-square" id="hide"><i class="fa fa-eye-slash"></i></button>
             <button type="button" class="btn btn-square" id="color"><i class="fa fi-paint-bucket"></i></button>
             <button type="button" class="btn btn-square" id="delete"><i class="fa fa-trash"></i></button>
           </div>

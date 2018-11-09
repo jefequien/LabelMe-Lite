@@ -84,7 +84,7 @@ Annotation.prototype.undo = function() {
     this.recoverUsingBoundaryPathData(this.undoHistory[this.undoHistory.length-1]);
     return true;
   }
-  alert("No more undo history for this annotation.");
+  alert("No more undo for this annotation.");
   return false;
 }
 Annotation.prototype.redo = function() {
@@ -94,7 +94,7 @@ Annotation.prototype.redo = function() {
     this.recoverUsingBoundaryPathData(pathData);
     return true;
   }
-  alert("No more redo history for this annotation.");
+  alert("No more redo for this annotation.");
   return false;
 }
 Annotation.prototype.recoverUsingBoundaryPathData = function(pathData) {
@@ -146,9 +146,15 @@ Annotation.prototype.highlight = function() {
   this.raster.opacity = 0.2;
   this.rasterinv.opacity = 0;
   this.boundary.strokeColor = this.color;
-  this.boundary.strokeWidth = paper.tool.toolSize * 2;
+  this.boundary.strokeWidth = paper.tool.toolSize;
 
   tree.setActive(this, true);
+
+  // Load rasterinv here to decrease loading time
+  if ( ! this.rasterinv.upToDate) {
+    this.updateRasterInv();
+    this.rasterinv.upToDate = true;
+  }
 }
 Annotation.prototype.unhighlight = function() {
   this.highlighted = false;
@@ -339,10 +345,9 @@ function findBoundariesOpenCV(imageData) {
 //
 function loadAnnotations(anns) {
   console.log("Loading annotations...");
-  if (anns == null) {
-    return;
-  }
   setTimeout(function(anns) {
+    console.time("Load");
+
     for (var i = 0; i < anns.length; i++) {
       var category = anns[i]["category"];
       var rle = anns[i]["segmentation"];
@@ -354,6 +359,7 @@ function loadAnnotations(anns) {
       annotation.updateBoundary();
       console.timeEnd(category);
     }
+  console.timeEnd("Load");
   }, 100, anns);
 }
 
@@ -361,10 +367,9 @@ function saveAnnotations() {
   console.time("Save");
   var anns = [];
   for (var i = 0; i < annotations.length; i++) {
-    annotations[i].updateMask();
     var name = annotations[i].name;
-    var mask = annotations[i].mask;
-    var rle = maskToRLE(mask);
+    annotations[i].updateMask();
+    var rle = maskToRLE(annotations[i].mask);
 
     var ann = {};
     ann["category"] = name;

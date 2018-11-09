@@ -2,22 +2,38 @@
 
 function toolKeys(event) {
   if (event.key == '1' || event.key == 'escape') {
-    selectTool.switch();
+    if (paper.tool.toolName != "selectTool") {
+      selectTool.switch();
+    }
   }
   else if (event.key == '2') {
-    editTool.switch(paper.tool.annotation);
+    if (paper.tool.toolName != "editTool") {
+      editTool.switch(paper.tool.annotation);
+    }
   }
   else if (event.key == '3' || event.key == 'b') {
-    brushTool.switch(paper.tool.annotation);
+    if (paper.tool.toolName != "brushTool") {
+      brushTool.switch(paper.tool.annotation);
+    }
   }
   else if (event.key == '4' || event.key == 'n') {
-    newTool.switch();
+    if (paper.tool.toolName != "newTool") {
+      newTool.switch();
+    }
   }
-  if (event.key == 'escape') {
-    flashButton(escapeToolButton);
-  }
-  if (event.key == 'h') {
-    alert("The help section for " + paper.tool.toolName + " is coming soon.");
+  if (event.key == 'z') {
+    flashButton(undoToolButton);
+
+    if (paper.tool.undoTool) {
+      var undoed = paper.tool.undoTool();
+      if ( ! undoed) {
+        selectTool.switch();
+      }
+    } else {
+      if (paper.tool.toolName != "selectTool") {
+        selectTool.switch();
+      }
+    }
   }
 
   if (event.key == '9') {
@@ -63,6 +79,7 @@ function movementKeys(event) {
 }
 
 function commonKeys(event) {
+  // Zoom in and out
   if (event.key == 'q') {
     background.scale(0.8);
     flashButton(zoomOutButton);
@@ -71,7 +88,31 @@ function commonKeys(event) {
     background.scale(1.25);
     flashButton(zoomInButton);
   }
-  else if (event.key == 'f') {
+
+  // Undo and redo
+  if (event.key == 'u') {
+    flashButton(undoAnnButton);
+    if (paper.tool.annotation) {
+      var undoed = paper.tool.annotation.undo();
+      if (undoed) {
+        paper.tool.switch(paper.tool.annotation);
+      }
+    } else {
+      alert("Select an annotation to undo first.");
+    }
+  } else if (event.key == 'y') {
+    flashButton(redoAnnButton);
+    if (paper.tool.annotation) {
+      var redoed = paper.tool.annotation.redo();
+      if (redoed) {
+        paper.tool.switch(paper.tool.annotation);
+      }
+    } else {
+      alert("Select an annotation to redo first.");
+    }
+  }
+
+  if (event.key == 'f') {
     flashButton(focusButton);
     // Toggle focus on annotation
     if (background.lastFocus != paper.tool.annotation) {
@@ -80,9 +121,9 @@ function commonKeys(event) {
       background.focus();
     }
   }
-  else if (event.key == 'v') {
-    flashButton(visibleButton);
-    $('#visible').find('i').toggleClass('fa fa-eye-slash').toggleClass('fa fa-eye');
+  else if (event.key == 'h') {
+    flashButton(hideButton);
+    $('#hide').find('i').toggleClass('fa fa-eye-slash').toggleClass('fa fa-eye');
 
     // Toggle hide all
     var allInvisible = true;
@@ -99,13 +140,16 @@ function commonKeys(event) {
     }
   }
   else if (event.key == 'c') {
+    flashButton(colorButton);
     if (paper.tool.annotation) {
       paper.tool.annotation.changeColor();
     } else {
-      var i = Math.floor(Math.random() * Math.floor(annotations.length));
-      annotations[i].changeColor();
+      if (annotations.length > 0) {
+        // Change color of random annotation;
+        var i = Math.floor(Math.random() * Math.floor(annotations.length));
+        annotations[i].changeColor();
+      }
     }
-    flashButton(colorButton);
   }
   else if (event.key == 'backspace') {
     flashButton(deleteButton);
@@ -115,7 +159,7 @@ function commonKeys(event) {
         selectTool.switch();
       }
     } else {
-      alert("Nothing to delete.");
+      alert("Select an annotation to delete first.");
     }
   }
 }

@@ -2,19 +2,23 @@
 
 function maskToRLE(mask) {
   var b = 0;
-  var c = 0;
+  var bit = 0;
+  var count = 0;
   var counts = [];
-  var flat = mask.flatten();
-  for (var i = 0; i < flat.shape[0]; i++) {
-    if (flat.get(i) == b) {
-      c += 1;
-    } else {
-      counts.push(c);
-      c = 1;
-      b = flat.get(i);
+  var list = mask.tolist();
+  for (var i = 0; i < list.length; i++) {
+    for (var j = 0; j < list[i].length; j++) {
+      b = list[i][j];
+      if (b == bit) {
+        count += 1;
+      } else {
+        counts.push(count);
+        count = 1;
+        bit = b;
+      }
     }
   }
-  counts.push(c);
+  counts.push(count);
 
   var rle = {};
   rle["height"] = mask.shape[0];

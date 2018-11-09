@@ -26,32 +26,38 @@ newTool.onMouseMove = function(event) {
 
   this.enforceStyles();
 }
-newTool.onMouseDown = function(event) {
+newTool.onMouseClick = function(event) {
   this.onMouseMove(event);
   this.points.push(this.curser.clone());
   this.segments.push(this.line.clone());
 
-  if (this.curser.loopedBack) {
-    this.createAnnotation();
-  }
-}
-newTool.onMouseUp = function(event) {
-  if (this.annotation) {
-    selectTool.switch();
-  }
-}
-newTool.onKeyDown = function(event) {
-  if (event.key == 'z') {
-    var undoed = this.undo();
-    if (! undoed) {
+  if (this.curserLoopedBack) {
+    this.name = prompt("Please enter a name for this object.", "");
+    if (this.name == null || this.name == "") {
+      this.undoTool();
+    } else {
+      this.createAnnotation();
       selectTool.switch();
     }
   }
+}
+newTool.onMouseDrag = function(event) {
+  background.move(event.delta);
+  this.isDragging = true;
+}
+newTool.onMouseUp = function(event) {
+  if ( ! this.isDragging) {
+    console.log(event);
+    this.onMouseClick(event);
+  }
+  this.isDragging = false;
+}
+newTool.onKeyDown = function(event) {
   if (event.key == 't') {
     scissors.toggle();
     this.refreshTool();
   }
-  if (event.key == 'space') {
+  if (event.key == 'g') {
     scissors.toggleVisualize();
   }
   onKeyDownShared(event);
@@ -90,11 +96,9 @@ newTool.switch = function () {
   this.points = [];
   this.segments = [];
 
-  this.curser.loopedBack = false;
+  this.curserLoopedBack = false;
 
   this.refreshTool();
-
-  setTimeout(this.requestName(), 100);
 }
 newTool.refreshTool = function() {
   newTool.onMouseMove({point: newTool.curser.position});
@@ -106,6 +110,14 @@ newTool.refreshTool = function() {
     clearInterval(newTool.interval);
     newTool.interval = null;
   }
+}
+newTool.undoTool = function() {
+  if (this.points.length > 0) {
+    this.points.pop().remove();
+    this.segments.pop().remove();
+    return true;
+  }
+  return false;
 }
 newTool.createAnnotation = function() {
   // Join segments to form one path
@@ -119,18 +131,6 @@ newTool.createAnnotation = function() {
   this.annotation.unite(path);
   this.annotation.updateBoundary();
 }
-newTool.undo = function() {
-  var success = false;
-  if (this.points.length > 0) {
-    this.points.pop().remove();
-    success = true;
-  }
-  if (this.segments.length > 0) {
-    this.segments.pop().remove();
-    success = true;
-  }
-  return success;
-}
 newTool.snapCurser = function() {
   // Snap to annotation bounds
   if ( ! background.image.contains(this.curser.position)) {
@@ -141,14 +141,14 @@ newTool.snapCurser = function() {
   // Snap to first point
   if (this.points.length >= 2 && this.curser.intersects(this.points[0])) {
     this.curser.position = this.points[0].position;
-    this.curser.loopedBack = true;
+    this.curserLoopedBack = true;
   } else {
-    this.curser.loopedBack = false;
+    this.curserLoopedBack = false;
   }
 }
 newTool.enforceStyles = function() {
-  var pointHeight = this.toolSize * 3;
-  var lineWidth = this.toolSize;
+  var pointHeight = this.toolSize * 1.5;
+  var lineWidth = this.toolSize / 2;
 
   // Annotation styles
   for (var i = 0; i < annotations.length; i++) {
@@ -156,28 +156,24 @@ newTool.enforceStyles = function() {
   }
 
   // Point styles
-  this.curser.fillColor = "red";
+  this.curser.fillColor = "#00FF00";
   this.curser.scale(pointHeight / this.curser.bounds.height);
   for (var i = 0; i < this.points.length; i++) {
     this.points[i].scale(pointHeight / this.points[i].bounds.height);
-  }
-  
-  // Visibility
-  this.curser.visible = ! this.curser.loopedBack;
-  for (var i = 0; i < this.points.length; i++) {
-    this.points[i].visible = ! this.curser.loopedBack;
   }
 
   // Line styles
   this.line.strokeColor = "blue";
   this.line.strokeWidth = lineWidth;
-}
-newTool.requestName = function() {
-  var name = prompt("Please enter object name.", "");
-  if (name == null || name == "") {
-    selectTool.switch();
-  } else {
-    newTool.name = name;
+  for (var i = 0; i < this.segments.length; i++) {
+    this.segments[i].strokeColor = "blue";
+    this.segments[i].strokeWidth = lineWidth;
+  }
+  
+  // Visibility
+  this.curser.visible = ! this.curserLoopedBack;
+  for (var i = 0; i < this.points.length; i++) {
+    this.points[i].visible = ! this.curserLoopedBack;
   }
 }
 

@@ -17,11 +17,20 @@ table, th, td {
     padding: 3px
 }
 
+#buttonPanel {
+    position: absolute;
+    z-index: 2;
+    top: 20%; right: 82%;
+    height: 75%;
+    width:130px;
+    text-align: center;
+}
+
 #annotationPanel {
     position: absolute;
     z-index: 2;
-    top: 20%; left: 80%;
-    height: 70%;
+    top: 20%; left: 82%;
+    height: 75%;
     width: 15%;
 }
 
@@ -30,15 +39,6 @@ ul.fancytree-container {
   width: 100%;
   overflow: auto;
   position: relative;
-}
-
-#buttonPanel {
-    position: absolute;
-    z-index: 2;
-    top: 20%; right: 80%;
-    height: 70%;
-    width:130px;
-    text-align: center;
 }
 
 #questionPanel {

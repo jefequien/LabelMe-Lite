@@ -35,15 +35,25 @@ zoomInButton.title = "Zoom in: 'e'";
 zoomInButton.onclick = function() {
     paper.tool.onKeyDown({key: 'e'});
 }
+var redoAnnButton = document.getElementById('redoAnn');
+redoAnnButton.title = "Redo Annotation: 'y'";
+redoAnnButton.onclick = function() {
+    paper.tool.onKeyDown({key: 'y'});
+}
+var undoAnnButton = document.getElementById('undoAnn');
+undoAnnButton.title = "Undo annotation: 'u'";
+undoAnnButton.onclick = function() {
+    paper.tool.onKeyDown({key: 'u'});
+}
 var focusButton = document.getElementById('focus');
 focusButton.title = "Focus: 'f'";
 focusButton.onclick = function() {
     paper.tool.onKeyDown({key: 'f'});
 }
-var visibleButton = document.getElementById('visible');
-visibleButton.title = "Hide/show: 'v'";
-visibleButton.onclick = function() {
-    paper.tool.onKeyDown({key: 'v'});
+var hideButton = document.getElementById('hide');
+hideButton.title = "Hide/show: 'h'";
+hideButton.onclick = function() {
+    paper.tool.onKeyDown({key: 'h'});
 }
 var colorButton = document.getElementById('color');
 colorButton.title = "Change colors: 'c'";
@@ -104,19 +114,19 @@ newToolButton.onclick = function() {
     paper.tool.onKeyDown({key: '4'});
 }
 var helpToolButton = document.getElementById('helpTool');
-helpToolButton.title = "Tool Help: 'h'";
+helpToolButton.title = "Tool Help";
 helpToolButton.onclick = function() {
-    paper.tool.onKeyDown({key: 'h'});
+    alert(paper.tool.toolName + " help coming soon.");
 }
-var escapeToolButton = document.getElementById('escapeTool');
-escapeToolButton.title = "Escape tool: 'esc'";
-escapeToolButton.onclick = function() {
-    paper.tool.onKeyDown({key: 'escape'});
+var undoToolButton = document.getElementById('undoTool');
+undoToolButton.title = "Undo: 'z'";
+undoToolButton.onclick = function() {
+    paper.tool.onKeyDown({key: 'z'});
 }
 
 var toolSlider = document.getElementById('toolSlider');
-toolSlider.value = 3;
-toolSlider.defaultValue = 3;
+toolSlider.value = 6;
+toolSlider.defaultValue = 6;
 toolSlider.title = "Tool Size: '9','0' \n 'r' to reset";
 toolSlider.oninput = function() {
     paper.tool.toolSize = parseInt(toolSlider.value);

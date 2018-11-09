@@ -6,15 +6,22 @@ editTool.onMouseMove = function(event) {
   this.curser.position = event.point;
   this.snapCurser();
 
+  // Set this.annotation
+  if ( ! this.annotationFixed) {
+    this.annotation = selectTool.getAnnotationAt(this.curser.position);
+  }
+
   // Set this.selectedBoundary
-  if ( ! this.selectedBoundary.fixed) {
+  if ( ! this.selectedBoundaryFixed) {
     this.selectedBoundary.segments = [];
     this.selectedBoundaryPixels = [];
-    for (var i = 0; i < this.annotation.boundary.children.length; i++) {
-      var child = this.annotation.boundary.children[i];
-      if (child.contains(this.curser.position) || child.intersects(this.curser)) {
-        if (Math.abs(child.area) < Math.abs(this.selectedBoundary.area) || this.selectedBoundary.segments.length == 0) {
-          this.selectedBoundary.segments = child.segments;
+    if (this.annotation) {
+      for (var i = 0; i < this.annotation.boundary.children.length; i++) {
+        var child = this.annotation.boundary.children[i];
+        if (child.contains(this.curser.position) || child.intersects(this.curser)) {
+          if (Math.abs(child.area) < Math.abs(this.selectedBoundary.area) || this.selectedBoundary.segments.length == 0) {
+            this.selectedBoundary.segments = child.segments;
+          }
         }
       }
     }
@@ -100,27 +107,34 @@ editTool.onMouseMove = function(event) {
   this.setMode();
   this.enforceStyles();
 }
-editTool.onMouseDown = function(event) {
+editTool.onMouseClick = function(event) {
   this.onMouseMove(event);
-  if ( ! this.selectedBoundary.fixed) {
-    this.selectedBoundary.fixed = true;
-    if (this.selectedBoundary.segments.length == 0) {
+
+  // Handle click
+  if (this.annotation) {
+    this.annotationFixed = true;
+  }
+  if (this.annotationFixed) {
+    if ( ! this.selectedBoundaryFixed) {
+      this.selectedBoundaryFixed = true;
+      if (this.selectedBoundary.segments.length == 0) {
+        this.points.push(this.curser.clone());
+        this.segments.push(this.line.clone());
+      }
+    } else {
       this.points.push(this.curser.clone());
       this.segments.push(this.line.clone());
     }
-  } else {
-    this.points.push(this.curser.clone());
-    this.segments.push(this.line.clone());
   }
 
-  // Edit
-  if (this.bp1.isSet || this.curser.loopedBack) {
+  // Edit annotation
+  if (this.bp1.isSet || this.curserLoopedBack) {
     var continuePoint = null;
     if (this.bp1.isSet) {
       this.editAnnotation();
       continuePoint = this.bp0.position;
 
-    } else if (this.curser.loopedBack) {
+    } else if (this.curserLoopedBack) {
       this.selectedArea.segments = [];
       for (var i = 1; i < this.segments.length; i++) {
         this.selectedArea.join(this.segments[i].clone());
@@ -129,27 +143,44 @@ editTool.onMouseDown = function(event) {
       continuePoint = this.points[0].position;
     }
 
-    // Continue
+    // Continue with same selectedBoundary
     editTool.switch(this.annotation);
     continuePoint = editTool.annotation.boundary.getNearestPoint(continuePoint);
-    editTool.onMouseDown({point: continuePoint});
-    editTool.onMouseMove(event);
+    editTool.onMouseClick({point: continuePoint});
   }
+
+  this.onMouseMove(event);
+}
+editTool.onMouseDrag = function(event) {
+  background.move(event.delta);
+  this.isDragging = true;
+}
+editTool.onMouseUp = function(event) {
+  if ( ! this.isDragging) {
+    this.onMouseClick(event);
+  }
+  this.isDragging = false;
 }
 editTool.onKeyDown = function(event) {
-  if (event.key == 'backspace') {
-    if (this.selectedBoundary.fixed) {
+  if (event.key == 'space') {
+    brushTool.switch(this.annotation);
+    return; // Prevent default
+  }
+  else if (event.key == 'escape') {
+    if (this.selectedBoundaryFixed) {
+      editTool.switch(this.annotation);
+      return; // Prevent default
+    }
+  }
+  else if (event.key == 'backspace') {
+    if (this.selectedBoundaryFixed) {
       this.deleteSelectedBoundary();
       editTool.switch(this.annotation);
       return; // Prevent default
     }
   }
-  else if (event.key == 'escape') {
-    if (this.selectedBoundary.fixed) {
-      editTool.switch(this.annotation);
-      return; // Prevent default
-    }
-  } else if (event.key == 'n') {
+
+  else if (event.key == 'n') {
     var success = this.splitAnnotation();
     if (success) {
       this.annotation.delete();
@@ -166,32 +197,12 @@ editTool.onKeyDown = function(event) {
     this.refreshTool();
   }
 
-  // Undo and redo
-  if (event.key == 'u') {
-    var undoed = this.annotation.undo();
-    if (undoed) {
-      editTool.switch(this.annotation);
-    }
-  }
-  else if (event.key == 'y') {
-    var redoed = this.annotation.redo();
-    if (redoed) {
-      editTool.switch(this.annotation);
-    }
-  }
-  else if (event.key == 'z') {
-    var undoed = this.undo();
-    if ( ! undoed) {
-      selectTool.switch();
-    }
-  }
-
   // Smart tool
   if (event.key == 't') {
     scissors.toggle();
     this.refreshTool();
   }
-  else if (event.key == 'space') {
+  else if (event.key == 'g') {
     scissors.toggleVisualize();
   }
   onKeyDownShared(event);
@@ -221,11 +232,6 @@ editTool.switch = function(annotation) {
   console.log("Switching to", this.toolName);
   var lastCurserPosition = paper.tool.curser.position;
   var lastToolSize = paper.tool.toolSize;
-  if (annotation == null) {
-    alert(this.toolName + ": Please select an annotation to edit first.");
-    selectTool.switch();
-    return;
-  }
   paper.tool.deactivate();
   this.activate();
 
@@ -233,7 +239,6 @@ editTool.switch = function(annotation) {
   this.button.className += " active";
   this.curser = new Shape.Circle(lastCurserPosition, 1);
   this.toolSize = lastToolSize;
-
   this.annotation = annotation;
 
   this.points = [];
@@ -246,8 +251,9 @@ editTool.switch = function(annotation) {
   this.selectedBoundaryPixels = [];
   this.selectedArea = new Path();
 
-  this.selectedBoundary.fixed = false;
-  this.curser.loopedBack = false;
+  this.annotationFixed = (this.annotation != null);
+  this.selectedBoundaryFixed = false;
+  this.curserLoopedBack = false;
   this.invertedMode = false;
 
   this.refreshTool();
@@ -262,6 +268,22 @@ editTool.refreshTool = function() {
     clearInterval(editTool.interval);
     editTool.interval = null;
   }
+}
+editTool.undoTool = function() {
+  if (this.points.length > 0) {
+    this.points.pop().remove();
+    this.segments.pop().remove();
+    if (this.points.length == 0 && this.selectedBoundary.segments.length == 0) {
+      this.selectedBoundaryFixed = false;
+    }
+    this.refreshTool();
+    return true;
+  } else if (this.selectedBoundaryFixed) {
+    this.selectedBoundaryFixed = false;
+    this.refreshTool();
+    return true;
+  }
+  return false;
 }
 
 //
@@ -285,7 +307,7 @@ editTool.deleteSelectedBoundary = function() {
     this.annotation.unite(this.selectedBoundary);
   }
 
-  this.selectedBoundary.fixed = false;
+  this.selectedBoundaryFixed = false;
   this.annotation.updateBoundary();
   this.refreshTool();
 }
@@ -324,40 +346,23 @@ editTool.cutAnnotation = function() {
   this.annotation.updateBoundary();
   this.refreshTool();
 }
-editTool.undo = function() {
-  if (this.points.length > 0) {
-    this.points.pop().remove();
-    this.segments.pop().remove();
-    if (this.points.length == 0 && this.selectedBoundary.segments.length == 0) {
-      this.selectedBoundary.fixed = false;
-    }
-    this.refreshTool();
-    return true;
-  } else if (this.selectedBoundary.fixed) {
-    this.selectedBoundary.fixed = false;
-    this.refreshTool();
-    return true;
-  }
-  return false;
-}
 
 // 
 // Styles
 //
 editTool.snapCurser = function() {
-  // Snap to annotation bounds
-  var ann_bounds = this.annotation.raster.bounds;
-  if ( ! ann_bounds.contains(this.curser.position)) {
-    var rect = new Path.Rectangle(ann_bounds);
+  // Snap to image bounds
+  if ( ! background.image.contains(this.curser.position)) {
+    var rect = new Path.Rectangle(background.image.bounds);
     rect.remove();
     this.curser.position = rect.getNearestPoint(this.curser.position);
   }
   // Snap to first point
   if (this.points.length >= 2 && this.curser.intersects(this.points[0])) {
     this.curser.position = this.points[0].position;
-    this.curser.loopedBack = true;
+    this.curserLoopedBack = true;
   } else {
-    this.curser.loopedBack = false;
+    this.curserLoopedBack = false;
   }
 }
 editTool.setMode = function() {
@@ -367,26 +372,32 @@ editTool.setMode = function() {
   } else {
     modePoint = this.segments[0].getPointAt(1);
   }
-  if ( ! this.annotation.boundary.contains(modePoint)) {
-    this.mode = "unite";
-  } else {
+  this.mode = "unite";
+  if (this.annotation && this.annotation.boundary.contains(modePoint)) {
     this.mode = "subtract";
   }
 }
 editTool.enforceStyles = function() {
-  var pointHeight = this.toolSize * 3;
-  var lineWidth = this.toolSize;
+  var pointHeight = this.toolSize * 1.5;
+  var lineWidth = this.toolSize / 2;
 
-  // Annotation styles
+  // this.annotation styles
+  if (this.annotation) {
+    this.annotation.highlight();
+    this.annotation.raster.opacity = 0.2;
+    this.annotation.boundary.strokeWidth = lineWidth;
+  }
+
+  // Other annotations styles
   for (var i = 0; i < annotations.length; i++) {
     if (annotations[i] != this.annotation) {
-      annotations[i].hide();
-    } else {
-      this.annotation.highlight();
+      if (this.annotation) {
+        annotations[i].hide();
+      } else {
+        annotations[i].unhighlight();
+      }
     }
   }
-  this.annotation.raster.opacity = 0.2;
-  this.annotation.boundary.strokeWidth = lineWidth;
 
   // Point styles
   var allPoints = this.points.concat([this.bp0, this.bp1, this.curser]);
@@ -403,13 +414,13 @@ editTool.enforceStyles = function() {
   this.bp0.strokeColor = "black";
   this.bp0.strokeWidth = 0.5;
   this.bp1.style = this.bp0.style;
-  if ( ! this.selectedBoundary.fixed) {
+  if ( ! this.selectedBoundaryFixed) {
     this.bp0.strokeWidth = 0;
   }
 
   // Line styles
   this.selectedBoundary.strokeColor = "gold";
-  this.selectedBoundary.strokeWidth = lineWidth;
+  this.selectedBoundary.strokeWidth = lineWidth * 2;
   this.line.strokeColor = "black";
   this.line.strokeWidth = lineWidth;
   this.bl.strokeColor = "black";
@@ -429,16 +440,16 @@ editTool.enforceStyles = function() {
   }
 
   // Visibility
-  this.bp0.visible = (this.selectedBoundary.fixed || this.selectedBoundary.segments.length == 0);
-  this.line.visible = this.selectedBoundary.fixed;
-  this.curser.visible = this.selectedBoundary.fixed;
+  this.bp0.visible = (this.selectedBoundaryFixed || this.selectedBoundary.segments.length == 0);
+  this.line.visible = this.selectedBoundaryFixed;
+  this.curser.visible = this.selectedBoundaryFixed;
   this.bp1.visible = this.bp1.isSet;
   if (this.segments.length > 0) {
-    this.segments[0].visible = ! this.curser.loopedBack;
-    this.bp0.visible = ! this.curser.loopedBack;
+    this.segments[0].visible = ! this.curserLoopedBack;
+    this.bp0.visible = ! this.curserLoopedBack;
   }
-  if (this.selectedBoundary.fixed) {
-    this.selectedBoundary.strokeWidth *= 1.5;
+  if (this.selectedBoundaryFixed) {
+    this.selectedBoundary.strokeWidth = lineWidth;
   }
 
   // Order
@@ -483,7 +494,7 @@ editTool.getPath = function(start, end) {
   return path;
 }
 editTool.getPathToBoundary = function(point, boundary) {
-  if (scissors.active && this.selectedBoundary.fixed) {
+  if (scissors.active && this.selectedBoundaryFixed) {
     // Try pixels along line
     var start = boundary.getNearestPoint(point);
     var path = new Path.Line(start, point);
