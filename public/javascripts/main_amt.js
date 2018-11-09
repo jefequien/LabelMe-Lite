@@ -5,10 +5,11 @@ var current_num = 0;
 
 window.onload = function() {
     selectTool.switch();
-    main();
-}
+    if (Object.keys(params).length == 0) {
+        params.id = "ade20k_val_maskrcnnc_15";
+        setWindowUrl(params);
+    }
 
-function main() {
     getBundle(function(res) {
         bundle = res;
         current_num = 0;
@@ -17,10 +18,13 @@ function main() {
     });
 }
 
+function main() {
+}
+
 function loadTool(task) {
     console.log(task);
     var category = task.annotations[0].category.split(" ")[0];
-    
+
     $('#category span').text(category);
     $('#current').text(current_num + 1);
     $('#total').text(bundle.length);
@@ -53,4 +57,9 @@ nextButton.onclick = function() {
         loadTool(bundle[current_num]);
         selectTool.switch();
     }
+}
+
+function setWindowUrl(json) {
+    var state = {id: json.id}
+    window.history.pushState(null, null, "/game_amt?" + buildQuery(state));
 }

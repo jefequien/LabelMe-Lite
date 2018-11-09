@@ -91,7 +91,7 @@ router.get('/annotations', function(req, res) {
     }
 
     var imgId = 0
-    if (req.query.file_name != null) {
+    if (req.query.file_name != null && req.query.file_name != "undefined") {
         imgId = coco.fnToImgId[req.query.file_name];
         if (imgId == null) {
             res.status(404).send('File name not found');

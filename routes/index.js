@@ -19,7 +19,7 @@ router.get('/game_amt', function(req, res, next) {
 });
 
 router.get('/', function(req, res, next) {
-  res.redirect('game?dataset=ade20k_val&ann_source=pspnet');
+  res.redirect('game');
   // res.render('index', { title: 'Express' });
 });
 

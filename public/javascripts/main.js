@@ -1,10 +1,12 @@
 
 window.onload = function() {
     selectTool.switch();
-    main();
-}
-
-function main() {
+    if (Object.keys(params).length == 0) {
+        params.dataset = "ade20k_val";
+        params.ann_source = "pspnet";
+        setWindowUrl(params);
+    }
+    
     getAnnotations(function(res) {
         loadTool(res);
     });
@@ -13,7 +15,7 @@ function main() {
 
 function loadTool(task) {
     console.log(task);
-    
+
     $('#datasetName span').text(task.dataset);
     $('#annotationSource span').text(task.ann_source);
     $('#imageFileName span').text(task.file_name);
@@ -21,11 +23,11 @@ function loadTool(task) {
     scissors.setImage(task.image_url);
     brush.setImage(task.image_url);
     
-    var annotations = [];
     if (task.annotations) {
-        annotations = task.annotations;
+        loadAnnotations(task.annotations);
+    } else {
+        loadAnnotations([]);
     }
-    loadAnnotations(annotations);
 
     setWindowUrl(task);
 }
