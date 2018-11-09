@@ -19,9 +19,12 @@ function main() {
 
 function loadTool(task) {
     console.log(task);
-    $('#datasetName span').text(task.dataset);
-    $('#annotationSource span').text(current_num);
-    $('#imageFileName span').text(task.file_name);
+    var category = task.annotations[0].category.split(" ")[0];
+    
+    $('#category span').text(category);
+    $('#current').text(current_num + 1);
+    $('#total').text(bundle.length);
+
     background.setImage(task.image_url);
     scissors.setImage(task.image_url);
     brush.setImage(task.image_url);

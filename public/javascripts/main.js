@@ -1,23 +1,55 @@
 
-
-
-function loadTool() {
+window.onload = function() {
     selectTool.switch();
-    getAnnotations(function(res) {
-        $('#datasetName span').text(res.dataset);
-        $('#annotationSource span').text(res.ann_source);
-        $('#imageFileName span').text(res.file_name);
-        background.setImage(res.image_url);
-        scissors.setImage(res.image_url);
-        brush.setImage(res.image_url);
-        
-        var annotations = [];
-        if (res.annotations) {
-            annotations = res.annotations;
-        }
-        loadAnnotations(annotations);
+    main();
+}
 
-        setWindowUrl(res);
+function main() {
+    getAnnotations(function(res) {
+        loadTool(res);
+    });
+}
+
+
+function loadTool(task) {
+    console.log(task);
+    
+    $('#datasetName span').text(task.dataset);
+    $('#annotationSource span').text(task.ann_source);
+    $('#imageFileName span').text(task.file_name);
+    background.setImage(task.image_url);
+    scissors.setImage(task.image_url);
+    brush.setImage(task.image_url);
+    
+    var annotations = [];
+    if (task.annotations) {
+        annotations = task.annotations;
+    }
+    loadAnnotations(annotations);
+
+    setWindowUrl(task);
+}
+
+var prevButton = document.getElementById('prevImage');
+prevButton.onclick = function() {
+    clearAnnotations();
+    getPrevImage(function(json){
+        setWindowUrl(json);
+        getAnnotations(function(res) {
+            loadTool(res);
+            selectTool.switch();
+        });
+    });
+}
+var nextButton = document.getElementById('nextImage');
+nextButton.onclick = function() {
+    clearAnnotations();
+    getNextImage(function(json){
+        setWindowUrl(json);
+        getAnnotations(function(res) {
+            loadTool(res);
+            selectTool.switch();
+        });
     });
 }
 
@@ -26,25 +58,4 @@ function setWindowUrl(json) {
                 ann_source: json.ann_source, 
                 file_name: json.file_name}
     window.history.pushState(null, null, "/game?" + buildQuery(state));
-}
-
-var prevButton = document.getElementById('prevImage');
-prevButton.onclick = function() {
-    clearAnnotations();
-    getPrevImage(function(json){
-        setWindowUrl(json);
-        loadTool();
-    });
-}
-var nextButton = document.getElementById('nextImage');
-nextButton.onclick = function() {
-    clearAnnotations();
-    getNextImage(function(json){
-        setWindowUrl(json);
-        loadTool();
-    });
-}
-
-window.onload = function() {
-    loadTool();
 }
