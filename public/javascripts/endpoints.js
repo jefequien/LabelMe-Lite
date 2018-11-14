@@ -19,36 +19,20 @@ function getImageURL(src) {
 }
 function getNextImage(callback) {
     var endpoint = base_url + "/data/images/next?" + query;
-    var parse = function(data) {
-      json = JSON.parse(data);
-      callback(json);
-    }
-    get_async(endpoint, parse);
+    get_async(endpoint, callback);
 }
 function getPrevImage(callback) {
     var endpoint = base_url + "/data/images/prev?" + query;
-    var parse = function(data) {
-      json = JSON.parse(data);
-      callback(json);
-    }
-    get_async(endpoint, parse);
+    get_async(endpoint, callback);
 }
 
 function getAnnotations(callback) {
     var endpoint = base_url + "/data/annotations?" + query;
-    var parse = function(data) {
-      json = JSON.parse(data);
-      callback(json);
-    }
-    get_async(endpoint, parse);
+    get_async(endpoint, callback);
 }
 function getBundle(callback) {
     var endpoint = base_url + "/data/bundles?" + query;
-    var parse = function(data) {
-      json = JSON.parse(data);
-      callback(json);
-    }
-    get_async(endpoint, parse);
+    get_async(endpoint, callback);
 }
 function get_annotation_tree(callback) {
     var endpoint = base_url + "/annotations/trees?" + query;
@@ -68,9 +52,10 @@ function get_async(url, callback) {
   xhr.onreadystatechange = function() { 
     if (xhr.readyState == 4){
       if (xhr.status == 200) {
-        callback(xhr.responseText);
+        var json = JSON.parse(xhr.responseText);
+        callback(json);
       } else if (xhr.status == 404) {
-        callback("{}");
+        callback();
       }
     }
   }

@@ -7,14 +7,44 @@ function Background() {
   this.setFocusRect();
   this.addGestures();
 
-  this.focusMaxScale = 5;
-  this.maxScale = 10;
+  this.clearImage();
+  this.makeFilter();
+
+  this.focusMaxScale = 7;
+  this.maxScale = 12;
   this.minScale = 0.2;
-
+}
+Background.prototype.setImage = function(image) {
+  var raster = new Raster(image);
+  raster.position = this.canvasCenter;
+  raster.onLoad = function() {
+    if (background.image) {
+      background.image.remove();
+    }
+    background.image = raster;
+    for (var i = 0; i < annotations.length; i++) {
+      background.align(annotations[i]);
+    }
+    background.focus();
+    background.image.sendToBack();
+    background.makeFilter();
+  }
+}
+Background.prototype.clearImage = function() {
+  if (this.image) {
+    this.image.remove();
+  }
   this.image = new Path.Rectangle(this.focusRect).rasterize();
+}
+Background.prototype.makeFilter = function() {
+  if (this.filter) {
+    this.filter.remove();
+  }
 
+  this.image.blendMode = 'overlay';
   this.filter = new Path.Rectangle(this.image.bounds);
   this.filter.fillColor = new Color(0.5);
+  this.filter.sendToBack();
 }
 Background.prototype.setFocusRect = function() {
   var h = this.canvas.height;
@@ -23,27 +53,6 @@ Background.prototype.setFocusRect = function() {
   var tl = this.canvasCenter - new Point(0.45 * w, 0.45 * h);
   var br = this.canvasCenter + new Point(0.45 * w, 0.45 * h);
   this.focusRect = new Rectangle(tl, br);
-}
-Background.prototype.setImage = function(image) {
-  var raster = new Raster(image);
-  raster.position = this.canvasCenter;
-  raster.onLoad = function() {
-    var filter = new Path.Rectangle(raster.bounds);
-    filter.style = background.filter.style;
-
-    background.image.remove();
-    background.filter.remove();
-    background.image = raster;
-    background.filter = filter;
-
-    background.image.blendMode = 'overlay';
-    background.image.sendToBack();
-    background.filter.sendToBack();
-    for (var i = 0; i < annotations.length; i++) {
-      background.align(annotations[i]);
-    }
-    background.focus();
-  }
 }
 Background.prototype.move = function(delta, noSnap) {
   paper.project.activeLayer.translate(delta);
@@ -206,9 +215,9 @@ Background.prototype.getInteriorPixels = function(shape) {
   clone.translate(new Point(0.5, 0.5)); // Align for rasterize.
   var raster = clone.rasterize();
   var tl = raster.bounds.topLeft;
+  raster.opacity = 1;
 
   var pixels = [];
-  raster.opacity = 0.01;
   var imageData = raster.getImageData();
   var mask = imageDataToMask(imageData);
   for (var x = 0; x < mask.shape[1]; x++) {

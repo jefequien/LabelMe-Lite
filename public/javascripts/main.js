@@ -15,6 +15,7 @@ window.onload = function() {
 
 function loadTool(task) {
     console.log(task);
+    clearAnnotations();
 
     $('#datasetName').text(task.dataset);
     $('#annotationSource').text(task.ann_source);
@@ -34,7 +35,6 @@ function loadTool(task) {
 
 var prevButton = document.getElementById('prevImage');
 prevButton.onclick = function() {
-    clearAnnotations();
     getPrevImage(function(json){
         setWindowUrl(json);
         getAnnotations(function(res) {
@@ -45,7 +45,6 @@ prevButton.onclick = function() {
 }
 var nextButton = document.getElementById('nextImage');
 nextButton.onclick = function() {
-    clearAnnotations();
     getNextImage(function(json){
         setWindowUrl(json);
         getAnnotations(function(res) {
@@ -59,5 +58,5 @@ function setWindowUrl(json) {
     var state = {dataset: json.dataset,
                 ann_source: json.ann_source, 
                 file_name: json.file_name}
-    window.history.pushState(null, null, "/game?" + buildQuery(state));
+    window.history.pushState(null, null, "/tool?" + buildQuery(state));
 }

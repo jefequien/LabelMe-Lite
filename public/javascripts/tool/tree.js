@@ -57,12 +57,11 @@ $("#tree").fancytree({
         data.node.setExpanded( ! data.node.isExpanded());
         return false;
       }
-    }).on("mousemove", ".fancytree-node", function(event){
+    }).on("mouseenter", ".fancytree-node", function(event){
+      // Highlight annotation when mouse is over cell
       var node = $.ui.fancytree.getNode(event);
       var annotation = tree.getAnnotationById(node.key);
       if (annotation) {
-        node.setActive(true);
-        node.setFocus(true);
         if (paper.tool == selectTool) {
           for (var i = 0; i < annotations.length; i++) {
             if (annotations[i] != annotation) {
@@ -72,7 +71,19 @@ $("#tree").fancytree({
           annotation.highlight();
         }
       }
-      return false;
+    }).on("mouseleave", ".fancytree-node", function(event){
+      // Unhighlight annotation when mouse leaves cell
+      var node = $.ui.fancytree.getNode(event);
+      // var annotation = tree.getAnnotationById(node.key);
+      // if (annotation) {
+        if (paper.tool == selectTool) {
+          for (var i = 0; i < annotations.length; i++) {
+            // if (annotations[i] != annotation) {
+              annotations[i].unhighlight();
+            // }
+          }
+        }
+      // }
     });
 
 

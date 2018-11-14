@@ -144,11 +144,12 @@ brushTool.setMode = function() {
   }
 }
 brushTool.enforceStyles = function() {
-  var curserHeight = this.toolSize * this.toolSize / 5 * background.getPixelHeight();
+  var curserHeight = this.toolSize * this.toolSize;
 
   // this.annotation styles
   if (this.annotation) {
     this.annotation.highlight();
+
     if (this.annotationFixed) {
       this.annotation.boundary.strokeWidth = 0;
       if (this.mode == "unite") {
@@ -158,6 +159,9 @@ brushTool.enforceStyles = function() {
         this.annotation.raster.opacity = 0;
         this.annotation.rasterinv.opacity = 0.8;
       }
+    } else {
+      this.annotation.boundary.strokeWidth = this.toolSize;
+      this.annotation.raster.opacity = 0.5;
     }
   }
 

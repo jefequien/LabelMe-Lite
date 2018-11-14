@@ -1,7 +1,6 @@
 /**
  * Buttons
  */
-
 var downloadImgButton = document.getElementById('downloadImg');
 downloadImgButton.onclick = function() {
     var newTab = window.open(background.image.source);
@@ -16,16 +15,32 @@ downloadAnnButton.onclick = function() {
     newTab.document.close();
 }
 
-
+//
+// Zoom Buttons
+//
+var zoomInButton = document.getElementById('zoomIn');
+zoomInButton.title = "Zoom in: 'e'";
+zoomInButton.onclick = function() {
+    paper.tool.onKeyDown({key: 'e'});
+}
 var zoomOutButton = document.getElementById('zoomOut');
 zoomOutButton.title = "Zoom out: 'q'";
 zoomOutButton.onclick = function() {
     paper.tool.onKeyDown({key: 'q'});
 }
-var zoomInButton = document.getElementById('zoomIn');
-zoomInButton.title = "Zoom in: 'e'";
-zoomInButton.onclick = function() {
-    paper.tool.onKeyDown({key: 'e'});
+var focusButton = document.getElementById('focus');
+focusButton.title = "Focus: 'f'";
+focusButton.onclick = function() {
+    paper.tool.onKeyDown({key: 'f'});
+}
+
+//
+// Edit Buttons
+//
+var undoToolButton = document.getElementById('undoTool');
+undoToolButton.title = "Undo: 'z'";
+undoToolButton.onclick = function() {
+    paper.tool.onKeyDown({key: 'z'});
 }
 var undoAnnButton = document.getElementById('undoAnn');
 undoAnnButton.title = "Undo annotation: 'u'";
@@ -37,17 +52,15 @@ redoAnnButton.title = "Redo annotation: 'y'";
 redoAnnButton.onclick = function() {
     paper.tool.onKeyDown({key: 'y'});
 }
-var focusButton = document.getElementById('focus');
-focusButton.title = "Focus: 'f'";
-focusButton.onclick = function() {
-    paper.tool.onKeyDown({key: 'f'});
-}
 var deleteButton = document.getElementById('delete');
 deleteButton.title = "Delete: 'backspace'";
 deleteButton.onclick = function() {
     paper.tool.onKeyDown({key: 'backspace'});
 }
 
+//
+// View Buttons
+//
 var decreaseBrightnessButton = document.getElementById('decreaseBrightness');
 decreaseBrightnessButton.title = "Decrease brightness";
 decreaseBrightnessButton.onclick = function() {
@@ -67,6 +80,14 @@ var hideButton = document.getElementById('hide');
 hideButton.title = "Hide/show: 'h'";
 hideButton.onclick = function() {
     paper.tool.onKeyDown({key: 'h'});
+}
+var toolSlider = document.getElementById('toolSlider');
+toolSlider.value = 6;
+toolSlider.defaultValue = 6;
+toolSlider.title = "Tool Size: '9','0' \n 'r' to reset";
+toolSlider.oninput = function() {
+    paper.tool.toolSize = parseInt(toolSlider.value);
+    paper.tool.refreshTool();
 }
 
 //
@@ -127,18 +148,4 @@ newToolButton.onclick = function() {
         alert(paper.tool.toolName + " help coming soon.");
     }
     paper.tool.onKeyDown({key: '4'});
-}
-var undoToolButton = document.getElementById('undoTool');
-undoToolButton.title = "Undo: 'z'";
-undoToolButton.onclick = function() {
-    paper.tool.onKeyDown({key: 'z'});
-}
-
-var toolSlider = document.getElementById('toolSlider');
-toolSlider.value = 6;
-toolSlider.defaultValue = 6;
-toolSlider.title = "Tool Size: '9','0' \n 'r' to reset";
-toolSlider.oninput = function() {
-    paper.tool.toolSize = parseInt(toolSlider.value);
-    paper.tool.refreshTool();
 }

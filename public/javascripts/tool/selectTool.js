@@ -19,12 +19,10 @@ selectTool.onMouseMove = function(event) {
 selectTool.onMouseClick = function(event) {
   this.onMouseMove(event);
   if (this.annotation) {
-    editTool.switch(this.annotation);
-    editTool.onMouseClick(event);
     if (background.lastFocus != this.annotation) {
       background.focus(this.annotation);
     }
-    editTool.refreshTool();
+    editTool.switch(this.annotation);
   }
 }
 selectTool.onMouseDown = function(event) {
@@ -50,6 +48,10 @@ selectTool.onKeyDown = function(event) {
   else if (event.key == 'z') {
     background.focus();
   }
+  else if (event.key == 'i') {
+    annotations.styleInverted = ( ! annotations.styleInverted);
+    this.refreshTool();
+  }
   onKeyDownShared(event);
 }
 selectTool.refreshTool = function() {
@@ -67,7 +69,7 @@ selectTool.switch = function(annotation) {
   this.toolName = "Select Tool";
   console.log("Switching to", this.toolName);
 
-  var lastCurserPosition = (paper.tool.curser) ? paper.tool.curser.position : background.canvasCenter;
+  var lastCurserPosition = (paper.tool.curser) ? paper.tool.curser.position : new Point(0,0);
   var lastToolSize = parseInt(toolSlider.value);
   paper.tool.deactivate();
   this.activate();

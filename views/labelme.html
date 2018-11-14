@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Pixel level segmentation application">
+    <meta name="author" content="Jeffrey Hu">
+    <title>LabelMeLite</title>
+
+    <!-- Fancytree CSS -->
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="vendor/fancytree/skin-bootstrap/ui.fancytree.css" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link href="stylesheets/tool.css" rel="stylesheet">
+
+</head>
+<body>
+    <nav class="navbar navbar-default">
+        <img src="Icons/LabelMe_logo3.png">
+    </nav>
+
+    <!-- Canvas -->
+    <canvas id="toolCanvas"></canvas>
+
+    <!-- Annotations Table --> 
+    <div id="annotationPanel" class="panel panel-default">
+        <div id="annotationHeader" class="panel-heading">
+          <b>Annotations</b>
+        </div>
+        <div id="tree" class="panel-body fancytree-fade-expander"></div>
+    </div>
+
+    <!-- NAVIGATION BUTTONS  -->
+    <div id="navigation_buttons" class="labelBtn-group">
+      <button id="downloadImg" class="labelBtn" type="button" title="Download image">
+        <img src="Icons/download_img.png"/>
+      </button>
+      <button id="downloadAnn" class="labelBtn" type="button" title="Download ann file">
+        <img src="Icons/download_xml.png"/>
+      </button>
+      <button id="help" class="labelBtn" type="button" title="Show help page">
+        <img src="Icons/help_new.png"/>
+      </button>
+      <button id="prevImage" class="labelBtn" type="button" title="Prev Image">
+        <img src="Icons/previous_2.png"/>
+      </button>
+      <button id="nextImage" class="labelBtn" type="button" title="Next Image">
+        <img src="Icons/next_2.png"/>
+      </button>
+    </div>
+
+    <!-- CONTRAST BUTTONS -->
+    <div id="contrast_buttons" class="labelBtn-group">
+      <button id="lessContrast" class="labelBtn" type="button" title="Decrease Brightness">
+        <img src="Icons/morecontrast.png"/>
+      </button>
+      <button id="moreContrast" class="labelBtn" type="button" title="Increase Brightness">
+        <img src="Icons/lesscontrast.png"/>
+      </button>
+    </div>
+    
+    <!-- DRAWING BUTTONS -->
+    <div id="drawing_buttons" class="labelBtn-group labelBtn-group-vertical">
+      <button id="zoomIn" class="labelBtn labelBtn-vertical" type="button" title="Zoom In">
+        <img src="Icons/zoomin.png"/>
+      </button>
+      <button id="zoomOut" class="labelBtn labelBtn-vertical" type="button" title="Zoom Out">
+        <img src="Icons/zoomout.png"/>
+      </button>
+      <button id="focus" class="labelBtn labelBtn-vertical" type="button" title="Fit Image">
+        <img src="Icons/fitscreen.png"/>
+      </button>
+      <button id="lasso" class="labelBtn labelBtn-vertical" type="button" title="Intelligent Scissors">
+        <img src="Icons/lasso.png"/>
+      </button>
+    </div>
+
+    <!-- TOOL BUTTONS -->
+    <div id="tool_buttons" class="labelBtn-group labelBtn-group-vertical">
+      <button id="selectTool" class="labelBtn labelBtn-vertical" type="button" title="Select Tool">
+        <img src="Icons/select.png"/>
+      </button>
+      <button id="newTool" class="labelBtn labelBtn-vertical" type="button" title="New Tool">
+        <img src="Icons/plus.png"/>
+      </button>
+      <button id="editTool" class="labelBtn labelBtn-vertical" type="button" title="Edit Tool">
+        <img src="Icons/polygon.png"/>
+      </button>
+      <button id="brushTool" class="labelBtn labelBtn-vertical" type="button" title="Brush Tool">
+        <img src="Icons/brush.png"/>
+      </button>
+    </div>
+
+
+    <!-- Fancytree Javascript -->
+    <script src="//code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script src="//code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
+    <script src="vendor/fancytree/jquery.fancytree-all.min.js"></script>
+
+
+    <!-- Custom Javascript -->
+    <script type="text/javascript" src="components/numjs/dist/numjs.min.js"></script>
+    <script type="text/javascript" src="javascripts/opencv.js"></script>
+    <script type="text/javascript" src="components/google-closure-library-compiler/compiled.js"></script>
+    <script type="text/javascript" src="components/paper/dist/paper-full.js"></script>
+    
+    <script type="text/paperscript" src="javascripts/tool/selectTool.js" canvas="toolCanvas"></script>
+    <script type="text/paperscript" src="javascripts/tool/brushTool.js" canvas="toolCanvas"></script>
+    <script type="text/paperscript" src="javascripts/tool/editTool.js" canvas="toolCanvas"></script>
+    <script type="text/paperscript" src="javascripts/tool/newTool.js" canvas="toolCanvas"></script>
+    <script type="text/paperscript" src="javascripts/tool/annotations.js" canvas="toolCanvas"></script>
+    <script type="text/paperscript" src="javascripts/tool/background.js" canvas="toolCanvas"></script>
+    <script type="text/paperscript" src="javascripts/tool/tree.js" canvas="toolCanvas"></script>
+
+    <script type="text/javascript" src="javascripts/tool/tool_utils.js"></script>
+    <script type="text/javascript" src="javascripts/tool/intelligent_scissors.js"></script>
+    <script type="text/javascript" src="javascripts/tool/intelligent_brush.js"></script>
+    <script type="text/javascript" src="javascripts/endpoints.js"></script>
+    <script type="text/javascript" src="javascripts/buttons.js"></script>
+    <script type="text/javascript" src="javascripts/main.js"></script>
+
+</body>
+
+</html>

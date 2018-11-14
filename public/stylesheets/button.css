@@ -1,0 +1,84 @@
+/*
+* Button Styles
+*/
+hr {
+    border-top: 3px solid #ccc;
+    width:60%;    
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+#viewButtons .btn {
+    margin-left: 5px;
+    margin-right: 5px;
+}
+#navButtons {
+    margin-left: auto;
+}
+#navButtons .btn {
+    margin-left: 5px;
+    margin-right: 5px;
+}
+#movementButtons {
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+
+.fa, .fi, .glyphicon {
+  font-size: 24px;
+  color:white;
+}
+.fa-small{
+  font-size: 14px;
+}
+.fa-large{
+  font-size: 30px;
+}
+.btn {
+  height: 50px;
+  width: 50px;
+  background: none;
+  color:white;
+  font-size: 12px;
+}
+.btn-small {
+   width: 30px;
+   height: 30px;
+   padding:0px;
+}
+.btn-slider {
+  height:30px;
+  width:80px;
+  padding-left:0px;
+  padding-right:0px;
+}
+.btn-group-vertical {
+  width:75px;
+}
+.btn:hover, .active {
+  background-color: #4a4a4a;
+  color:white;
+}
+.btn:focus {
+  color:white;
+  outline:0 !important;
+}
+
+.btn-matrix > .btn:nth-child(2n+3) {
+  clear: left;
+  margin-left: 0;
+}
+.btn-matrix > .btn:nth-child(n+3) {
+  margin-top: -1px;
+}
+.btn-matrix > .btn:first-child {
+  border-bottom-left-radius: 0;
+}
+.btn-matrix > .btn:nth-child(2) {
+  border-top-right-radius: 4px !important;
+}
+.btn-matrix > .btn:nth-last-child(2) {
+  border-bottom-left-radius: 4px !important;
+}
+.btn-matrix > .btn:last-child {
+  border-top-right-radius: 0;
+}

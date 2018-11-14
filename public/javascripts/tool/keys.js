@@ -21,21 +21,9 @@ function toolKeys(event) {
       newTool.switch();
     }
   }
-  if (event.key == 'z') {
-    flashButton(undoToolButton);
+}
 
-    if (paper.tool.undoTool) {
-      var undoed = paper.tool.undoTool();
-      if ( ! undoed) {
-        selectTool.switch();
-      }
-    } else {
-      if (paper.tool.toolName != "selectTool") {
-        selectTool.switch();
-      }
-    }
-  }
-
+function sliderKeys(event) {
   if (event.key == '9') {
     var toolSize = paper.tool.toolSize - 1;
     toolSize = Math.max(toolSlider.min, Math.min(toolSlider.max, toolSize));
@@ -59,69 +47,8 @@ function toolKeys(event) {
   }
 }
 
-function movementKeys(event) {
-  if (event.key == 'left' || event.key == 'a') {
-    background.move(new Point(100, 0));
-    flashButton(leftButton);
-  }
-  else if (event.key == 'right' || event.key == 'd') {
-    background.move(new Point(-100, 0));
-    flashButton(rightButton);
-  }
-  else if (event.key == 'up' || event.key == 'w') {
-    background.move(new Point(0, 100));
-    flashButton(upButton);
-  }
-  else if (event.key == 'down' || event.key == 's') {
-    background.move(new Point(0, -100));
-    flashButton(downButton);
-  }
-}
-
-function commonKeys(event) {
-  // Zoom in and out
-  if (event.key == 'q') {
-    background.scale(0.8);
-    flashButton(zoomOutButton);
-  }
-  else if (event.key == 'e') {
-    background.scale(1.25);
-    flashButton(zoomInButton);
-  }
-
-  // Undo and redo
-  if (event.key == 'u') {
-    flashButton(undoAnnButton);
-    if (paper.tool.annotation) {
-      var undoed = paper.tool.annotation.undo();
-      if (undoed) {
-        paper.tool.switch(paper.tool.annotation);
-      }
-    } else {
-      alert("Select an annotation to undo first.");
-    }
-  } else if (event.key == 'y') {
-    flashButton(redoAnnButton);
-    if (paper.tool.annotation) {
-      var redoed = paper.tool.annotation.redo();
-      if (redoed) {
-        paper.tool.switch(paper.tool.annotation);
-      }
-    } else {
-      alert("Select an annotation to redo first.");
-    }
-  }
-
-  if (event.key == 'f') {
-    flashButton(focusButton);
-    // Toggle focus on annotation
-    if (background.lastFocus != paper.tool.annotation) {
-      background.focus(paper.tool.annotation);
-    } else {
-      background.focus();
-    }
-  }
-  else if (event.key == 'h') {
+function viewKeys(event) {
+  if (event.key == 'h') {
     flashButton(hideButton);
 
     // Toggle hide all
@@ -153,7 +80,90 @@ function commonKeys(event) {
         annotations[i].changeColor();
       }
     }
+    paper.tool.refreshTool();
   }
+}
+
+function zoomKeys(event) {
+  if (event.key == 'q') {
+    flashButton(zoomOutButton);
+    background.scale(0.8);
+    paper.tool.refreshTool();
+  }
+  else if (event.key == 'e') {
+    flashButton(zoomInButton);
+    background.scale(1.25);
+    paper.tool.refreshTool();
+  }
+  else if (event.key == 'f') {
+    flashButton(focusButton);
+    // Toggle focus on annotation
+    if (background.lastFocus != paper.tool.annotation) {
+      background.focus(paper.tool.annotation);
+    } else {
+      background.focus();
+    }
+    paper.tool.refreshTool();
+  }
+}
+
+function movementKeys(event) {
+  if (event.key == 'left' || event.key == 'a') {
+    background.move(new Point(100, 0));
+    flashButton(leftButton);
+  }
+  else if (event.key == 'right' || event.key == 'd') {
+    background.move(new Point(-100, 0));
+    flashButton(rightButton);
+  }
+  else if (event.key == 'up' || event.key == 'w') {
+    background.move(new Point(0, 100));
+    flashButton(upButton);
+  }
+  else if (event.key == 'down' || event.key == 's') {
+    background.move(new Point(0, -100));
+    flashButton(downButton);
+  }
+}
+
+function editKeys(event) {
+  if (event.key == 'z') {
+    flashButton(undoToolButton);
+
+    if (paper.tool.undoTool) {
+      var undoed = paper.tool.undoTool();
+      if ( ! undoed) {
+        selectTool.switch();
+      }
+    } else {
+      if (paper.tool.toolName != "selectTool") {
+        selectTool.switch();
+      }
+    }
+  }
+  // Undo and redo
+  if (event.key == 'u') {
+    flashButton(undoAnnButton);
+    if (paper.tool.annotation) {
+      var undoed = paper.tool.annotation.undo();
+      if (undoed) {
+        paper.tool.switch(paper.tool.annotation);
+      }
+    } else {
+      alert("Select an annotation to undo first.");
+    }
+  } else if (event.key == 'y') {
+    flashButton(redoAnnButton);
+    if (paper.tool.annotation) {
+      var redoed = paper.tool.annotation.redo();
+      if (redoed) {
+        paper.tool.switch(paper.tool.annotation);
+      }
+    } else {
+      alert("Select an annotation to redo first.");
+    }
+  }
+
   else if (event.key == 'backspace') {
     flashButton(deleteButton);
     if (paper.tool.annotation) {
@@ -164,9 +174,6 @@ function commonKeys(event) {
     } else {
       alert("Select an annotation to delete first.");
     }
-  }
-  else if (event.key == 'space') {
-    return; // Prevent default
   }
 }
 
@@ -179,8 +186,11 @@ function flashButton(button) {
 // Exports
 //
 function onKeyDownShared(event) {
-  movementKeys(event);
   toolKeys(event);
-  commonKeys(event);
+  sliderKeys(event);
+  viewKeys(event)
+  zoomKeys(event)
+  editKeys(event);
+  movementKeys(event);
 }
 window.onKeyDownShared = onKeyDownShared;

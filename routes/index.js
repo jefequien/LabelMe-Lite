@@ -10,16 +10,13 @@ router.get('/amt', function(req, res, next) {
   res.render('amt', { title: 'Express' });
 });
 
-router.get('/game', function(req, res, next) {
-  res.render('game', { title: 'Game interface' });
+router.get('/labelme', function(req, res, next) {
+  res.render('labelme', { title: 'LabelMe interface' });
 });
 
-router.get('/game_amt', function(req, res, next) {
-  res.render('game_amt', { title: 'Game interface for AMT' });
-});
 
 router.get('/', function(req, res, next) {
-  res.redirect('game');
+  res.redirect('tool');
   // res.render('index', { title: 'Express' });
 });
 

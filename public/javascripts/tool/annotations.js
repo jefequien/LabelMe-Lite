@@ -148,12 +148,11 @@ Annotation.prototype.highlight = function() {
     console.log(this.name);
   }
   this.highlighted = true;
-  this.raster.opacity = 0.2;
-  this.rasterinv.opacity = 0;
-  this.boundary.strokeColor = this.color;
-  this.boundary.strokeWidth = paper.tool.toolSize;
-
   tree.setActive(this, true);
+  this.emphasizeBoundary();
+  if (annotations.styleInverted) {
+    this.emphasizeMask();
+  }
 
   // Load rasterinv here to decrease loading time
   if ( ! this.rasterinv.upToDate) {
@@ -163,21 +162,20 @@ Annotation.prototype.highlight = function() {
 }
 Annotation.prototype.unhighlight = function() {
   this.highlighted = false;
-  this.raster.opacity = 0.7;
-  this.rasterinv.opacity = 0;
-  this.boundary.strokeColor = this.color;
-  this.boundary.strokeWidth = 0;
-
   tree.setActive(this, false);
+  this.emphasizeMask();
+  if (annotations.styleInverted) {
+    this.emphasizeBoundary();
+  }
 }
 Annotation.prototype.hide = function() {
   this.highlighted = false;
+  tree.setActive(this, false);
+
   this.raster.opacity = 0;
   this.rasterinv.opacity = 0;
   this.boundary.strokeColor = this.color;
   this.boundary.strokeWidth = 0;
-
-  tree.setActive(this, false);
 }
 Annotation.prototype.setInvisible = function() {
   this.visible = false;
@@ -190,6 +188,18 @@ Annotation.prototype.setVisible = function() {
   this.raster.visible = true;
   this.rasterinv.visible = true;
   this.boundary.visible = true;
+}
+Annotation.prototype.emphasizeMask = function() {
+  this.raster.opacity = 0.7;
+  this.rasterinv.opacity = 0;
+  this.boundary.strokeColor = this.color;
+  this.boundary.strokeWidth = 0;
+}
+Annotation.prototype.emphasizeBoundary = function() {
+  this.raster.opacity = 0.2;
+  this.rasterinv.opacity = 0;
+  this.boundary.strokeColor = this.color;
+  this.boundary.strokeWidth = paper.tool.toolSize;
 }
 
 //

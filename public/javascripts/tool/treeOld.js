@@ -84,6 +84,20 @@ $("#tree").fancytree({
         annotation = tree.getAnnotationById(node.key);
         annotation.unhighlight();
       }
+    }).on("mousemove", ".fancytree-node", function(event){
+      var node = $.ui.fancytree.getNode(event);
+      var annotation = tree.getAnnotationById(node.key);
+      if (annotation) {
+        if (paper.tool == selectTool) {
+          for (var i = 0; i < annotations.length; i++) {
+            if (annotations[i] != annotation) {
+              annotations[i].hide();
+            }
+          }
+          annotation.highlight();
+        }
+      }
+      return false;
     });
 
 
