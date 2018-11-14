@@ -446,8 +446,10 @@ editTool.enforceStyles = function() {
   this.line.visible = this.selectedBoundaryFixed;
   this.curser.visible = this.selectedBoundaryFixed;
   this.bp1.visible = this.bp1.isSet;
-  if (this.segments.length > 0) {
-    this.segments[0].visible = ! this.curserLoopedBack;
+  if (this.segments == 0) {
+    this.line.visible = false;
+  } else {
+    this.segments[0].visible = false;
     this.bp0.visible = ! this.curserLoopedBack;
   }
   if (this.selectedBoundaryFixed) {

@@ -12,32 +12,33 @@ function Background() {
   this.minScale = 0.2;
 
   this.image = new Path.Rectangle(this.focusRect).rasterize();
-  this.border = new Path.Rectangle(this.image.bounds);
-  this.border.strokeColor = "silver";
-  this.border.strokeWidth = 20;
+
+  this.filter = new Path.Rectangle(this.image.bounds);
+  this.filter.fillColor = new Color(0.5);
 }
 Background.prototype.setFocusRect = function() {
   var h = this.canvas.height;
   var w = this.canvas.width;
-  this.canvasCenter = new Point(w/2, h/2 + 50);
-  var tl = this.canvasCenter - new Point(w/4, h/3);
-  var br = this.canvasCenter + new Point(w/4, h/3);
+  this.canvasCenter = new Point(0.5 * w, 0.5 * h);
+  var tl = this.canvasCenter - new Point(0.45 * w, 0.45 * h);
+  var br = this.canvasCenter + new Point(0.45 * w, 0.45 * h);
   this.focusRect = new Rectangle(tl, br);
 }
 Background.prototype.setImage = function(image) {
   var raster = new Raster(image);
   raster.position = this.canvasCenter;
   raster.onLoad = function() {
+    var filter = new Path.Rectangle(raster.bounds);
+    filter.style = background.filter.style;
+
     background.image.remove();
-    background.border.remove();
-
+    background.filter.remove();
     background.image = raster;
-    background.border = new Path.Rectangle(background.image.bounds);
-    background.border.strokeColor = "silver";
-    background.border.strokeWidth = 20;
+    background.filter = filter;
 
+    background.image.blendMode = 'overlay';
     background.image.sendToBack();
-    background.border.sendToBack();
+    background.filter.sendToBack();
     for (var i = 0; i < annotations.length; i++) {
       background.align(annotations[i]);
     }
@@ -252,6 +253,18 @@ Background.prototype.getBoundaryPixels = function(path) {
 //
 function onResize(event) {
   background.setFocusRect();
+}
+Background.prototype.increaseBrightness = function() {
+  background.filter.fillColor += 0.05;
+  if (background.filter.fillColor.gray > 1) {
+    background.filter.fillColor.gray = 1;
+  }
+}
+Background.prototype.decreaseBrightness = function() {
+  background.filter.fillColor -= 0.05;
+  if (background.filter.fillColor.gray < 0) {
+    background.filter.fillColor.gray = 0;
+  }
 }
 window.background = new Background();
 paper.view._context.imageSmoothingEnabled = false; // Pixelates background

@@ -16,9 +16,9 @@ window.onload = function() {
 function loadTool(task) {
     console.log(task);
 
-    $('#datasetName span').text(task.dataset);
-    $('#annotationSource span').text(task.ann_source);
-    $('#imageFileName span').text(task.file_name);
+    $('#datasetName').text(task.dataset);
+    $('#annotationSource').text(task.ann_source);
+    $('#imageFileName').text(task.file_name);
     background.setImage(task.image_url);
     scissors.setImage(task.image_url);
     brush.setImage(task.image_url);

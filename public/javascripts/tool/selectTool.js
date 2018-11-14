@@ -19,16 +19,18 @@ selectTool.onMouseMove = function(event) {
 selectTool.onMouseClick = function(event) {
   this.onMouseMove(event);
   if (this.annotation) {
+    editTool.switch(this.annotation);
+    editTool.onMouseClick(event);
     if (background.lastFocus != this.annotation) {
       background.focus(this.annotation);
     }
-    editTool.switch(this.annotation);
+    editTool.refreshTool();
   }
 }
-editTool.onMouseDown = function(event) {
+selectTool.onMouseDown = function(event) {
   this.dragDelta = 0;
 }
-editTool.onMouseDrag = function(event) {
+selectTool.onMouseDrag = function(event) {
   background.move(event.delta);
   this.dragDelta += event.delta.length;
   if (this.dragDelta > 15) {
