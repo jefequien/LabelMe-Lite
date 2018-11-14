@@ -55,7 +55,7 @@ hr {
   width:100%;
 }
 .btn-group-vertical {
-  width:75px;
+  width:100%;
 }
 .btn:hover, .active {
   background-color: #4a4a4a;
