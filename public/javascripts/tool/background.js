@@ -138,7 +138,7 @@ Background.prototype.setTempImage = function(imageData) {
     this.tempImage.remove();
   }
   this.tempImage = this.image.clone();
-  this.tempImage.blendMode = null;
+  this.tempImage.blendMode = 'normal';
   this.tempImage.setImageData(imageData, new Point(0,0));
   this.tempImage.insertAbove(this.image);
 }
