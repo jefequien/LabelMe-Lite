@@ -1,13 +1,11 @@
 html, body {
+    display:block;
     height:100%;
     width:100%;
-    margin: 0;
-    overflow: hidden
 }
 canvas {
     height:100%;
     width:100%;
-
     background-image: url(/images/black_grid.jpg);
     background-size: 300px;
 }

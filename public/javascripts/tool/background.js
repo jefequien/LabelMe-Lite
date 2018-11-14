@@ -3,12 +3,10 @@
  */
 
 function Background() {
-  this.canvas = document.getElementById('toolCanvas');
   this.setFocusRect();
-  this.addGestures();
-
   this.clearImage();
   this.makeFilter();
+  this.addListeners();
 
   this.focusMaxScale = 7;
   this.maxScale = 12;
@@ -16,7 +14,7 @@ function Background() {
 }
 Background.prototype.setImage = function(image) {
   var raster = new Raster(image);
-  raster.position = this.canvasCenter;
+  raster.position = this.viewCenter;
   raster.onLoad = function() {
     if (background.image) {
       background.image.remove();
@@ -47,11 +45,11 @@ Background.prototype.makeFilter = function() {
   this.filter.sendToBack();
 }
 Background.prototype.setFocusRect = function() {
-  var h = this.canvas.height;
-  var w = this.canvas.width;
-  this.canvasCenter = new Point(0.5 * w, 0.5 * h);
-  var tl = this.canvasCenter - new Point(0.45 * w, 0.45 * h);
-  var br = this.canvasCenter + new Point(0.45 * w, 0.45 * h);
+  var h = paper.view.size.height;
+  var w = paper.view.size.width;
+  this.viewCenter = new Point(0.5 * w, 0.5 * h);
+  var tl = this.viewCenter - new Point(0.45 * w, 0.45 * h);
+  var br = this.viewCenter + new Point(0.45 * w, 0.45 * h);
   this.focusRect = new Rectangle(tl, br);
 }
 Background.prototype.move = function(delta, noSnap) {
@@ -61,12 +59,12 @@ Background.prototype.move = function(delta, noSnap) {
   }
 }
 Background.prototype.moveTo = function(center, noSnap) {
-    var dx = this.canvasCenter.x - center.x;
-    var dy = this.canvasCenter.y - center.y;
+    var dx = this.viewCenter.x - center.x;
+    var dy = this.viewCenter.y - center.y;
     this.move(new Point(dx,dy), noSnap);
 }
 Background.prototype.scale = function(deltaScale, noSnap) {
-  paper.project.activeLayer.scale(deltaScale, this.canvasCenter);
+  paper.project.activeLayer.scale(deltaScale, this.viewCenter);
   if ( ! noSnap) {
     this.snapImage();
   }
@@ -145,8 +143,9 @@ Background.prototype.setTempImage = function(imageData) {
 Background.prototype.removeTempImage = function() {
   this.tempImage.remove();
 }
-Background.prototype.addGestures = function() {
-  this.canvas.addEventListener('wheel', function(e) {
+Background.prototype.addListeners = function() {
+  var canvas = document.getElementById('toolCanvas');
+  canvas.addEventListener('wheel', function(e) {
     e.preventDefault();
     if (e.ctrlKey) {
       var scale = Math.abs(-0.01 * e.deltaY + 1);
@@ -214,7 +213,7 @@ Background.prototype.getInteriorPixels = function(shape) {
 
   background.toPixelSpace(clone);
   clone.translate(new Point(0.5, 0.5)); // Align for rasterize.
-  var raster = clone.rasterize();
+  var raster = clone.rasterize(paper.view.resolution / window.devicePixelRatio);
   var tl = raster.bounds.topLeft;
   raster.opacity = 1;
 
