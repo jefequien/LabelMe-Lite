@@ -8,19 +8,20 @@
     <meta name="author" content="Jeffrey Hu">
     <title>LabelMeLite</title>
 
+    <!-- JQuery -->
+    <script src="//code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script src="//code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
+
     <!-- Bootstrap -->
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" >
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
 
     <!-- Icons -->
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.4.2/css/all.css" integrity="sha384-/rXc/GQVaYpyDdyxK+ecHPVYJSN9bmVFBvjA/9eOB+pb3F2w2N6fc5qB9Ew5yIns" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/foundicons/3.0.0/foundation-icons.min.css" integrity="sha256-Q9c+RVayp4Y4gEKE3jaABDEwnMlDf6cFEWEQSzFaOB8=" crossorigin="anonymous" />
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
-    <!-- JQuery -->
-    <script src="//code.jquery.com/jquery-3.3.1.min.js"></script>
-    <script src="//code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
 
     <!-- Fancytree -->
     <link href="vendor/fancytree/skin-bootstrap/ui.fancytree.css" rel="stylesheet">
@@ -33,6 +34,7 @@
 
 </head>
 <body>
+
   <nav class="navbar">
     <a class="navbar-brand" href="/">LabelMe</a>
 
@@ -61,12 +63,8 @@
     </div>
 
     <div id="navButtons">
-      <button type="button" class="btn btn-small" id="prevImage">
-        <i class="glyphicon glyphicon-circle-arrow-left"></i>
-      </button>
-      <button type="button" class="btn btn-small" id="nextImage">
-        <i class="glyphicon glyphicon-circle-arrow-right"></i>
-      </button>
+      <button type="button" class="btn btn-small" id="prevImage"><i class="fa fa-arrow-circle-left"></i></button>
+      <button type="button" class="btn btn-small" id="nextImage"><i class="fa fa-arrow-circle-right"></i></button>
       <button type="button" class="btn btn-small" id="info" data-toggle="modal" data-target="#exampleModalLong">
         <i class="fa fa-info-circle"></i>
       </button>
@@ -78,6 +76,7 @@
       </button>
     </div>
   </nav>
+
 
   <div class="sidebar leftbar">
 
@@ -99,8 +98,8 @@
     <hr>
 
     <div class="btn-group-vertical">
-      <button type="button" class="btn btn-square" id="zoomIn"><i class="glyphicon glyphicon-zoom-in"></i></button>
-      <button type="button" class="btn btn-square" id="zoomOut"><i class="glyphicon glyphicon-zoom-out"></i></button>
+      <button type="button" class="btn btn-square" id="zoomIn"><i class="fa fa-search-plus"></i></i></button>
+      <button type="button" class="btn btn-square" id="zoomOut"><i class="fa fa-search-minus"></i></button>
       <button type="button" class="btn btn-square" id="focus"><i class="fa fi-arrows-out"></i></button>
     </div>
 
@@ -115,11 +114,11 @@
 
     <hr>
 
-    <div id="movementButtons" class="btn-group btn-matrix">
-      <button type="button" class="btn btn-square btn-small" id="up"><i class="glyphicon glyphicon-arrow-up fa-small"></i></button>
-      <button type="button" class="btn btn-square btn-small" id="down"><i class="glyphicon glyphicon-arrow-down fa-small"></i></button>
-      <button type="button" class="btn btn-square btn-small" id="left"><i class="glyphicon glyphicon-arrow-left fa-small"></i></button>
-      <button type="button" class="btn btn-square btn-small" id="right"><i class="glyphicon glyphicon-arrow-right fa-small"></i></button>
+    <div id="movementButtons" class="btn-matrix">
+      <button type="button" class="btn btn-square btn-small" id="up"><i class="fa fa-small fa-arrow-up"></i></button>
+      <button type="button" class="btn btn-square btn-small" id="down"><i class="fa fa-small fa-arrow-down"></i></button>
+      <button type="button" class="btn btn-square btn-small" id="left"><i class="fa fa-small fa-arrow-left"></i></button>
+      <button type="button" class="btn btn-square btn-small" id="right"><i class="fa fa-small fa-arrow-right"></i></button>
     </div>
   </div>
 
@@ -256,8 +255,9 @@
     <script type="text/javascript" src="javascripts/tool/intelligent_scissors.js"></script>
     <script type="text/javascript" src="javascripts/tool/intelligent_brush.js"></script>
     <script type="text/javascript" src="javascripts/endpoints.js"></script>
+    <!-- <script type="text/javascript" src="javascripts/main.js"></script> -->
     <script type="text/javascript" src="javascripts/main_amt.js"></script>
 
 </body>
-
+s
 </html>

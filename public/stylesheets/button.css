@@ -23,7 +23,7 @@ hr {
   padding-bottom: 5px;
 }
 
-.fa, .fi, .glyphicon {
+.fa, .fi {
   font-size: 24px;
   color:white;
 }
@@ -51,6 +51,9 @@ hr {
   padding-left:0px;
   padding-right:0px;
 }
+.btn-slider input {
+  width:100%;
+}
 .btn-group-vertical {
   width:75px;
 }
@@ -65,20 +68,6 @@ hr {
 
 .btn-matrix > .btn:nth-child(2n+3) {
   clear: left;
-  margin-left: 0;
-}
-.btn-matrix > .btn:nth-child(n+3) {
-  margin-top: -1px;
-}
-.btn-matrix > .btn:first-child {
-  border-bottom-left-radius: 0;
-}
-.btn-matrix > .btn:nth-child(2) {
-  border-top-right-radius: 4px !important;
-}
-.btn-matrix > .btn:nth-last-child(2) {
-  border-bottom-left-radius: 4px !important;
-}
-.btn-matrix > .btn:last-child {
-  border-top-right-radius: 0;
+}.btn-matrix > .btn {
+  margin: 0;
 }
