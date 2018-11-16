@@ -19,9 +19,11 @@ brushTool.onMouseMove = function(event) {
 }
 
 brushTool.onMouseDrag = function(event) {
-  var fixedMode = this.mode;
-  this.onMouseMove(event);
-  this.mode = fixedMode;
+  this.curser.position = event.point;
+  this.snapCurser();
+  this.enforceStyles();
+  this.updateSmartBrush();
+  this.writeHints();
   
   if (this.annotationFixed) {
     this.editAnnotation();

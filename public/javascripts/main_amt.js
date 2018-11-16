@@ -22,28 +22,29 @@ window.onload = function() {
 
 function loadTool(task) {
     console.log(task);
-    clearAnnotations();
-
     var category = task.annotations[0].category.split(" ")[0];
     $('#category').text(category);
     $('#current').text(current_num + 1);
     $('#total').text(bundle.length);
 
-    background.setImage(task.image_url);
+    background.setImage(task.image_url, function() {
+        background.focus(window.annotations[0]);
+    });
     scissors.setImage(task.image_url);
     brush.setImage(task.image_url);
-    
+
     var annotations = [];
     if (task.annotations) {
-        annotations = task.annotations;
+        anns = task.annotations;
     }
-    loadAnnotations(annotations);
+    loadAnnotations(anns);
 }
 
 var prevButton = document.getElementById('prevImage');
 prevButton.onclick = function() {
     if (current_num > 0) {
         current_num -= 1;
+        clearAnnotations();
         loadTool(bundle[current_num]);
         selectTool.switch();
     }
@@ -52,6 +53,7 @@ var nextButton = document.getElementById('nextImage');
 nextButton.onclick = function() {
     if (current_num < bundle.length - 1) {
         current_num += 1;
+        clearAnnotations();
         loadTool(bundle[current_num]);
         selectTool.switch();
     }

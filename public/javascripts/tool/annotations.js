@@ -56,6 +56,7 @@ Annotation.prototype.updateBoundary = function() {
 
   var paths = new CompoundPath({ children: paths });
   paths.remove();
+  // paths.reorient(true, true);
 
   this.boundary.pathData = paths.pathData;
   background.toPointSpace(this.boundary);
@@ -379,31 +380,25 @@ function findBoundariesOpenCV(imageData) {
 // Exports
 //
 function loadAnnotations(anns) {
-  console.log("Loading annotations...");
+  console.time("Load");
   tree.setMessage("Loading annotations...");
+  for (var i = 0; i < anns.length; i++) {
+    var category = anns[i]["category"];
+    var rle = anns[i]["segmentation"];
 
-  setTimeout(function(anns) {
-    console.time("Load");
-
-    for (var i = 0; i < anns.length; i++) {
-      var category = anns[i]["category"];
-      var rle = anns[i]["segmentation"];
-
-      console.time(category);
-      var mask = rleToMask(rle);
-      var annotation = new Annotation(category, mask);
-      annotation.updateRaster();
-      annotation.updateBoundary();
-      console.timeEnd(category);
-    }
-    if (annotations.length == 0) {
-      tree.setMessage("No annotations.");
-    } else {
-      tree.removeMessage();
-    }
-
-    console.timeEnd("Load");
-  }, 100, anns);
+    console.time(category);
+    var mask = rleToMask(rle);
+    var annotation = new Annotation(category, mask);
+    annotation.updateRaster();
+    annotation.updateBoundary();
+    console.timeEnd(category);
+  }
+  if (annotations.length == 0) {
+    tree.setMessage("No annotations.");
+  } else {
+    tree.removeMessage();
+  }
+  console.timeEnd("Load");
 }
 
 function saveAnnotations() {

@@ -8,12 +8,24 @@ function toolKeys(event) {
   }
   else if (event.key == '2') {
     if (paper.tool != editTool) {
-      editTool.switch(paper.tool.annotation);
+      if (paper.tool.annotation) {
+        editTool.switch(paper.tool.annotation);
+      } else if (annotations.length == 1) {
+        editTool.switch(annotations[0]);
+      } else {
+        editTool.switch();
+      }
     }
   }
   else if (event.key == '3' || event.key == 'b') {
     if (paper.tool != brushTool) {
-      brushTool.switch(paper.tool.annotation);
+      if (paper.tool.annotation) {
+        brushTool.switch(paper.tool.annotation);
+      } else if (annotations.length == 1) {
+        brushTool.switch(annotations[0]);
+      } else {
+        brushTool.switch();
+      }
     }
   }
   else if (event.key == '4' || event.key == 'n') {
