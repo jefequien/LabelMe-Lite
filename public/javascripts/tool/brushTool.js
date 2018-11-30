@@ -14,7 +14,6 @@ brushTool.onMouseMove = function(event) {
 
   this.setMode();
   this.enforceStyles();
-  this.updateSmartBrush();
   this.writeHints();
 }
 
@@ -22,7 +21,6 @@ brushTool.onMouseDrag = function(event) {
   this.curser.position = event.point;
   this.snapCurser();
   this.enforceStyles();
-  this.updateSmartBrush();
   this.writeHints();
   
   if (this.annotationFixed) {
@@ -49,27 +47,14 @@ brushTool.onMouseUp = function(event) {
   this.refreshTool();
 }
 brushTool.onKeyDown = function(event) {
-  if (event.key == 'space') {
-    editTool.switch(this.annotation);
-    return;
-  }
-  else if (event.key == 'z') {
+  if (event.key == 'z') {
     if (this.annotationFixed) {
       brushTool.switch();
       return;
     }
   }
-  else if (event.key == 'i') {
-    this.invertedMode = ! this.invertedMode;
-    this.refreshTool();
-  }
-  
-  // Smart tool
-  if (event.key == 't') {
-    brush.toggle();
-    this.refreshTool();
-  }
-  else if (event.key == 'g') {
+
+  if (event.key == 'v') {
     brush.toggleVisualize();
   }
   onKeyDownShared(event);
@@ -77,7 +62,6 @@ brushTool.onKeyDown = function(event) {
 brushTool.deactivate = function() {
   this.button.className = this.button.className.replace(" active", "");
   this.curser.remove();
-  this.smartBrush.remove();
 }
 brushTool.switch = function(annotation) {
   this.toolName = "Brush Tool";
@@ -95,10 +79,6 @@ brushTool.switch = function(annotation) {
   this.annotation = annotation;
   this.annotationFixed = (this.annotation != null);
 
-  this.smartBrush = new Path();
-  this.smartBrush.visible = false;
-  this.invertedMode = false;
-
   this.refreshTool();
 }
 brushTool.refreshTool = function() {
@@ -109,15 +89,10 @@ brushTool.refreshTool = function() {
 // Edit Actions
 //
 brushTool.editAnnotation = function() {
-  var shape = this.curser;
-  if (brush.active) {
-    shape = this.smartBrush;
-  }
-
   if (this.mode == "unite") {
-    this.annotation.unite(shape);
+    this.annotation.unite(this.curser);
   } else {
-    this.annotation.subtract(shape);
+    this.annotation.subtract(this.curser);
   }
 }
 
@@ -136,13 +111,6 @@ brushTool.setMode = function() {
   this.mode = "subtract";
   if (this.annotation && this.annotation.containsPoint(this.curser.position)) {
     this.mode = "unite";
-  }
-  if (this.invertedMode) {
-    if (this.mode == "unite") {
-      this.mode = "subtract";
-    } else {
-      this.mode = "unite";
-    }
   }
 }
 brushTool.enforceStyles = function() {
@@ -187,40 +155,6 @@ brushTool.enforceStyles = function() {
   }
   if ( ! this.annotationFixed) {
     this.curser.fillColor = "red";
-  }
-
-  // Curser gradient style
-  if (this.invertedMode) {
-    var stops = ['black', this.curser.fillColor];
-    this.curser.fillColor = {
-     gradient: {
-         stops: stops,
-         radial: true
-     },
-     origin: this.curser.position,
-     destination: this.curser.bounds.rightCenter
-    };
-  }
-}
-
-brushTool.updateSmartBrush = function() {
-  if (brush.active) {
-    var numPixels = this.curser.bounds.height / background.getPixelHeight();
-    numPixels *= numPixels;
-    var p = background.getPixel(this.curser.position);
-    var pixels = brush.getNearestPixels([p.x, p.y], numPixels);
-    var path = new Path(pixels);
-    path.remove();
-    background.toPointSpace(path);
-    this.smartBrush.segments = path.segments;
-
-    this.curser.visible = false;
-    this.smartBrush.visible = true;
-    this.smartBrush.selected = true;
-  } else {
-    this.curser.visible = true;
-    this.smartBrush.visible = false;
-    this.smartBrush.selected = false;
   }
 }
 

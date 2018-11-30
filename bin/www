@@ -5,8 +5,12 @@
  */
 
 var app = require('../app');
+var fs = require('fs');
+var path = require('path');
+
 var debug = require('debug')('labelmelite:server');
 var http = require('http');
+var https = require('https');
 
 /**
  * Get port from environment and store in Express.
@@ -19,7 +23,14 @@ app.set('port', port);
  * Create HTTP server.
  */
 
-var server = http.createServer(app);
+
+var httpsOptions = {
+  cert: fs.readFileSync(path.join(__dirname, '../ssl', 'cert.pem')),
+  key: fs.readFileSync(path.join(__dirname, '../ssl', 'key.pem')),
+  passphrase: 'labelme'
+}
+var server = https.createServer(httpsOptions, app);
+// var server = https.createServer(app);
 
 /**
  * Listen on provided port, on all network interfaces.

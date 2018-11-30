@@ -18,6 +18,7 @@ build
 node_modules
 
 data/
+ssl/
 
 public/components/
 !public/components/google-closure-library-compiler/

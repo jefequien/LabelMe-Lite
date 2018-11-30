@@ -195,12 +195,14 @@ Annotation.prototype.emphasizeMask = function() {
   this.rasterinv.opacity = 0;
   this.boundary.strokeColor = this.color;
   this.boundary.strokeWidth = 0;
+  this.boundary.fillColor = null;
 }
 Annotation.prototype.emphasizeBoundary = function() {
   this.raster.opacity = 0.2;
   this.rasterinv.opacity = 0;
   this.boundary.strokeColor = this.color;
   this.boundary.strokeWidth = paper.tool.toolSize;
+  this.boundary.fillColor = null;
 }
 
 //
