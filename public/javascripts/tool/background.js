@@ -8,11 +8,11 @@ function Background() {
   this.makeFilter();
   this.addListeners();
 
-  this.focusMaxScale = 7;
+  this.focusMaxScale = 4;
   this.maxScale = 12;
   this.minScale = 0.2;
 }
-Background.prototype.setImage = function(image) {
+Background.prototype.setImage = function(image, callback) {
   var raster = new Raster(image);
   raster.position = this.viewCenter;
   raster.onLoad = function() {
@@ -26,6 +26,9 @@ Background.prototype.setImage = function(image) {
     background.focus();
     background.image.sendToBack();
     background.makeFilter();
+    if (callback) {
+      callback();
+    }
   }
 }
 Background.prototype.clearImage = function() {
@@ -39,7 +42,7 @@ Background.prototype.makeFilter = function() {
     this.filter.remove();
   }
 
-  this.image.blendMode = 'overlay';
+  this.image.blendMode = 'hard-light';
   this.filter = new Path.Rectangle(this.image.bounds);
   this.filter.fillColor = new Color(0.5);
   this.filter.sendToBack();
@@ -111,11 +114,14 @@ Background.prototype.focus = function(annotation) {
   this.lastFocus = annotation;
   var target = this.image.bounds;
   if (annotation) {
-    if (annotation.boundary.bounds.height > 0 && annotation.boundary.bounds.width > 0) {
-      target = annotation.boundary.bounds;
+    target = annotation.boundary.bounds;
+    if (target.height == 0 && target.width == 0) {
+      target = this.image.bounds;
     }
   }
-  var scale = Math.min(this.image.bounds.height/target.height, this.image.bounds.width/target.width);
+  var height = Math.max(1, target.height);
+  var width = Math.max(1, target.width);
+  var scale = Math.min(this.image.bounds.height/height, this.image.bounds.width/width);
   this.moveTo(target.center);
   this.scaleTo(Math.min(this.focusMaxScale, scale));
 }
@@ -154,6 +160,7 @@ Background.prototype.addListeners = function() {
       var delta = new Point(e.deltaX, e.deltaY);
       background.move(delta);
     }
+    paper.tool.refreshTool();
   });
 }
 
@@ -216,8 +223,13 @@ Background.prototype.getInteriorPixels = function(shape) {
   var raster = clone.rasterize(paper.view.resolution / window.devicePixelRatio);
   var tl = raster.bounds.topLeft;
   raster.opacity = 1;
+  clone.remove();
+  raster.remove();
 
   var pixels = [];
+  if (raster.height == 0 || raster.width == 0) {
+    return pixels;
+  }
   var imageData = raster.getImageData();
   var mask = imageDataToMask(imageData);
   for (var x = 0; x < mask.shape[1]; x++) {
@@ -228,8 +240,6 @@ Background.prototype.getInteriorPixels = function(shape) {
     }
   }
 
-  clone.remove();
-  raster.remove();
   return pixels;
 }
 Background.prototype.getBoundaryPixels = function(path) {

@@ -5,49 +5,36 @@
  */
 
 var app = require('../app');
+var fs = require('fs');
+var path = require('path');
+
 var debug = require('debug')('labelmelite:server');
-var http = require('http');
 
-/**
- * Get port from environment and store in Express.
- */
-
-var port = normalizePort(process.env.PORT || '3000');
-app.set('port', port);
 
 /**
  * Create HTTP server.
  */
+var http = require('http');
+var httpServer = http.createServer(app);
+httpServer.listen(3000);
+httpServer.on('error', onError);
+// httpServer.on('listening', onListening);
 
-var server = http.createServer(app);
-
-/**
- * Listen on provided port, on all network interfaces.
- */
-
-server.listen(port);
-server.on('error', onError);
-server.on('listening', onListening);
 
 /**
- * Normalize a port into a number, string, or false.
+ * Create HTTPS server.
  */
-
-function normalizePort(val) {
-  var port = parseInt(val, 10);
-
-  if (isNaN(port)) {
-    // named pipe
-    return val;
-  }
-
-  if (port >= 0) {
-    // port number
-    return port;
-  }
-
-  return false;
+var https = require('https');
+var httpsOptions = {
+  cert: fs.readFileSync(path.join(__dirname, '../ssl', 'cert.pem')),
+  key: fs.readFileSync(path.join(__dirname, '../ssl', 'key.pem')),
+  passphrase: 'labelme'
 }
+var httpsServer = https.createServer(httpsOptions, app);
+httpsServer.listen(3001);
+httpsServer.on('error', onError);
+// httpsServer.on('listening', onListening);
+
 
 /**
  * Event listener for HTTP server "error" event.

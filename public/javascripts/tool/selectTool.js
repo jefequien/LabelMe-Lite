@@ -4,16 +4,9 @@ var selectTool = new Tool();
 selectTool.onMouseMove = function(event) {
   this.curser.position = event.point;
 
-  // Enforce styles
   this.annotation = this.getAnnotationAt(this.curser.position);
-  for (var i = 0; i < annotations.length; i++) {
-    if (annotations[i] != this.annotation) {
-      annotations[i].unhighlight();
-    } else {
-      this.annotation.highlight();
-    }
-  }
 
+  this.enforceStyles();
   this.writeHints();
 }
 selectTool.onMouseClick = function(event) {
@@ -29,30 +22,36 @@ selectTool.onMouseDown = function(event) {
   this.dragDelta = 0;
 }
 selectTool.onMouseDrag = function(event) {
-  background.move(event.delta);
   this.dragDelta += event.delta.length;
-  if (this.dragDelta > 15) {
-    this.isDragging = true;
-  }
+  background.move(event.delta);
+  this.onMouseMove(event);
 }
 selectTool.onMouseUp = function(event) {
-  if ( ! this.isDragging) {
+  if (this.dragDelta < 15) {
     this.onMouseClick(event);
   }
-  this.isDragging = false;
 }
 selectTool.onKeyDown = function(event) {
+  this.editKeys(event);
   if (event.key == 'escape') {
     background.focus();
   }
-  else if (event.key == 'z') {
-    background.focus();
-  }
-  else if (event.key == 'i') {
+  if (event.key == 'i') {
     annotations.styleInverted = ( ! annotations.styleInverted);
     this.refreshTool();
   }
   onKeyDownShared(event);
+}
+selectTool.editKeys = function(event) {
+  if (event.key == 'u') {
+    alert("Please select an annotation first.");
+  }
+  if (event.key == 'y') {
+    alert("Please select an annotation first.");
+  }
+  if (event.key == 'backspace') {
+    alert("Please select an annotation first.");
+  }
 }
 selectTool.refreshTool = function() {
   selectTool.onMouseMove({point: selectTool.curser.position});
@@ -82,6 +81,7 @@ selectTool.switch = function(annotation) {
   this.annotation = annotation;
   this.refreshTool();
 }
+
 selectTool.getAnnotationAt = function(point) {
   for (var i = 0; i < annotations.length; i++) {
     if (annotations[i].boundary.contains(point)) {
@@ -91,6 +91,19 @@ selectTool.getAnnotationAt = function(point) {
   return null;
 }
 
+//
+// Styles
+//
+selectTool.enforceStyles = function() {
+  // Annotation styles
+  for (var i = 0; i < annotations.length; i++) {
+    if (annotations[i] != this.annotation) {
+      annotations[i].unhighlight();
+    } else {
+      this.annotation.highlight();
+    }
+  }
+}
 selectTool.writeHints = function() {
   var hints = [];
   hints.push("Click on an annotation to begin editing.");

@@ -8,12 +8,24 @@ function toolKeys(event) {
   }
   else if (event.key == '2') {
     if (paper.tool != editTool) {
-      editTool.switch(paper.tool.annotation);
+      if (paper.tool.annotation) {
+        editTool.switch(paper.tool.annotation);
+      } else if (annotations.length == 1) {
+        editTool.switch(annotations[0]);
+      } else {
+        editTool.switch();
+      }
     }
   }
   else if (event.key == '3' || event.key == 'b') {
     if (paper.tool != brushTool) {
-      brushTool.switch(paper.tool.annotation);
+      if (paper.tool.annotation) {
+        brushTool.switch(paper.tool.annotation);
+      } else if (annotations.length == 1) {
+        brushTool.switch(annotations[0]);
+      } else {
+        brushTool.switch();
+      }
     }
   }
   else if (event.key == '4' || event.key == 'n') {
@@ -126,57 +138,6 @@ function movementKeys(event) {
   }
 }
 
-function editKeys(event) {
-  if (event.key == 'z') {
-    flashButton(undoToolButton);
-
-    if (paper.tool.undoTool) {
-      var undoed = paper.tool.undoTool();
-      if ( ! undoed) {
-        selectTool.switch();
-      }
-    } else {
-      if (paper.tool.toolName != "selectTool") {
-        selectTool.switch();
-      }
-    }
-  }
-  // Undo and redo
-  if (event.key == 'u') {
-    flashButton(undoAnnButton);
-    if (paper.tool.annotation) {
-      var undoed = paper.tool.annotation.undo();
-      if (undoed) {
-        paper.tool.switch(paper.tool.annotation);
-      }
-    } else {
-      alert("Select an annotation to undo first.");
-    }
-  } else if (event.key == 'y') {
-    flashButton(redoAnnButton);
-    if (paper.tool.annotation) {
-      var redoed = paper.tool.annotation.redo();
-      if (redoed) {
-        paper.tool.switch(paper.tool.annotation);
-      }
-    } else {
-      alert("Select an annotation to redo first.");
-    }
-  }
-
-  else if (event.key == 'backspace') {
-    flashButton(deleteButton);
-    if (paper.tool.annotation) {
-      var deleted = paper.tool.annotation.delete();
-      if (deleted) {
-        selectTool.switch();
-      }
-    } else {
-      alert("Select an annotation to delete first.");
-    }
-  }
-}
-
 function flashButton(button) {
   button.className += " active";
   setTimeout(function(){ button.className = button.className.replace(" active", ""); }, 100);
@@ -190,7 +151,7 @@ function onKeyDownShared(event) {
   sliderKeys(event);
   viewKeys(event)
   zoomKeys(event)
-  editKeys(event);
   movementKeys(event);
 }
 window.onKeyDownShared = onKeyDownShared;
+window.flashButton = flashButton;

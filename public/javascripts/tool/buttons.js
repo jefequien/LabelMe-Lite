@@ -7,11 +7,10 @@ downloadImgButton.onclick = function() {
 }
 var downloadAnnButton = document.getElementById('downloadAnn');
 downloadAnnButton.onclick = function() {
-    var out = {};
-    out["annotations"] = saveAnnotations();
+    var anns = saveAnnotations();
 
     var newTab = window.open();
-    newTab.document.write('<textarea disabled style="width:100%;height:100%">' + JSON.stringify(out, null, 2) + "</textarea>");
+    newTab.document.write('<textarea disabled style="width:100%;height:100%">' + JSON.stringify(anns, null, 2) + "</textarea>");
     newTab.document.close();
 }
 
@@ -37,18 +36,13 @@ focusButton.onclick = function() {
 //
 // Edit Buttons
 //
-var undoToolButton = document.getElementById('undoTool');
-undoToolButton.title = "Undo: 'z'";
-undoToolButton.onclick = function() {
-    paper.tool.onKeyDown({key: 'z'});
-}
 var undoAnnButton = document.getElementById('undoAnn');
-undoAnnButton.title = "Undo annotation: 'u'";
+undoAnnButton.title = "Undo: 'u'";
 undoAnnButton.onclick = function() {
     paper.tool.onKeyDown({key: 'u'});
 }
 var redoAnnButton = document.getElementById('redoAnn');
-redoAnnButton.title = "Redo annotation: 'y'";
+redoAnnButton.title = "Redo: 'y'";
 redoAnnButton.onclick = function() {
     paper.tool.onKeyDown({key: 'y'});
 }

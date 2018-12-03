@@ -15,8 +15,6 @@ window.onload = function() {
 
 function loadTool(task) {
     console.log(task);
-    clearAnnotations();
-
     $('#datasetName').text(task.dataset);
     $('#annotationSource').text(task.ann_source);
     $('#imageFileName').text(task.file_name);
@@ -35,6 +33,7 @@ function loadTool(task) {
 
 var prevButton = document.getElementById('prevImage');
 prevButton.onclick = function() {
+    clearAnnotations();
     getPrevImage(function(json){
         setWindowUrl(json);
         getAnnotations(function(res) {
@@ -45,6 +44,7 @@ prevButton.onclick = function() {
 }
 var nextButton = document.getElementById('nextImage');
 nextButton.onclick = function() {
+    clearAnnotations();
     getNextImage(function(json){
         setWindowUrl(json);
         getAnnotations(function(res) {
