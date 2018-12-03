@@ -16,7 +16,7 @@ var debug = require('debug')('labelmelite:server');
  */
 var http = require('http');
 var httpServer = http.createServer(app);
-httpServer.listen(3000);
+httpServer.listen(80);
 httpServer.on('error', onError);
 // httpServer.on('listening', onListening);
 
@@ -24,15 +24,15 @@ httpServer.on('error', onError);
 /**
  * Create HTTPS server.
  */
-var https = require('https');
-var httpsOptions = {
-  cert: fs.readFileSync(path.join(__dirname, '../ssl', 'cert.pem')),
-  key: fs.readFileSync(path.join(__dirname, '../ssl', 'key.pem')),
-  passphrase: 'labelme'
-}
-var httpsServer = https.createServer(httpsOptions, app);
-httpsServer.listen(3001);
-httpsServer.on('error', onError);
+// var https = require('https');
+// var httpsOptions = {
+//   cert: fs.readFileSync(path.join(__dirname, '../ssl', 'cert.pem')),
+//   key: fs.readFileSync(path.join(__dirname, '../ssl', 'key.pem')),
+//   passphrase: 'labelme'
+// }
+// var httpsServer = https.createServer(httpsOptions, app);
+// httpsServer.listen(443);
+// httpsServer.on('error', onError);
 // httpsServer.on('listening', onListening);
 
 

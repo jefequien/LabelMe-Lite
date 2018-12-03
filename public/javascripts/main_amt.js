@@ -30,8 +30,8 @@ function loadTool(task) {
     background.setImage(task.image_url, function() {
         background.focus(window.annotations[0]);
     });
-    scissors.setImage(task.image_url);
-    brush.setImage(task.image_url);
+    // scissors.setImage(task.image_url_backup);
+    // brush.setImage(task.image_url_backup);
 
     var annotations = [];
     if (task.annotations) {

@@ -26,7 +26,7 @@ editTool.onMouseClick = function(event) {
   }
   if (this.annotationFixed) {
     this.points.push(this.curser.clone());
-    this.removedPoints = [];
+    this.save();
   }
 
   this.refreshTool();
@@ -54,6 +54,8 @@ editTool.onMouseDrag = function(event) {
 editTool.onMouseUp = function(event) {
   if (this.dragDelta < 15 && this.dragPoint == null) {
     this.onMouseClick(event);
+  } else {
+    this.save();
   }
 }
 editTool.onKeyDown = function(event) {
@@ -84,7 +86,7 @@ editTool.editKeys = function(event) {
 
   if (event.key == 'u') {
     flashButton(undoAnnButton);
-    var success = this.removePoint();
+    var success = this.undo();
     if (! success) {
       this.annotation.undo();
     }
@@ -93,16 +95,18 @@ editTool.editKeys = function(event) {
     flashButton(redoAnnButton);
     var success = this.annotation.redo();
     if (! success) {
-      this.addRemovedPoint();
+      this.redo();
     }
   }
   if (event.key == 'backspace') {
     flashButton(deleteButton);
     if (this.points.length > 0) {
-      // Remove all points
-      while (this.points.length > 0) {
-        this.removePoint();
+      for (var i = 0; i < this.points.length; i++) {
+        this.points[i].remove();
       }
+      this.points = [];
+      this.save();
+      this.refreshTool();
     } else {
       // Remove selected boundary
       var success = this.deleteSelectedBoundary();
@@ -152,7 +156,8 @@ editTool.switch = function(annotation) {
 
   this.points = [];
   this.segments = [];
-  this.removedPoints = [];
+  this.undoHistory = [];
+  this.redoHistory = [];
 
   this.bp0 = this.curser.clone();
   this.bp1 = this.curser.clone();
@@ -181,25 +186,50 @@ editTool.refreshTool = function() {
   this.drawSelectedArea();
   this.enforceStyles();
 }
-editTool.removePoint = function() {
-  if (this.points.length > 0) {
-    var point = this.points.pop()
-    point.remove();
-    this.removedPoints.push(point);
+editTool.undo = function() {
+  if (this.undoHistory.length != 0) {
+    var checkpoint = this.undoHistory.pop();
+    this.redoHistory.push(checkpoint);
+    if (this.undoHistory.length == 0) {
+      this.restore([]);
+    } else {
+      this.restore(this.undoHistory[this.undoHistory.length-1]);
+    }
     this.refreshTool();
     return true;
   }
   return false;
 }
-editTool.addRemovedPoint = function() {
-  if (this.removedPoints.length > 0) {
-    var point = this.curser.clone();
-    point.position = this.removedPoints.pop().position;
-    this.points.push(point);
+editTool.redo = function() {
+  if (this.redoHistory != 0) {
+    var checkpoint = this.redoHistory.pop();
+    this.undoHistory.push(checkpoint);
+    this.restore(checkpoint);
     this.refreshTool();
     return true;
   }
   return false;
+}
+editTool.restore = function(checkpoint) {
+  for (var i = 0; i < this.points.length; i++) {
+    this.points[i].remove();
+  }
+  this.points = [];
+
+  for (var i = 0; i < checkpoint.length; i++) {
+    var point = this.curser.clone();
+    point.position = background.getPoint(checkpoint[i]);
+    this.points.push(point);
+  }
+}
+editTool.save = function() {
+  var checkpoint = [];
+  for (var i = 0; i < this.points.length; i++) {
+    var pixel = background.getPixel(this.points[i].position);
+    checkpoint.push(pixel);
+  }
+  this.undoHistory.push(checkpoint);
+  this.redoHistory = [];
 }
 
 //

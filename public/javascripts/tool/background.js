@@ -174,7 +174,7 @@ Background.prototype.getPixel = function(point) {
 
   var x = (point.x - tl.x) * (size.height/ bounds.height) - 0.5;
   var y = (point.y - tl.y) * (size.height/ bounds.height) - 0.5;
-  return new Point(Math.round(x), Math.round(y));
+  return new Point(x, y);
 }
 Background.prototype.getPoint = function(pixel) {
   var bounds = this.image.bounds;
