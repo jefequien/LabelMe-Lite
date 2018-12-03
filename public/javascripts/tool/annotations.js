@@ -88,9 +88,9 @@ Annotation.prototype.undo = function() {
     var currentBoundary = this.undoHistory.pop();
     this.redoHistory.push(currentBoundary);
     this.recoverUsingBoundaryPathData(this.undoHistory[this.undoHistory.length-1]);
+    paper.tool.refreshTool();
     return true;
   }
-  alert("No more undo for this annotation.");
   return false;
 }
 Annotation.prototype.redo = function() {
@@ -98,9 +98,9 @@ Annotation.prototype.redo = function() {
     var pathData = this.redoHistory.pop();
     this.undoHistory.push(pathData);
     this.recoverUsingBoundaryPathData(pathData);
+    paper.tool.refreshTool();
     return true;
   }
-  alert("No more redo for this annotation.");
   return false;
 }
 Annotation.prototype.recoverUsingBoundaryPathData = function(pathData) {
@@ -177,6 +177,7 @@ Annotation.prototype.hide = function() {
   this.rasterinv.opacity = 0;
   this.boundary.strokeColor = this.color;
   this.boundary.strokeWidth = 0;
+  this.boundary.fillColor = null;
 }
 Annotation.prototype.setInvisible = function() {
   this.visible = false;

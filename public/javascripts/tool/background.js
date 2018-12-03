@@ -115,6 +115,9 @@ Background.prototype.focus = function(annotation) {
   var target = this.image.bounds;
   if (annotation) {
     target = annotation.boundary.bounds;
+    if (target.height == 0 && target.width == 0) {
+      target = this.image.bounds;
+    }
   }
   var height = Math.max(1, target.height);
   var width = Math.max(1, target.width);

@@ -11,14 +11,10 @@ editTool.onMouseMove = function(event) {
     this.annotation = selectTool.getAnnotationAt(this.curser.position);
   }
 
-  this.selectBoundary();
+  this.drawSelectedBoundary();
   this.drawBoundaryPoints();
   this.drawCurserArea();
 
-  // Move to refreshTool if too slow
-  this.drawSegments();
-  this.drawBoundaryLine();
-  this.drawSelectedArea();
   this.enforceStyles();
   this.writeHints();
 }
@@ -28,12 +24,16 @@ editTool.onMouseClick = function(event) {
   if (this.annotation) {
     this.annotationFixed = true;
   }
-  this.points.push(this.curser.clone());
+  if (this.annotationFixed) {
+    this.points.push(this.curser.clone());
+    this.removedPoints = [];
+  }
 
   this.refreshTool();
 }
 editTool.onMouseDown = function(event) {
   this.dragDelta = 0;
+  // Set this.dragPoint
   this.dragPoint = null;
   for (var i = 0; i < this.points.length; i++) {
     if (this.curser.intersects(this.points[i])) {
@@ -42,35 +42,27 @@ editTool.onMouseDown = function(event) {
   }
 }
 editTool.onMouseDrag = function(event) {
-  this.onMouseMove(event);
-
+  this.curser.position = event.point;
+  this.dragDelta += event.delta.length;
   if (this.dragPoint) {
     this.dragPoint.position += event.delta;
   } else {
     background.move(event.delta);
   }
-  this.dragDelta += event.delta.length;
-
+  this.refreshTool();
 }
 editTool.onMouseUp = function(event) {
-  if (this.dragPoint == null && this.dragDelta < 15) {
+  if (this.dragDelta < 15 && this.dragPoint == null) {
     this.onMouseClick(event);
   }
-  this.dragPoint = null;
 }
 editTool.onKeyDown = function(event) {
+  this.editKeys(event);
   if (event.key == 'enter') {
     this.editAnnotation();
     editTool.switch(this.annotation);
   }
-  if (event.key == 'backspace') {
-    if (this.annotationFixed) {
-      this.deleteSelectedBoundary();
-      editTool.switch(this.annotation);
-      return; // Prevent default
-    }
-  }
-
+  // Modes
   if (event.key == 'space') {
     this.invertedMode = ! this.invertedMode;
     this.refreshTool();
@@ -79,12 +71,50 @@ editTool.onKeyDown = function(event) {
     this.noBoundaryMode = ! this.noBoundaryMode;
     this.refreshTool();
   }
-
-  // Smart tool
   if (event.key == 'v') {
     scissors.toggleVisualize();
   }
   onKeyDownShared(event);
+}
+editTool.editKeys = function(event) {
+  if ( ! this.annotation) {
+    alert("Please select an annotation first.");
+    return false;
+  }
+
+  if (event.key == 'u') {
+    flashButton(undoAnnButton);
+    var success = this.removePoint();
+    if (! success) {
+      this.annotation.undo();
+    }
+  }
+  if (event.key == 'y') {
+    flashButton(redoAnnButton);
+    var success = this.annotation.redo();
+    if (! success) {
+      this.addRemovedPoint();
+    }
+  }
+  if (event.key == 'backspace') {
+    flashButton(deleteButton);
+    if (this.points.length > 0) {
+      // Remove all points
+      while (this.points.length > 0) {
+        this.removePoint();
+      }
+    } else {
+      // Remove selected boundary
+      var success = this.deleteSelectedBoundary();
+      if ( ! success) {
+        // Remove annotation
+        var success = this.annotation.delete();
+        if (success) {
+          selectTool.switch();
+        }
+      }
+    }
+  }
 }
 editTool.deactivate = function() {
   this.button.className = this.button.className.replace(" active", "");
@@ -122,6 +152,7 @@ editTool.switch = function(annotation) {
 
   this.points = [];
   this.segments = [];
+  this.removedPoints = [];
 
   this.bp0 = this.curser.clone();
   this.bp1 = this.curser.clone();
@@ -143,10 +174,28 @@ editTool.switch = function(annotation) {
 }
 editTool.refreshTool = function() {
   paper.tool.onMouseMove({point: paper.tool.curser.position});
+
+  // Move to refreshTool if too slow
+  this.drawSegments();
+  this.drawBoundaryLine();
+  this.drawSelectedArea();
+  this.enforceStyles();
 }
-editTool.undoTool = function() {
+editTool.removePoint = function() {
   if (this.points.length > 0) {
-    this.points.pop().remove();
+    var point = this.points.pop()
+    point.remove();
+    this.removedPoints.push(point);
+    this.refreshTool();
+    return true;
+  }
+  return false;
+}
+editTool.addRemovedPoint = function() {
+  if (this.removedPoints.length > 0) {
+    var point = this.curser.clone();
+    point.position = this.removedPoints.pop().position;
+    this.points.push(point);
     this.refreshTool();
     return true;
   }
@@ -156,7 +205,7 @@ editTool.undoTool = function() {
 //
 // Draw
 //
-editTool.selectBoundary = function() {
+editTool.drawSelectedBoundary = function() {
   // Set this.selectedBoundary
   var keyPoint = this.curser.position;
   if (this.points.length > 0) {
@@ -298,17 +347,19 @@ editTool.drawSelectedArea = function() {
     this.selectedArea.join(this.bl.clone());
   }
 
-  if (this.selectedBoundary.clockwise == this.annotation.boundary.clockwise) {
-    this.selectedAreaUnite = this.selectedArea.subtract(this.selectedBoundary);
-    this.selectedAreaSubtract = this.selectedArea.intersect(this.selectedBoundary);
-  } else {
-    this.selectedAreaSubtract = this.selectedArea.subtract(this.selectedBoundary);
-    this.selectedAreaUnite = this.selectedArea.intersect(this.selectedBoundary);
+  if (this.annotation) {
+    if (this.selectedBoundary.clockwise == this.annotation.boundary.clockwise) {
+      this.selectedAreaUnite = this.selectedArea.subtract(this.selectedBoundary);
+      this.selectedAreaSubtract = this.selectedArea.intersect(this.selectedBoundary);
+    } else {
+      this.selectedAreaSubtract = this.selectedArea.subtract(this.selectedBoundary);
+      this.selectedAreaUnite = this.selectedArea.intersect(this.selectedBoundary);
+    }
   }
 }
 
 //
-// Edit Actions
+// Edit Annotation
 //
 editTool.editAnnotation = function() {
   this.annotation.unite(this.selectedAreaUnite);
@@ -319,6 +370,10 @@ editTool.editAnnotation = function() {
   this.refreshTool();
 }
 editTool.deleteSelectedBoundary = function() {
+  if (this.selectedBoundary.segments.length == 0) {
+    return false;
+  }
+
   if (this.selectedBoundary.clockwise == this.annotation.boundary.clockwise) {
     this.annotation.subtract(this.selectedBoundary);
   } else {
@@ -327,6 +382,7 @@ editTool.deleteSelectedBoundary = function() {
 
   this.annotation.updateBoundary();
   this.refreshTool();
+  return true;
 }
 
 // 
@@ -364,7 +420,7 @@ editTool.enforceStyles = function() {
   // Other annotations styles
   for (var i = 0; i < annotations.length; i++) {
     if (annotations[i] != this.annotation) {
-      if (this.annotation) {
+      if (this.annotationFixed) {
         annotations[i].hide();
       } else {
         annotations[i].unhighlight();
@@ -459,14 +515,8 @@ editTool.writeHints = function() {
   if ( ! this.annotationFixed) {
     hints.push("Click on an annotation to begin editing.");
   }
-  if (this.points.length <= 1) {
-    hints.push("Click to drop points.");
-  }
-  if (this.points.length <= 3) {
-    hints.push("Press 'enter' to edit.");
-  }
   if (this.points.length <= 5) {
-    hints.push("Press 'z' to remove points.");
+    hints.push("Click to drop points. Press 'enter' to edit.");
   }
   hints.push("Press 'esc' to quit.");
 

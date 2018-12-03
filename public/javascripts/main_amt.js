@@ -42,21 +42,43 @@ function loadTool(task) {
 
 var prevButton = document.getElementById('prevImage');
 prevButton.onclick = function() {
+    if (paper.tool == editTool || paper.tool == newTool) {
+        if (paper.tool.points.length > 0) {
+            alert("Warning: Unsaved changes. Press 'enter' to avoid losing any work.");
+            return;
+        }
+    }
+
+    prevButton.disabled = true;
     if (current_num > 0) {
-        current_num -= 1;
+        bundle[current_num].annotations = saveAnnotations();
         clearAnnotations();
+
+        current_num -= 1;
         loadTool(bundle[current_num]);
         selectTool.switch();
     }
+    setTimeout(function() {prevButton.disabled = false;}, 500);
 }
 var nextButton = document.getElementById('nextImage');
 nextButton.onclick = function() {
+    if (paper.tool == editTool || paper.tool == newTool) {
+        if (paper.tool.points.length > 0) {
+            alert("Press 'enter' to avoid losing any changes.");
+            return;
+        }
+    }
+
+    nextButton.disabled = true;
     if (current_num < bundle.length - 1) {
-        current_num += 1;
+        bundle[current_num].annotations = saveAnnotations();
         clearAnnotations();
+
+        current_num += 1;
         loadTool(bundle[current_num]);
         selectTool.switch();
     }
+    setTimeout(function() {nextButton.disabled = false;}, 500);
 }
 
 function setWindowUrl(json) {
