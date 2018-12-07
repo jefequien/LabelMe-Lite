@@ -359,6 +359,7 @@ editTool.editAnnotation = function() {
   this.annotation.unite(this.selectedArea);
   this.annotation.updateBoundary();
   this.refreshTool();
+  this.undoHistory = [];
 }
 editTool.deleteSelectedBoundary = function() {
   this.editedBoundary.segments = [];
