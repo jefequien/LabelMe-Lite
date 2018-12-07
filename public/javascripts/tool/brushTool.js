@@ -70,7 +70,7 @@ brushTool.switch = function(annotation) {
   var lastCurserPosition = paper.tool.curser.position;
   var lastToolSize = paper.tool.toolSize;
 
-  this.toolName = "Brush Tool";
+  this.toolName = "brushTool";
   console.log("Switching to", this.toolName);
   paper.tool.deactivate();
   this.activate();

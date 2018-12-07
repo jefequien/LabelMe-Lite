@@ -55,6 +55,18 @@ Background.prototype.setFocusRect = function() {
   var br = this.viewCenter + new Point(0.45 * w, 0.45 * h);
   this.focusRect = new Rectangle(tl, br);
 }
+Background.prototype.setVisible = function() {
+  this.image.visible = true;
+  this.filter.visible = true;
+}
+Background.prototype.setInvisible = function() {
+  this.image.visible = false;
+  this.filter.visible = false;
+}
+
+//
+// Move and scale background
+//
 Background.prototype.move = function(delta, noSnap) {
   paper.project.activeLayer.translate(delta);
   if ( ! noSnap) {

@@ -166,7 +166,7 @@ editTool.switch = function(annotation) {
   this.segmentsJoined = new Path();
   this.selectedBoundary = new Path({closed: true});
   this.editedBoundary = new Path({closed: true});
-  this.selectedArea = new Path({closed: true});
+  this.selectedArea = new CompoundPath({fillRule: "evenodd"});
 
   this.annotationFixed = (this.annotation != null);
   this.mode = "normal";
@@ -333,7 +333,7 @@ editTool.drawEditedBoundary = function() {
   this.editedBoundary.closed = true;
 }
 editTool.drawSelectedArea = function() {
-  this.selectedArea.remove();
+  this.selectedArea.children = [];
 
   if (this.annotation) {
     var childrenList = [];
@@ -348,10 +348,7 @@ editTool.drawSelectedArea = function() {
       childrenList.push(path);
     }
     childrenList.push(this.editedBoundary.clone());
-
-    this.selectedArea = new CompoundPath();
     this.selectedArea.children = childrenList;
-    this.selectedArea.fillRule = "evenodd";
   }
 }
 
@@ -445,12 +442,12 @@ editTool.enforceStyles = function() {
   // For debugging
   for (var i = 0; i < this.segments.length; i++) {
     this.segments[i].strokeColor = "orange";
-    this.segments[i].strokeWidth = lineWidth;
+    this.segments[i].strokeWidth = 0;
   }
   this.segmentsJoined.strokeColor = "yellow";
-  this.segmentsJoined.strokeWidth = lineWidth;
+  this.segmentsJoined.strokeWidth = 0;
   this.bl.strokeColor = "green";
-  this.bl.strokeWidth = lineWidth;
+  this.bl.strokeWidth = 0;
 
   // Order
   this.selectedArea.bringToFront();
@@ -460,9 +457,13 @@ editTool.enforceStyles = function() {
   }
 
   // Visibility
-  this.bl.visible = this.mode != "noBoundary";
-  this.bp0.visible = this.mode != "noBoundary";
-  this.bp1.visible = this.mode != "noBoundary";
+  if (this.mode == "noBoundary") {
+    this.bp0.opacity = 0;
+    this.bp1.opacity = 0;
+  } else {
+    this.bp0.opacity = 1;
+    this.bp1.opacity = 1;
+  }
 }
 
 //

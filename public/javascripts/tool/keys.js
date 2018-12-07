@@ -61,22 +61,24 @@ function sliderKeys(event) {
 
 function viewKeys(event) {
   if (event.key == 'h') {
-    // Toggle hide all
-    var allInvisible = true;
-    for (var i = 0; i < annotations.length; i++) {
-      if (annotations[i].visible) {
-        annotations[i].setInvisible();
-        allInvisible = false;
+    var objects = paper.project.activeLayer.children;
+    console.log("Number of objects: ", objects.length);
+    if (objects.allHidden) {
+      for (var i = 0; i < objects.length; i++) {
+        objects[i].visible = true;
       }
-    }
-    if (allInvisible) {
-      for (var i = 0; i < annotations.length; i++) {
-        annotations[i].setVisible();
-      }
+      objects.allHidden = false;
+      background.setVisible();
       $('#hide').find('i').addClass('fa-eye-slash').removeClass('fa-eye');
     } else {
+      for (var i = 0; i < objects.length; i++) {
+        objects[i].visible = false;
+      }
+      objects.allHidden = true;
+      background.setVisible();
       $('#hide').find('i').addClass('fa-eye').removeClass('fa-eye-slash');
     }
+    paper.tool.refreshTool();
     flashButton("hide");
   }
   else if (event.key == 'c') {
