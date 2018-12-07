@@ -70,11 +70,13 @@ editTool.onKeyDown = function(event) {
 
   // Modes
   if (event.key == 'space') {
-    this.smallerMode = ! this.smallerMode;
-    this.refreshTool();
-  }
-  if (event.key == 'm') {
-    this.noBoundaryMode = ! this.noBoundaryMode;
+    if (this.mode == "normal") {
+      this.mode = "smaller";
+    } else if (this.mode == "smaller") {
+      this.mode = "noBoundary";
+    } else if (this.mode == "noBoundary") {
+      this.mode = "normal";
+    }
     this.refreshTool();
   }
 
@@ -167,8 +169,7 @@ editTool.switch = function(annotation) {
   this.selectedArea = new Path({closed: true});
 
   this.annotationFixed = (this.annotation != null);
-  this.noBoundaryMode = false;
-  this.smallerMode = false;
+  this.mode = "normal";
 
   this.refreshTool();
 }
@@ -287,17 +288,17 @@ editTool.drawSegments = function() {
   for (var i = 0; i < this.points.length; i++) {
     this.segmentsJoined.add(this.points[i].position);
   }
-  if (! this.noBoundaryMode) {
+  if (this.mode == "noBoundary") {
+    this.segmentsJoined.closed = true;
+  } else {
     this.segmentsJoined.insert(0, this.bp0.position);
     this.segmentsJoined.add(this.bp1.position);
     this.segmentsJoined.closed = false;
-  } else {
-    this.segmentsJoined.closed = true;
   }
 }
 editTool.drawBoundaryLine = function() {
   this.bl.segments = [];
-  if (this.noBoundaryMode) {
+  if (this.mode == "noBoundary") {
     return;
   }
 
@@ -317,7 +318,7 @@ editTool.drawBoundaryLine = function() {
   selectedArea0.remove();
   selectedArea1.remove();
 
-  if ((area0 > area1 && !this.smallerMode) || (area0 < area1 && this.smallerMode)) {
+  if ((area0 > area1 && this.mode == "normal") || (area0 < area1 && this.mode == "smaller")) {
     this.bl.segments = paths[0].segments;
   } else {
     this.bl.segments = paths[1].segments;
@@ -326,7 +327,7 @@ editTool.drawBoundaryLine = function() {
 editTool.drawEditedBoundary = function() {
   this.editedBoundary.segments = [];
   this.editedBoundary.join(this.segmentsJoined.clone());
-  if ( ! this.noBoundaryMode) {
+  if (this.mode != "noBoundary") {
     this.editedBoundary.join(this.bl.clone());
   }
   this.editedBoundary.closed = true;
@@ -339,7 +340,7 @@ editTool.drawSelectedArea = function() {
     var keyPoint = this.bp0.position;
     for (var i = 0; i < this.annotation.boundary.children.length; i++) {
       var child = this.annotation.boundary.children[i];
-      if (child.getLocationOf(keyPoint) && !this.noBoundaryMode) {
+      if (child.getLocationOf(keyPoint) && this.mode != "noBoundary") {
         continue;
       }
       var path = new Path({closed: true});
@@ -459,9 +460,9 @@ editTool.enforceStyles = function() {
   }
 
   // Visibility
-  this.bl.visible = ! this.noBoundaryMode;
-  this.bp0.visible = ! this.noBoundaryMode;
-  this.bp1.visible = ! this.noBoundaryMode;
+  this.bl.visible = this.mode != "noBoundary";
+  this.bp0.visible = this.mode != "noBoundary";
+  this.bp1.visible = this.mode != "noBoundary";
 }
 
 //
@@ -495,8 +496,11 @@ editTool.writeHints = function() {
   if ( ! this.annotationFixed) {
     hints.push("Click on an annotation to begin editing.");
   }
-  if (this.points.length <= 5) {
+  if (this.points.length <= 2) {
     hints.push("Click to drop points. Points are draggable.");
+  }
+  if (this.points.length <= 4) {
+    hints.push("Press 'm' to cycle through modes.");
   }
   hints.push("Press 'enter' to edit. Press 'esc' to quit.");
 
