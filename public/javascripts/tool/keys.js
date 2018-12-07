@@ -61,8 +61,6 @@ function sliderKeys(event) {
 
 function viewKeys(event) {
   if (event.key == 'h') {
-    flashButton(hideButton);
-
     // Toggle hide all
     var allInvisible = true;
     for (var i = 0; i < annotations.length; i++) {
@@ -71,7 +69,6 @@ function viewKeys(event) {
         allInvisible = false;
       }
     }
-
     if (allInvisible) {
       for (var i = 0; i < annotations.length; i++) {
         annotations[i].setVisible();
@@ -80,9 +77,9 @@ function viewKeys(event) {
     } else {
       $('#hide').find('i').addClass('fa-eye').removeClass('fa-eye-slash');
     }
+    flashButton("hide");
   }
   else if (event.key == 'c') {
-    flashButton(colorButton);
     if (paper.tool.annotation) {
       paper.tool.annotation.changeColor();
     } else {
@@ -93,22 +90,22 @@ function viewKeys(event) {
       }
     }
     paper.tool.refreshTool();
+    flashButton("color");
   }
 }
 
 function zoomKeys(event) {
   if (event.key == 'q') {
-    flashButton(zoomOutButton);
     background.scale(0.8);
     paper.tool.refreshTool();
+    flashButton("zoomOut");
   }
   else if (event.key == 'e') {
-    flashButton(zoomInButton);
     background.scale(1.25);
     paper.tool.refreshTool();
+    flashButton("zoomIn");
   }
   else if (event.key == 'f') {
-    flashButton(focusButton);
     // Toggle focus on annotation
     if (background.lastFocus != paper.tool.annotation) {
       background.focus(paper.tool.annotation);
@@ -116,32 +113,29 @@ function zoomKeys(event) {
       background.focus();
     }
     paper.tool.refreshTool();
+    flashButton("focus");
   }
 }
 
 function movementKeys(event) {
   if (event.key == 'left' || event.key == 'a') {
     background.move(new Point(100, 0));
-    flashButton(leftButton);
+    flashButton("left");
   }
   else if (event.key == 'right' || event.key == 'd') {
     background.move(new Point(-100, 0));
-    flashButton(rightButton);
+    flashButton("right");
   }
   else if (event.key == 'up' || event.key == 'w') {
     background.move(new Point(0, 100));
-    flashButton(upButton);
+    flashButton("up");
   }
   else if (event.key == 'down' || event.key == 's') {
     background.move(new Point(0, -100));
-    flashButton(downButton);
+    flashButton("down");
   }
 }
 
-function flashButton(button) {
-  button.className += " active";
-  setTimeout(function(){ button.className = button.className.replace(" active", ""); }, 100);
-}
 
 //
 // Exports
@@ -154,4 +148,3 @@ function onKeyDownShared(event) {
   movementKeys(event);
 }
 window.onKeyDownShared = onKeyDownShared;
-window.flashButton = flashButton;

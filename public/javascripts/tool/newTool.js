@@ -33,9 +33,8 @@ newTool.onMouseClick = function(event) {
   } else {
     this.points.push(this.curser.clone());
     this.save();
+    this.refreshTool();
   }
-
-  this.refreshTool();
 }
 newTool.onMouseDown = function(event) {
   this.dragDelta = 0;
@@ -78,48 +77,47 @@ newTool.onKeyDown = function(event) {
 }
 newTool.editKeys = function(event) {
   if (event.key == 'u') {
-    flashButton(undoAnnButton);
     this.undo();
+    flashButton("undo");
   }
   else if (event.key == 'y') {
-    flashButton(redoAnnButton);
     this.redo();
+    flashButton("redo");
   }
   else if (event.key == 'backspace') {
-    flashButton(deleteButton);
     for (var i = 0; i < this.points.length; i++) {
       this.points[i].remove();
     }
     this.points = [];
     this.save();
     this.refreshTool();
+    flashButton("delete");
   }
 }
 newTool.deactivate = function() {
-  this.button.className = this.button.className.replace(" active", "");
   this.curser.remove();
-
   for (var i = 0; i < this.points.length; i++) {
     this.points[i].remove();
   }
   for (var i = 0; i < this.segments.length; i++) {
     this.segments[i].remove();
   }
+
+  deactivateButton(this.toolName);
 }
 newTool.switch = function () {
-  this.toolName = "New Tool";
-  console.log("Switching to", this.toolName);
   var lastCurserPosition = paper.tool.curser.position;
   var lastToolSize = paper.tool.toolSize;
+
+  this.toolName = "newTool";
+  console.log("Switching to", this.toolName);
   paper.tool.deactivate();
   this.activate();
-
-  this.button = newToolButton;
-  this.button.className += " active";
-  this.curser = new Shape.Circle(lastCurserPosition, 1);
-  this.toolSize = lastToolSize;
+  activateButton(this.toolName);
 
   this.annotation = null;
+  this.curser = new Shape.Circle(lastCurserPosition, 1);
+  this.toolSize = lastToolSize;
 
   this.points = [];
   this.segments = [];
@@ -192,6 +190,7 @@ newTool.createAnnotation = function() {
 
   this.annotation = new Annotation(this.name);
   this.annotation.unite(path);
+  this.annotation.updateMask();
   this.annotation.updateBoundary();
 }
 

@@ -46,45 +46,40 @@ brushTool.onKeyDown = function(event) {
   onKeyDownShared(event);
 }
 brushTool.editKeys = function(event) {
-  if ( ! this.annotation) {
-    alert("Please select an annotation first.");
-    return false;
-  }
-
   if (event.key == 'u') {
-    flashButton(undoAnnButton);
     this.annotation.undo();
+    flashButton("undo");
   }
   else if (event.key == 'y') {
-    flashButton(redoAnnButton);
     this.annotation.redo();
+    flashButton("redo");
   }
   else if (event.key == 'backspace') {
-    flashButton(deleteButton);
     var deleted = this.annotation.delete();
     if (deleted) {
       selectTool.switch();
     }
+    flashButton("delete");
   }
 }
 brushTool.deactivate = function() {
-  this.button.className = this.button.className.replace(" active", "");
   this.curser.remove();
+  deactivateButton(this.toolName);
 }
 brushTool.switch = function(annotation) {
-  this.toolName = "Brush Tool";
-  console.log("Switching to", this.toolName);
   var lastCurserPosition = paper.tool.curser.position;
   var lastToolSize = paper.tool.toolSize;
+
+  this.toolName = "Brush Tool";
+  console.log("Switching to", this.toolName);
   paper.tool.deactivate();
   this.activate();
+  activateButton(this.toolName);
 
-  this.button = brushToolButton;
-  this.button.className += " active";
+  this.annotation = annotation;
   this.curser = new Shape.Circle(lastCurserPosition, 1);
   this.toolSize = lastToolSize;
 
-  this.annotation = annotation;
   this.annotationFixed = (this.annotation != null);
 
   this.refreshTool();

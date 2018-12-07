@@ -60,25 +60,22 @@ selectTool.deactivate = function() {
   if (this.curser) {
     this.curser.remove();
   }
-  if (this.button) {
-    this.button.className = this.button.className.replace(" active", "");
-  }
+  deactivateButton(this.toolName);
 }
 selectTool.switch = function(annotation) {
-  this.toolName = "Select Tool";
-  console.log("Switching to", this.toolName);
-
   var lastCurserPosition = (paper.tool.curser) ? paper.tool.curser.position : new Point(0,0);
   var lastToolSize = parseInt(toolSlider.value);
+  
+  this.toolName = "selectTool";
+  console.log("Switching to", this.toolName);
   paper.tool.deactivate();
   this.activate();
+  activateButton(this.toolName);
 
-  this.button = selectToolButton;
-  this.button.className += " active";
+  this.annotation = annotation;
   this.curser = new Shape.Circle(lastCurserPosition, 1);
   this.toolSize = lastToolSize;
 
-  this.annotation = annotation;
   this.refreshTool();
 }
 

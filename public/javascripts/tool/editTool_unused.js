@@ -10,6 +10,33 @@ editTool.getIntersectionsSorted = function(path0, path1) {
   });
   return intersections;
 }
+editTool.drawCurserArea = function() {
+  this.curserArea.segments = [];
+
+  if (this.noBoundaryMode) {
+    this.curserArea.add(this.curser.position);
+    if (this.points.length > 0) {
+      this.curserArea.add(this.points[this.points.length-1].position);
+      this.curserArea.add(this.points[0].position);
+    }
+    return;
+  }
+
+  if (this.selectedBoundary.segments.length != 0) {
+    var curserBp = this.selectedBoundary.getNearestPoint(this.curser.position);
+    this.curserArea.add(curserBp);
+    this.curserArea.add(this.curser.position);
+    if (this.points.length > 0) {
+      this.curserArea.add(this.points[this.points.length-1].position);
+    }
+    this.curserArea.add(this.bp1.position);
+    var paths = this.getPathUsingBoundary(this.bp1.position, curserBp, this.selectedBoundary);
+    if (paths.length != 0) {
+      this.curserArea.join(paths[0]);
+      paths[1].remove();
+    }
+  }
+}
 
 editTool.drawSegmentsComplex = function() {
   // Clear this.segments

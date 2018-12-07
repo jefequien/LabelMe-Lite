@@ -56,7 +56,6 @@ Annotation.prototype.updateBoundary = function() {
 
   var paths = new CompoundPath({ children: paths });
   paths.remove();
-  // paths.reorient(true, true);
 
   this.boundary.pathData = paths.pathData;
   background.toPointSpace(this.boundary);
@@ -155,10 +154,10 @@ Annotation.prototype.highlight = function() {
     this.emphasizeMask();
   }
 
-  // Load rasterinv here to decrease loading time
-  if ( ! this.rasterinv.upToDate) {
+  // In loadAnnotations, updateRasterInv here to decrease loading time
+  if ( ! this.rasterinvUpToDate) {
     this.updateRasterInv();
-    this.rasterinv.upToDate = true;
+    this.rasterinvUpToDate = true;
   }
 }
 Annotation.prototype.unhighlight = function() {
