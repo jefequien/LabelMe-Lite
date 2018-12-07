@@ -94,7 +94,6 @@ editTool.editKeys = function(event) {
     flashButton("undo");
   }
   if (event.key == 'y') {
-    flashButton(redoAnnButton);
     var success = this.annotation.redo();
     if (! success) {
       this.redo();
