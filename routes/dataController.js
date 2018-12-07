@@ -137,8 +137,9 @@ function prepareResponse(coco, imgId) {
     var file_name = coco.imgs[imgId]["file_name"];
     var dataset_name = coco.imgs[imgId]["dataset_name"];
     if ( ! dataset_name) {
-        var fn = coco.ann_fn.split('/').reverse()[0];
-        dataset_name = fn.split('_')[0];
+        // Infer dataset_name from coco.ann_fn
+        // HACK. Should remove ASAP
+        dataset_name = coco.ann_fn.split('#')[0];
     }
     var img_url = "http://places.csail.mit.edu/scaleplaces/datasets/" + path.join(getImDir(dataset_name), file_name); 
     var img_url_backup = "http://vision01.csail.mit.edu:3000/data/images?dataset=" + dataset_name + "&file_name=" + file_name; // CORS access
