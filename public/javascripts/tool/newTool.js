@@ -32,7 +32,7 @@ newTool.onMouseClick = function(event) {
     }
   } else {
     this.points.push(this.curser.clone());
-    this.removedPoints = [];
+    this.save();
     this.refreshTool();
   }
 }
@@ -77,49 +77,52 @@ newTool.onKeyDown = function(event) {
 }
 newTool.editKeys = function(event) {
   if (event.key == 'u') {
-    flashButton(undoAnnButton);
-    this.removePoint();
+    this.undo();
+    flashButton("undo");
   }
   else if (event.key == 'y') {
-    flashButton(redoAnnButton);
-    this.addRemovedPoint();
+    this.redo();
+    flashButton("redo");
   }
   else if (event.key == 'backspace') {
-    flashButton(deleteButton);
-    while (this.points.length > 0) {
-      this.removePoint();
+    for (var i = 0; i < this.points.length; i++) {
+      this.points[i].remove();
     }
+    this.points = [];
+    this.save();
+    this.refreshTool();
+    flashButton("delete");
   }
 }
 newTool.deactivate = function() {
-  this.button.className = this.button.className.replace(" active", "");
   this.curser.remove();
-
   for (var i = 0; i < this.points.length; i++) {
     this.points[i].remove();
   }
   for (var i = 0; i < this.segments.length; i++) {
     this.segments[i].remove();
   }
+
+  deactivateButton(this.toolName);
 }
 newTool.switch = function () {
-  this.toolName = "New Tool";
-  console.log("Switching to", this.toolName);
   var lastCurserPosition = paper.tool.curser.position;
   var lastToolSize = paper.tool.toolSize;
+
+  this.toolName = "newTool";
+  console.log("Switching to", this.toolName);
   paper.tool.deactivate();
   this.activate();
+  activateButton(this.toolName);
 
-  this.button = newToolButton;
-  this.button.className += " active";
+  this.annotation = null;
   this.curser = new Shape.Circle(lastCurserPosition, 1);
   this.toolSize = lastToolSize;
 
-  this.annotation = null;
-
   this.points = [];
   this.segments = [];
-  this.removedPoints = [];
+  this.undoHistory = [];
+  this.redoHistory = [];
 
   this.curserLoopedBack = false;
 
@@ -128,25 +131,50 @@ newTool.switch = function () {
 newTool.refreshTool = function() {
   newTool.onMouseMove({point: newTool.curser.position});
 }
-newTool.removePoint = function() {
-  if (this.points.length > 0) {
-    var point = this.points.pop()
-    point.remove();
-    this.removedPoints.push(point);
+newTool.undo = function() {
+  if (this.undoHistory.length != 0) {
+    var checkpoint = this.undoHistory.pop();
+    this.redoHistory.push(checkpoint);
+    if (this.undoHistory.length == 0) {
+      this.restore([]);
+    } else {
+      this.restore(this.undoHistory[this.undoHistory.length-1]);
+    }
     this.refreshTool();
     return true;
   }
   return false;
 }
-newTool.addRemovedPoint = function() {
-  if (this.removedPoints.length > 0) {
-    var point = this.curser.clone();
-    point.position = this.removedPoints.pop().position;
-    this.points.push(point);
+newTool.redo = function() {
+  if (this.redoHistory != 0) {
+    var checkpoint = this.redoHistory.pop();
+    this.undoHistory.push(checkpoint);
+    this.restore(checkpoint);
     this.refreshTool();
     return true;
   }
   return false;
+}
+newTool.restore = function(checkpoint) {
+  for (var i = 0; i < this.points.length; i++) {
+    this.points[i].remove();
+  }
+  this.points = [];
+
+  for (var i = 0; i < checkpoint.length; i++) {
+    var point = this.curser.clone();
+    point.position = background.getPoint(checkpoint[i]);
+    this.points.push(point);
+  }
+}
+newTool.save = function() {
+  var checkpoint = [];
+  for (var i = 0; i < this.points.length; i++) {
+    var pixel = background.getPixel(this.points[i].position);
+    checkpoint.push(pixel);
+  }
+  this.undoHistory.push(checkpoint);
+  this.redoHistory = [];
 }
 
 // 
@@ -162,6 +190,7 @@ newTool.createAnnotation = function() {
 
   this.annotation = new Annotation(this.name);
   this.annotation.unite(path);
+  this.annotation.updateMask();
   this.annotation.updateBoundary();
 }
 

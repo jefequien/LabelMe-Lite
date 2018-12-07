@@ -19,8 +19,8 @@ function loadTool(task) {
     $('#annotationSource').text(task.ann_source);
     $('#imageFileName').text(task.file_name);
     background.setImage(task.image_url);
-    scissors.setImage(task.image_url);
-    brush.setImage(task.image_url);
+    // scissors.setImage(task.image_url_backup);
+    // brush.setImage(task.image_url_backup);
     
     if (task.annotations) {
         loadAnnotations(task.annotations);

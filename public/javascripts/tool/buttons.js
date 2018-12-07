@@ -1,12 +1,39 @@
 /**
  * Buttons
  */
-var downloadImgButton = document.getElementById('downloadImg');
-downloadImgButton.onclick = function() {
+var buttons = {};
+
+//
+// Tools
+//
+buttons["selectTool"] = document.getElementById('selectTool');
+buttons["selectTool"].title = "Select tool: 'esc' or '1'";
+buttons["selectTool"].onclick = function() {
+    paper.tool.onKeyDown({key: '1'});
+}
+buttons["editTool"] = document.getElementById('editTool');
+buttons["editTool"].title = "Edit tool: 'click' or '2'";
+buttons["editTool"].onclick = function() {
+    paper.tool.onKeyDown({key: '2'});
+}
+buttons["brushTool"] = document.getElementById('brushTool');
+buttons["brushTool"].title = "Brush tool: 'b' or '3'";
+buttons["brushTool"].onclick = function() {
+    paper.tool.onKeyDown({key: '3'});
+}
+buttons["newTool"] = document.getElementById('newTool');
+buttons["newTool"].title = "New tool: 'n' or '4'";
+buttons["newTool"].onclick = function() {
+    paper.tool.onKeyDown({key: '4'});
+}
+
+
+buttons["downloadImg"] = document.getElementById('downloadImg');
+buttons["downloadImg"].onclick = function() {
     var newTab = window.open(background.image.source);
 }
-var downloadAnnButton = document.getElementById('downloadAnn');
-downloadAnnButton.onclick = function() {
+buttons["downloadAnn"] = document.getElementById('downloadAnn');
+buttons["downloadAnn"].onclick = function() {
     var anns = saveAnnotations();
 
     var newTab = window.open();
@@ -17,62 +44,62 @@ downloadAnnButton.onclick = function() {
 //
 // Zoom Buttons
 //
-var zoomInButton = document.getElementById('zoomIn');
-zoomInButton.title = "Zoom in: 'e'";
-zoomInButton.onclick = function() {
+buttons["zoomIn"] = document.getElementById('zoomIn');
+buttons["zoomIn"].title = "Zoom in: 'e'";
+buttons["zoomIn"].onclick = function() {
     paper.tool.onKeyDown({key: 'e'});
 }
-var zoomOutButton = document.getElementById('zoomOut');
-zoomOutButton.title = "Zoom out: 'q'";
-zoomOutButton.onclick = function() {
+buttons["zoomOut"] = document.getElementById('zoomOut');
+buttons["zoomOut"].title = "Zoom out: 'q'";
+buttons["zoomOut"].onclick = function() {
     paper.tool.onKeyDown({key: 'q'});
 }
-var focusButton = document.getElementById('focus');
-focusButton.title = "Focus: 'f'";
-focusButton.onclick = function() {
+buttons["focus"] = document.getElementById('focus');
+buttons["focus"].title = "Focus: 'f'";
+buttons["focus"].onclick = function() {
     paper.tool.onKeyDown({key: 'f'});
 }
 
 //
 // Edit Buttons
 //
-var undoAnnButton = document.getElementById('undoAnn');
-undoAnnButton.title = "Undo: 'u'";
-undoAnnButton.onclick = function() {
+buttons["undo"] = document.getElementById('undo');
+buttons["undo"].title = "Undo: 'u'";
+buttons["undo"].onclick = function() {
     paper.tool.onKeyDown({key: 'u'});
 }
-var redoAnnButton = document.getElementById('redoAnn');
-redoAnnButton.title = "Redo: 'y'";
-redoAnnButton.onclick = function() {
+buttons["redo"] = document.getElementById('redo');
+buttons["redo"].title = "Redo: 'y'";
+buttons["redo"].onclick = function() {
     paper.tool.onKeyDown({key: 'y'});
 }
-var deleteButton = document.getElementById('delete');
-deleteButton.title = "Delete: 'backspace'";
-deleteButton.onclick = function() {
+buttons["delete"] = document.getElementById('delete');
+buttons["delete"].title = "Delete: 'backspace'";
+buttons["delete"].onclick = function() {
     paper.tool.onKeyDown({key: 'backspace'});
 }
 
 //
 // View Buttons
 //
-var decreaseBrightnessButton = document.getElementById('decreaseBrightness');
-decreaseBrightnessButton.title = "Decrease brightness";
-decreaseBrightnessButton.onclick = function() {
+buttons["decreaseBrightness"] = document.getElementById('decreaseBrightness');
+buttons["decreaseBrightness"].title = "Decrease brightness";
+buttons["decreaseBrightness"].onclick = function() {
     background.decreaseBrightness();
 }
-var increaseBrightnessButton = document.getElementById('increaseBrightness');
-increaseBrightnessButton.title = "Increase brightness";
-increaseBrightnessButton.onclick = function() {
+buttons["increaseBrightness"] = document.getElementById('increaseBrightness');
+buttons["increaseBrightness"].title = "Increase brightness";
+buttons["increaseBrightness"].onclick = function() {
     background.increaseBrightness();
 }
-var colorButton = document.getElementById('color');
-colorButton.title = "Change colors: 'c'";
-colorButton.onclick = function() {
+buttons["color"] = document.getElementById('color');
+buttons["color"].title = "Change colors: 'c'";
+buttons["color"].onclick = function() {
     paper.tool.onKeyDown({key: 'c'});
 }
-var hideButton = document.getElementById('hide');
-hideButton.title = "Hide/show: 'h'";
-hideButton.onclick = function() {
+buttons["hide"] = document.getElementById('hide');
+buttons["hide"].title = "Hide/show: 'h'";
+buttons["hide"].onclick = function() {
     paper.tool.onKeyDown({key: 'h'});
 }
 var toolSlider = document.getElementById('toolSlider');
@@ -87,59 +114,50 @@ toolSlider.oninput = function() {
 //
 // Movement buttons
 //
-var upButton = document.getElementById('up');
-upButton.title = "Up: 'w'";
-upButton.onclick = function() {
+buttons["up"] = document.getElementById('up');
+buttons["up"].title = "Up: 'w'";
+buttons["up"].onclick = function() {
     paper.tool.onKeyDown({key: 'w'});
 }
-var downButton = document.getElementById('down');
-downButton.title = "Down: 's'";
-downButton.onclick = function() {
+buttons["down"] = document.getElementById('down');
+buttons["down"].title = "Down: 's'";
+buttons["down"].onclick = function() {
     paper.tool.onKeyDown({key: 's'});
 }
-var leftButton = document.getElementById('left');
-leftButton.title = "Left: 'a'";
-leftButton.onclick = function() {
+buttons["left"] = document.getElementById('left');
+buttons["left"].title = "Left: 'a'";
+buttons["left"].onclick = function() {
     paper.tool.onKeyDown({key: 'a'});
 }
-var rightButton = document.getElementById('right');
-rightButton.title = "Right: 'd'";
-rightButton.onclick = function() {
+buttons["right"] = document.getElementById('right');
+buttons["right"].title = "Right: 'd'";
+buttons["right"].onclick = function() {
     paper.tool.onKeyDown({key: 'd'});
 }
 
-//
-// Tool buttons
-//
-var selectToolButton = document.getElementById('selectTool');
-selectToolButton.title = "Select tool: 'esc' or '1'";
-selectToolButton.onclick = function() {
-    if (paper.tool == selectTool) {
-        alert(paper.tool.toolName + " help coming soon.");
+
+function flashButton(name) {
+    if (buttons[name]) {
+        buttons[name].className += " active";
+        setTimeout(function(){ buttons[name].className = buttons[name].className.replace(" active", ""); }, 100);
+    } else {
+        console.log("Button not found:", name);
     }
-    paper.tool.onKeyDown({key: '1'});
 }
-var editToolButton = document.getElementById('editTool');
-editToolButton.title = "Edit tool: 'click' or '2'";
-editToolButton.onclick = function() {
-    if (paper.tool == editTool) {
-        alert(paper.tool.toolName + " help coming soon.");
+function activateButton(name) {
+    if (buttons[name]) {
+        buttons[name].className += " active";
+    } else {
+        console.log("Button not found:", name);
     }
-    paper.tool.onKeyDown({key: '2'});
 }
-var brushToolButton = document.getElementById('brushTool');
-brushToolButton.title = "Brush tool: 'b' or '3'";
-brushToolButton.onclick = function() {
-    if (paper.tool == brushTool) {
-        alert(paper.tool.toolName + " help coming soon.");
+function deactivateButton(name) {
+    if (buttons[name]) {
+        buttons[name].className = buttons[name].className.replace(" active", "");
+    } else {
+        console.log("Button not found:", name);
     }
-    paper.tool.onKeyDown({key: '3'});
 }
-var newToolButton = document.getElementById('newTool');
-newToolButton.title = "New tool: 'n' or '4'";
-newToolButton.onclick = function() {
-    if (paper.tool == newTool) {
-        alert(paper.tool.toolName + " help coming soon.");
-    }
-    paper.tool.onKeyDown({key: '4'});
-}
+window.flashButton = flashButton;
+window.activateButton = activateButton;
+window.deactivateButton = deactivateButton;
