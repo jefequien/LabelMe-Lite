@@ -163,7 +163,6 @@ brushTool.writeHints = function() {
     hints.push("Click on an annotation to begin editing.");
   }
   hints.push("Press '9' or '0' to change brush size.");
-  // hints.push("Press 'esc' to quit.");
   $('#toolName').text(this.toolName);
   $('#toolMessage').text(hints[0]);
 }

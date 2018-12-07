@@ -67,11 +67,17 @@ editTool.onKeyDown = function(event) {
     this.editAnnotation();
     editTool.switch(this.annotation);
   }
+
   // Modes
   if (event.key == 'space') {
+    this.smallerMode = ! this.smallerMode;
+    this.refreshTool();
+  }
+  if (event.key == 'm') {
     this.noBoundaryMode = ! this.noBoundaryMode;
     this.refreshTool();
   }
+
   if (event.key == 'v') {
     scissors.toggleVisualize();
   }
@@ -162,6 +168,7 @@ editTool.switch = function(annotation) {
 
   this.annotationFixed = (this.annotation != null);
   this.noBoundaryMode = false;
+  this.smallerMode = false;
 
   this.refreshTool();
 }
@@ -310,7 +317,7 @@ editTool.drawBoundaryLine = function() {
   selectedArea0.remove();
   selectedArea1.remove();
 
-  if (area0 > area1) {
+  if ((area0 > area1 && !this.smallerMode) || (area0 < area1 && this.smallerMode)) {
     this.bl.segments = paths[0].segments;
   } else {
     this.bl.segments = paths[1].segments;
@@ -489,9 +496,9 @@ editTool.writeHints = function() {
     hints.push("Click on an annotation to begin editing.");
   }
   if (this.points.length <= 5) {
-    hints.push("Click to drop points. Press 'enter' to edit.");
+    hints.push("Click to drop points. Points are draggable.");
   }
-  hints.push("Press 'esc' to quit.");
+  hints.push("Press 'enter' to edit. Press 'esc' to quit.");
 
   $('#toolName').text(this.toolName);
   $('#toolMessage').text(hints[0]);

@@ -264,17 +264,11 @@ newTool.enforceStyles = function() {
 
 newTool.writeHints = function() {
   var hints = [];
-  if (this.points.length == 0) {
-    hints.push("Click to drop points."); 
-  }
-  if (this.points.length <= 2) {
-    hints.push("Drag points to adjust annotation."); 
-  }
   if (this.points.length <= 3) {
-    hints.push("Close loop to create new annotation.");
+    hints.push("Click to drop points. Points are draggable.");
   }
   if (this.points.length <= 5) {
-    hints.push("Press 'u' to remove points.");
+    hints.push("Close loop to create new annotation.");
   }
   hints.push("Press 'esc' to quit.");
 
