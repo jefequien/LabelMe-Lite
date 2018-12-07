@@ -111,13 +111,13 @@ editTool.editKeys = function(event) {
     } else {
       // Remove selected boundary
       var success = this.deleteSelectedBoundary();
-      if ( ! success) {
-        // Remove annotation
-        var success = this.annotation.delete();
-        if (success) {
-          selectTool.switch();
-        }
-      }
+      // if ( ! success) {
+      //   // Remove annotation
+      //   var success = this.annotation.delete();
+      //   if (success) {
+      //     selectTool.switch();
+      //   }
+      // }
     }
     flashButton("delete");
   }

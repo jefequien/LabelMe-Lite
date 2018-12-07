@@ -7,7 +7,7 @@ window.onload = function() {
     annotations.styleInverted = true;
     selectTool.switch();
     if (Object.keys(params).length == 0) {
-        params.id = "ade20k_val_maskrcnnc_15";
+        params.id = "examples/ade20k_val_maskrcnnc_15";
         setWindowUrl(params);
     }
 
