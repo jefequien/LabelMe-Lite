@@ -47,12 +47,20 @@ buttons["downloadAnn"].onclick = function() {
 buttons["zoomIn"] = document.getElementById('zoomIn');
 buttons["zoomIn"].title = "Zoom in: 'e'";
 buttons["zoomIn"].onclick = function() {
+    var p = paper.tool.curser.position;
+    paper.tool.curser.position = background.viewCenter;
     paper.tool.onKeyDown({key: 'e'});
+    paper.tool.curser.position = p;
+    paper.tool.refreshTool();
 }
 buttons["zoomOut"] = document.getElementById('zoomOut');
 buttons["zoomOut"].title = "Zoom out: 'q'";
 buttons["zoomOut"].onclick = function() {
+    var p = paper.tool.curser.position;
+    paper.tool.curser.position = background.viewCenter;
     paper.tool.onKeyDown({key: 'q'});
+    paper.tool.curser.position = p;
+    paper.tool.refreshTool();
 }
 buttons["focus"] = document.getElementById('focus');
 buttons["focus"].title = "Focus: 'f'";

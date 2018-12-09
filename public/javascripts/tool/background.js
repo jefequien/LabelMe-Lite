@@ -79,7 +79,7 @@ Background.prototype.moveTo = function(center, noSnap) {
     this.move(new Point(dx,dy), noSnap);
 }
 Background.prototype.scale = function(deltaScale, noSnap) {
-  paper.project.activeLayer.scale(deltaScale, this.viewCenter);
+  paper.project.activeLayer.scale(deltaScale, paper.tool.curser.position);
   if ( ! noSnap) {
     this.snapImage();
   }
@@ -164,15 +164,14 @@ Background.prototype.removeTempImage = function() {
 Background.prototype.addListeners = function() {
   var canvas = document.getElementById('toolCanvas');
   canvas.addEventListener('wheel', function(e) {
-    e.preventDefault();
+    var deltaY = e.deltaY;
     if (e.ctrlKey) {
-      var scale = Math.abs(-0.01 * e.deltaY + 1);
-      background.scale(scale);
-    } else {
-      var delta = new Point(e.deltaX, e.deltaY);
-      background.move(delta);
+      deltaY *= 2;
     }
+    var scale = Math.abs(1 - 0.005 * deltaY);
+    background.scale(scale);
     paper.tool.refreshTool();
+    e.preventDefault();
   });
 }
 
