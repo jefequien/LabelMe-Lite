@@ -355,8 +355,7 @@ editTool.drawSelectedArea = function() {
 // Edit Annotation
 //
 editTool.editAnnotation = function() {
-  this.annotation.subtract(this.annotation.boundary);
-  this.annotation.unite(this.selectedArea);
+  this.annotation.updateRaster(this.selectedArea);
   this.annotation.updateBoundary();
   this.refreshTool();
   this.undoHistory = [];

@@ -23,16 +23,17 @@ router.get('/images', function(req, res) {
 router.get('/images/next', function(req, res) {
     var dataset_name = req.query.dataset;
     var ann_source = req.query.ann_source;
+    var file_name = req.query.file_name;
 
-    var ann_fn = dataset_name + "_" + ann_source + "_#.json";
-    var ann_dir = path.join(DATA_DIR, "annotations/");
-    var coco = loadCOCO(path.join(ann_dir, ann_fn));
+    var dataset_dir = path.join(DATA_DIR, dataset_name);
+    var ann_fn = path.join(dataset_dir, ann_source + "_#.json");
+    var coco = loadCOCO(ann_fn);
     if (coco == null) {
         res.status(404).send('Annotation source not found');
         return;
     }
     
-    var imgId = coco.fnToImgId[req.query.file_name];
+    var imgId = coco.fnToImgId[file_name];
     if (imgId == null) {
         res.status(404).send('File name not found');
         return;
@@ -52,16 +53,17 @@ router.get('/images/next', function(req, res) {
 router.get('/images/prev', function(req, res) {
     var dataset_name = req.query.dataset;
     var ann_source = req.query.ann_source;
+    var file_name = req.query.file_name;
 
-    var ann_fn = dataset_name + "_" + ann_source + "_#.json";
-    var ann_dir = path.join(DATA_DIR, "annotations/");
-    var coco = loadCOCO(path.join(ann_dir, ann_fn));
+    var dataset_dir = path.join(DATA_DIR, dataset_name);
+    var ann_fn = path.join(dataset_dir, ann_source + "_#.json");
+    var coco = loadCOCO(ann_fn);
     if (coco == null) {
         res.status(404).send('Annotation source not found');
         return;
     }
 
-    var imgId = coco.fnToImgId[req.query.file_name];
+    var imgId = coco.fnToImgId[file_name];
     if (imgId == null) {
         res.status(404).send('File name not found');
         return;
@@ -81,17 +83,18 @@ router.get('/images/prev', function(req, res) {
 router.get('/annotations', function(req, res) {
     var dataset_name = req.query.dataset;
     var ann_source = req.query.ann_source;
+    var file_name = req.query.file_name;
 
-    var ann_fn = dataset_name + "_" + ann_source + "_#.json";
-    var ann_dir = path.join(DATA_DIR, "annotations/");
-    var coco = loadCOCO(path.join(ann_dir, ann_fn));
+    var dataset_dir = path.join(DATA_DIR, dataset_name);
+    var ann_fn = path.join(dataset_dir, ann_source + "_#.json");
+    var coco = loadCOCO(ann_fn);
     if (coco == null) {
         res.status(404).send('Annotation source not found');
         return;
     }
 
-    var imgId = 0
-    if (req.query.file_name != null && req.query.file_name != "undefined") {
+    var imgId = 0 // Default imgId
+    if (file_name != null && file_name != "undefined") {
         imgId = coco.fnToImgId[req.query.file_name];
         if (imgId == null) {
             res.status(404).send('File name not found');
@@ -99,10 +102,11 @@ router.get('/annotations', function(req, res) {
         }
     }
 
-    var response = prepareResponse(coco, imgId);
-    response["annotations"] = prepareAnnotations(coco, imgId);
+    var response = {};
     response["dataset"] = dataset_name;
     response["ann_source"] = ann_source;
+    response["file_name"] = coco.imgs[imgId]["file_name"];
+    response["annotations"] = prepareAnnotations(coco, imgId);
     res.json(response);
 });
 
@@ -135,20 +139,21 @@ router.get('/bundles', function(req, res) {
 
 function prepareResponse(coco, imgId) {
     var file_name = coco.imgs[imgId]["file_name"];
+
+    var response = {};
+    response["file_name"] = file_name;
+    response["image_url"] = img_url;
+    return response;
+}
+function backupImageUrl() {
     var dataset_name = coco.imgs[imgId]["dataset_name"];
     if ( ! dataset_name) {
         // Infer dataset_name from coco.ann_fn
         // HACK. Should remove ASAP
         dataset_name = coco.ann_fn.split('#')[0];
     }
+    var img_url = "http://vision01.csail.mit.edu:3000/data/images?dataset=" + dataset_name + "&file_name=" + file_name; // CORS access
     var img_url = "http://places.csail.mit.edu/scaleplaces/datasets/" + path.join(getImDir(dataset_name), file_name); 
-    var img_url_backup = "http://vision01.csail.mit.edu:3000/data/images?dataset=" + dataset_name + "&file_name=" + file_name; // CORS access
-
-    var response = {};
-    response["file_name"] = file_name;
-    response["image_url"] = img_url;
-    response["image_url_backup"] = img_url_backup;
-    return response;
 }
 function prepareAnnotations(coco, imgId) {
     var annIds = coco.getAnnIds([imgId]);
@@ -189,6 +194,8 @@ function getImDir(dataset_name) {
         return "coco/images/";
     } else if (dataset_name.includes('places')) {
         return "places/images/";
+    } else if (dataset_name.includes('demo')) {
+        return "demo/images/";
     } else {
         return null;
     }

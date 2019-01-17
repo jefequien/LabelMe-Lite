@@ -46,7 +46,7 @@ function rleToMask(rle) {
 function imageDataToMask(imageData) {
   var mask = [];
   for (var i = 3; i < imageData.data.length; i = i+4) {
-    if (imageData.data[i] == 255) {
+    if (imageData.data[i] > 0) {
       mask.push(1);
     } else {
       mask.push(0);

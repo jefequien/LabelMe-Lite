@@ -9,8 +9,8 @@ function Background() {
   this.addListeners();
 
   this.focusMaxScale = 4;
-  this.maxScale = 12;
-  this.minScale = 0.2;
+  this.maxScale = 8;
+  this.minScale = 0.5;
 }
 Background.prototype.setImage = function(image, callback) {
   var raster = new Raster(image);
@@ -67,59 +67,56 @@ Background.prototype.setInvisible = function() {
 //
 // Move and scale background
 //
-Background.prototype.move = function(delta, noSnap) {
+Background.prototype.move = function(delta) {
   paper.project.activeLayer.translate(delta);
-  if ( ! noSnap) {
-    this.snapImage();
-  }
+  this.snapBounds();
 }
-Background.prototype.moveTo = function(center, noSnap) {
+Background.prototype.moveTo = function(center) {
     var dx = this.viewCenter.x - center.x;
     var dy = this.viewCenter.y - center.y;
-    this.move(new Point(dx,dy), noSnap);
+    this.move(new Point(dx,dy));
 }
-Background.prototype.scale = function(deltaScale, noSnap) {
-  paper.project.activeLayer.scale(deltaScale, paper.tool.curser.position);
-  if ( ! noSnap) {
-    this.snapImage();
+Background.prototype.scale = function(deltaScale, center) {
+  if ( ! center) {
+    center = this.viewCenter;
   }
+  paper.project.activeLayer.scale(deltaScale, center);
+  this.snapScale(center);
+  this.snapBounds();
 }
-Background.prototype.scaleTo = function(scale, noSnap) {
+Background.prototype.scaleTo = function(scale) {
   var currentScale = this.getCurrentScale();
-  this.scale(scale / currentScale, noSnap);
+  this.scale(scale / currentScale);
 }
 Background.prototype.getCurrentScale = function() {
+  // Defines what scale means
   var scale = Math.max(this.image.bounds.height / this.focusRect.height, this.image.bounds.width / this.focusRect.width);
   return scale;
 }
-Background.prototype.getPixelHeight = function() {
-  return this.image.bounds.height / this.image.height;
-}
-Background.prototype.snapImage = function() {
+Background.prototype.snapBounds = function() {
   var tl = this.image.bounds.topLeft;
   var br = this.image.bounds.bottomRight;
-  if (tl.x > this.focusRect.bottomRight.x) {
-    var delta = new Point(this.focusRect.bottomRight.x - tl.x, 0);
-    this.move(delta, true);
+  var delta = new Point(0,0);
+  if (tl.x > this.viewCenter.x) {
+    delta += new Point(this.viewCenter.x - tl.x, 0);
   }
-  if (tl.y > this.focusRect.bottomRight.y) {
-    var delta = new Point(0, this.focusRect.bottomRight.y - tl.y);
-    this.move(delta, true);
+  if (tl.y > this.viewCenter.y) {
+    delta += new Point(0, this.viewCenter.y - tl.y);
   }
-  if (br.x < this.focusRect.topLeft.x) {
-    var delta = new Point(this.focusRect.topLeft.x - br.x, 0);
-    this.move(delta, true);
+  if (br.x < this.viewCenter.x) {
+    delta += new Point(this.viewCenter.x - br.x, 0);
   }
-  if (br.y < this.focusRect.topLeft.y) {
-    var delta = new Point(0, this.focusRect.topLeft.y - br.y);
-    this.move(delta, true);
+  if (br.y < this.viewCenter.y) {
+    delta += new Point(0, this.viewCenter.y - br.y);
   }
-
+  paper.project.activeLayer.translate(delta);
+}
+Background.prototype.snapScale = function(center) {
   var currentScale = this.getCurrentScale();
   if (currentScale > this.maxScale) {
-    this.scaleTo(this.maxScale, true);
+    paper.project.activeLayer.scale(this.maxScale / currentScale, center);
   } else if (currentScale < this.minScale) {
-    this.scaleTo(this.minScale, true);
+    paper.project.activeLayer.scale(this.minScale / currentScale, center);
   }
 }
 Background.prototype.focus = function(annotation) {
@@ -131,16 +128,16 @@ Background.prototype.focus = function(annotation) {
       target = this.image.bounds;
     }
   }
+
   var height = Math.max(1, target.height);
   var width = Math.max(1, target.width);
   var scale = Math.min(this.image.bounds.height/height, this.image.bounds.width/width);
+  scale = Math.min(this.focusMaxScale, scale);
+  // Move before scaling
   this.moveTo(target.center);
-  this.scaleTo(Math.min(this.focusMaxScale, scale));
+  this.scaleTo(scale);
 }
-Background.prototype.focusPoint = function(point) {
-  this.moveTo(point);
-  this.scaleTo(this.focusMaxScale);
-}
+
 Background.prototype.align = function(annotation) {
   var img_bounds = this.image.bounds;
   var ann_bounds = annotation.raster.bounds;
@@ -169,10 +166,15 @@ Background.prototype.addListeners = function() {
       deltaY *= 2;
     }
     var scale = Math.abs(1 - 0.005 * deltaY);
-    background.scale(scale);
+    var center = new Point(e.offsetX, e.offsetY);
+    background.scale(scale, center);
+    paper.tool.curser.position = center;
     paper.tool.refreshTool();
     e.preventDefault();
   });
+}
+Background.prototype.getPixelHeight = function() {
+  return this.image.bounds.height / this.image.height;
 }
 
 //
@@ -213,69 +215,6 @@ Background.prototype.toPointSpace = function(shape) {
   shape.translate(new Point(0.5, 0.5));
   shape.scale(bounds.height / size.height, new Point(0, 0));
   shape.translate(tl);
-}
-
-//
-// Shape to Pixel
-//
-Background.prototype.getAllPixels = function(shape) {
-  var pixels0 = this.getBoundaryPixels(shape);
-  var pixels1 = this.getInteriorPixels(shape);
-  return pixels0.concat(pixels1);
-}
-Background.prototype.getInteriorPixels = function(shape) {
-  var clone = shape.clone();
-  clone.strokeWidth = 0;
-  clone.fillColor = "red";
-  clone.opacity = 1;
-
-  background.toPixelSpace(clone);
-  clone.translate(new Point(0.5, 0.5)); // Align for rasterize.
-  var raster = clone.rasterize(paper.view.resolution / window.devicePixelRatio);
-  var tl = raster.bounds.topLeft;
-  raster.opacity = 1;
-  clone.remove();
-  raster.remove();
-
-  var pixels = [];
-  if (raster.height == 0 || raster.width == 0) {
-    return pixels;
-  }
-  var imageData = raster.getImageData();
-  var mask = imageDataToMask(imageData);
-  for (var x = 0; x < mask.shape[1]; x++) {
-    for (var y = 0; y < mask.shape[0]; y++) {
-      if (mask.get(y,x) != 0) {
-        pixels.push(new Point(x,y) + tl);
-      }
-    }
-  }
-
-  return pixels;
-}
-Background.prototype.getBoundaryPixels = function(path) {
-  var pixels = [];
-  // CompoundPath
-  if (path.children) {
-    for (var i = 0; i < path.children.length; i++) {
-      pixels = pixels.concat(background.getBoundaryPixels(path.children[i]));
-    }
-    return pixels;
-  }
-  // Shape
-  if ( ! path.getPointAt) {
-    path = path.toPath();
-    path.remove();
-  }
-  // Path
-  var path_pixel = path.clone();
-  path_pixel.remove();
-  background.toPixelSpace(path_pixel);
-  for (var i = 0; i < path_pixel.length; i = i + 0.1) {
-    var pixel = path_pixel.getPointAt(i);
-    pixels.push(pixel);
-  }
-  return pixels;
 }
 
 //

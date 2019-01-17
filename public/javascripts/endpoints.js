@@ -13,8 +13,7 @@ if (query) {
 // Get Requests
 //
 function getImageURL(src) {
-    var server = "http://vision01.csail.mit.edu:3000";
-    var endpoint = server + "/data/images?" + query;
+    var endpoint = base_url + "/data/images?" + query;
     return endpoint;
 }
 function getNextImage(callback) {

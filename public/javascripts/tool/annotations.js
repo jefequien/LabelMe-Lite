@@ -2,23 +2,11 @@
  * Annotation tool powered by PaperJS.
  */
  
-function Annotation(name, mask){
+function Annotation(name){
   this.name = name;
-
-  // Mask
-  this.mask = mask;
-  if (this.mask == null) {
-    this.mask = nj.zeros([background.image.height, background.image.width]);
-  }
-
-  // Raster
-  this.raster = new Raster({size: new Size(this.mask.shape[1], this.mask.shape[0])});
-  this.rasterinv = this.raster.clone();
-
-  // Boundary
   this.boundary = new CompoundPath();
-  this.undoHistory = [];
-  this.redoHistory = [];
+  this.raster = new Raster({size: new Size(background.image.width, background.image.height)});
+  this.rasterinv = this.raster.clone();
 
  // Add to data structures
   this.id = this.raster.id;
@@ -26,24 +14,49 @@ function Annotation(name, mask){
   tree.addAnnotation(this);
   background.align(this);
 
+  // Undo
+  this.undoHistory = [];
+  this.redoHistory = [];
+
   // Styles
   this.visible = true;
   this.color = new Color(Math.random(), Math.random(), Math.random(), 1);
   this.colorinv = this.color / 2;
   this.unhighlight();
 }
-Annotation.prototype.updateRaster = function() {
-  setRaster(this.raster, this.color, this.mask);
+Annotation.prototype.setMask = function(mask) {
+  this.raster.size = new Size(mask.shape[1], mask.shape[0]);
+  this.rasterinv.size = new Size(mask.shape[1], mask.shape[0]);
+  background.align(this);
+
+  setRasterWithMask(this.raster, this.color, mask);
+  this.updateBoundary();
+  this.updateRaster();
 }
-Annotation.prototype.updateRasterInv = function() {
-  var maskinv = nj.add(nj.multiply(this.mask, -1), 1);
-  setRasterOld(this.rasterinv, this.colorinv, maskinv);
-}
-Annotation.prototype.updateMask = function() {
+Annotation.prototype.getMask = function() {
   var imageData = this.raster.getImageData();
-  this.mask = imageDataToMask(imageData);
+  var mask = imageDataToMask(imageData);
+  return mask;
+}
+Annotation.prototype.updateRaster = function(boundary) {
+  console.time("updateRaster");
+  if ( ! boundary) {
+    boundary = this.boundary;
+  }
+
+  // Update raster
+  setRasterWithPath(this.raster, this.color, boundary);
+  // Update rasterinv
+  var boundaryinv = new CompoundPath({
+    children: [new Path.Rectangle(background.image.bounds), boundary.clone()],
+    fillRule: "evenodd"
+  });
+  boundaryinv.remove();
+  setRasterWithPath(this.rasterinv, this.colorinv, boundaryinv);
+  console.timeEnd("updateRaster");
 }
 Annotation.prototype.updateBoundary = function() {
+  console.time("updateBoundary");
   var imageData = this.raster.getImageData();
   var boundaries = findBoundariesOpenCV(imageData);
 
@@ -63,6 +76,7 @@ Annotation.prototype.updateBoundary = function() {
   this.undoHistory.push(paths.pathData);
   this.redoHistory = [];
   sortAnnotations();
+  console.timeEnd("updateBoundary");
 }
 Annotation.prototype.delete = function(noConfirm) {
   var confirmed = true;
@@ -86,7 +100,14 @@ Annotation.prototype.undo = function() {
   if (this.undoHistory.length > 1) {
     var currentBoundary = this.undoHistory.pop();
     this.redoHistory.push(currentBoundary);
-    this.recoverUsingBoundaryPathData(this.undoHistory[this.undoHistory.length-1]);
+    var pathData = this.undoHistory[this.undoHistory.length-1];
+    var boundary = new CompoundPath(pathData);
+    background.toPointSpace(boundary);
+    boundary.remove();
+
+    this.boundary.pathData = boundary.pathData;
+    this.updateRaster();
+
     paper.tool.refreshTool();
     return true;
   }
@@ -96,34 +117,24 @@ Annotation.prototype.redo = function() {
   if (this.redoHistory != 0) {
     var pathData = this.redoHistory.pop();
     this.undoHistory.push(pathData);
-    this.recoverUsingBoundaryPathData(pathData);
+    var boundary = new CompoundPath(pathData);
+    background.toPointSpace(boundary);
+    boundary.remove();
+
+    this.boundary.pathData = boundary.pathData;
+    this.updateRaster();
+
     paper.tool.refreshTool();
     return true;
   }
   return false;
-}
-Annotation.prototype.recoverUsingBoundaryPathData = function(pathData) {
-  var oldBoundary = new CompoundPath(pathData);
-  oldBoundary.remove();
-  background.toPointSpace(oldBoundary);
-
-  // Clear mask
-  this.mask = nj.zeros(this.mask.shape);
-  this.updateRaster();
-  this.updateRasterInv();
-
-  var pixels = background.getAllPixels(oldBoundary);
-  this.unitePixels(pixels);
-  this.boundary.pathData = oldBoundary.pathData;
 }
 Annotation.prototype.changeColor = function() {
   this.color = new Color(Math.random(), Math.random(), Math.random(), 1);
   this.colorinv = this.color / 2;
 
   this.boundary.strokeColor = this.color;
-  this.updateMask();
   this.updateRaster();
-  this.updateRasterInv();
 }
 
 //
@@ -139,6 +150,154 @@ Annotation.prototype.scale = function(scale, center) {
   this.rasterinv.scale(scale, center);
   this.boundary.scale(scale, center);
 }
+Annotation.prototype.containsPoint = function(point) {
+  var pixel = background.getPixel(point);
+  return this.containsPixel(pixel);
+}
+Annotation.prototype.containsPixel = function(pixel) {
+  var c = this.raster.getPixel(pixel);
+  return c.alpha > 0.5;
+}
+
+//
+// Edit Annotation
+//
+Annotation.prototype.unite = function(path) {
+  var path_raster = rasterize(path, "red");
+  path_raster.remove();
+  if (path_raster.height == 0 || path_raster.width == 0) {
+    return;
+  }
+
+  var pixels = getRasterPixels(path_raster);
+  editRasterCrop(this.raster, path_raster.bounds, pixels, this.color);
+  editRasterCrop(this.rasterinv, path_raster.bounds, pixels, new Color(0,0,0,0));
+}
+Annotation.prototype.subtract = function(path) {
+  var path_raster = rasterize(path, "red");
+  path_raster.remove();
+  if (path_raster.height == 0 || path_raster.width == 0) {
+    return;
+  }
+  
+  var pixels = getRasterPixels(path_raster);
+  editRasterCrop(this.raster, path_raster.bounds, pixels, new Color(0,0,0,0));
+  editRasterCrop(this.rasterinv, path_raster.bounds, pixels, this.colorinv);
+}
+function getRasterPixels(raster) {
+  var pixels = [];
+  var imageData = raster.getImageData();
+  var mask = imageDataToMask(imageData);
+  for (var x = 0; x < mask.shape[1]; x++) {
+    for (var y = 0; y < mask.shape[0]; y++) {
+      if (mask.get(y,x) != 0) {
+        pixels.push(new Point(x,y));
+      }
+    }
+  }
+  return pixels;
+}
+function editRasterCrop(raster, crop_bbox, pixels, color) {
+  var crop = raster.getImageData(crop_bbox);
+  for (var i = 0; i < pixels.length; i++) {
+      setPixelColor(crop, pixels[i], color);
+  }
+  raster.setImageData(crop, crop_bbox.topLeft);
+}
+function setPixelColor(imageData, pixel, color) {
+  var x = Math.round(pixel.x);
+  var y = Math.round(pixel.y);
+  if (x < 0 || y < 0
+    || x >= imageData.width || y >= imageData.height) {
+    return;
+  }
+  var p = (y * imageData.width + x) * 4;
+  imageData.data[p] = color.red * 255;
+  imageData.data[p+1] = color.green * 255;
+  imageData.data[p+2] = color.blue * 255;
+  imageData.data[p+3] = color.alpha * 255;
+}
+function setRasterWithPath(raster, color, path) {
+  clearRaster(raster);
+
+  var path_raster = rasterize(path, color);
+  path_raster.remove();
+  if (path_raster.height == 0 || path_raster.width == 0) {
+    return;
+  }
+  var imageData = path_raster.getImageData();
+  var tl = path_raster.bounds.topLeft;
+  raster.setImageData(imageData, tl);
+}
+function setRasterWithMask(raster, color, mask) {
+  var cv = document.createElement('canvas');
+  var ctx = cv.getContext('2d');
+  var imageData = ctx.getImageData(0,0,mask.shape[1], mask.shape[0]);
+
+  var list = mask.tolist();
+  for (var y = 0; y < list.length; y++) {
+    for (var x = 0; x < list[y].length; x++) {
+      b = list[y][x];
+      if (b != 0) {
+        var p = (y * list[y].length + x) * 4;
+        imageData.data[p] = color.red * 255;
+        imageData.data[p+1] = color.green * 255;
+        imageData.data[p+2] = color.blue * 255;
+        imageData.data[p+3] = color.alpha * 255;
+      }
+    }
+  }
+  raster.setImageData(imageData, new Point(0, 0));
+}
+function clearRaster(raster) {
+  var cv = document.createElement('canvas');
+  var ctx = cv.getContext('2d');
+  var imageData = ctx.getImageData(0, 0, raster.width, raster.height);
+  raster.setImageData(imageData, new Point(0, 0));
+}
+function rasterize(path, color) {
+  var clone = path.clone();
+  clone.fillColor = color;
+  clone.strokeWidth = 0;
+  background.toPixelSpace(clone);
+  clone.translate(new Point(0.5, 0.5)); // Align for rasterize.
+
+  var path_raster = clone.rasterize(paper.view.resolution / window.devicePixelRatio);
+  clone.remove();
+  return path_raster;
+}
+
+//
+// Utils
+//
+function findBoundariesOpenCV(imageData) {
+  var src = cv.matFromImageData(imageData);
+  var dst = cv.Mat.zeros(src.cols, src.rows, cv.CV_8UC3);
+  cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
+  cv.threshold(src, src, 1, 255, cv.THRESH_BINARY);
+  var contours = new cv.MatVector();
+  var hierarchy = new cv.Mat();
+  // // You can try more different parameters
+  cv.findContours(src, contours, hierarchy, cv.RETR_LIST, cv.CHAIN_APPROX_NONE);
+
+  var boundaries = [];
+  for (var i = 0; i < contours.size(); i++) {
+    var cnt = contours.get(i);
+    var bnd = [];
+    for (var j = 0; j < cnt.rows; j++) {
+      bnd.push([cnt.data32S[j*2], cnt.data32S[j*2+1]])
+    }
+    if (bnd.length > 4) {
+      boundaries.push(bnd);
+    }
+    cnt.delete();
+  }
+  src.delete();
+  dst.delete();
+  contours.delete();
+  hierarchy.delete();
+  return boundaries;
+}
 
 //
 // Styles
@@ -152,12 +311,6 @@ Annotation.prototype.highlight = function() {
   this.emphasizeBoundary();
   if (annotations.styleInverted) {
     this.emphasizeMask();
-  }
-
-  // In loadAnnotations, updateRasterInv here to decrease loading time
-  if ( ! this.rasterinvUpToDate) {
-    this.updateRasterInv();
-    this.rasterinvUpToDate = true;
   }
 }
 Annotation.prototype.unhighlight = function() {
@@ -206,179 +359,6 @@ Annotation.prototype.emphasizeBoundary = function() {
 }
 
 //
-// Edit raster
-//
-Annotation.prototype.unite = function(shape) {
-  var pixels = background.getAllPixels(shape);
-  this.unitePixels(pixels);
-}
-Annotation.prototype.subtract = function(shape) {
-  var pixels = background.getAllPixels(shape);
-  this.subtractPixels(pixels);
-}
-Annotation.prototype.flip = function(shape) {
-  var pixels = background.getAllPixels(shape);
-  this.flipPixels(pixels);
-}
-Annotation.prototype.unitePath = function(shape) {
-  var pixels = background.getBoundaryPixels(shape);
-  this.unitePixels(pixels);
-}
-Annotation.prototype.subtractPath = function(shape) {
-  var pixels = background.getBoundaryPixels(shape);
-  this.subtractPixels(pixels);
-}
-Annotation.prototype.uniteInterior = function(shape) {
-  var pixels = background.getInteriorPixels(shape);
-  this.unitePixels(pixels);
-}
-Annotation.prototype.subtractInterior = function(shape) {
-  var pixels = background.getInteriorPixels(shape);
-  this.subtractPixels(pixels);
-}
-Annotation.prototype.unitePixels = function(pixels) {
-  editRaster(this.raster, this.color, pixels, "unite");
-  editRaster(this.rasterinv, this.colorinv, pixels, "subtract");
-}
-Annotation.prototype.subtractPixels = function(pixels) {
-  editRaster(this.raster, this.color, pixels, "subtract");
-  editRaster(this.rasterinv, this.colorinv, pixels, "unite");
-}
-Annotation.prototype.flipPixels = function(pixels) {
-  pixels = removeDuplicatePixels(pixels);
-  editRaster(this.raster, this.color, pixels, "flip");
-  editRaster(this.rasterinv, this.colorinv, pixels, "flip");
-}
-Annotation.prototype.containsPoint = function(point) {
-  var pixel = background.getPixel(point);
-  return this.containsPixel(pixel);
-}
-Annotation.prototype.containsPixel = function(pixel) {
-  var c = this.raster.getPixel(pixel);
-  return c.alpha > 0.5;
-}
-function setRaster(raster, color, mask) {
-  var cv = document.createElement('canvas');
-  var ctx = cv.getContext('2d');
-  var imageData = ctx.getImageData(0,0,mask.shape[1], mask.shape[0]);
-
-  var list = mask.tolist();
-  for (var y = 0; y < list.length; y++) {
-    for (var x = 0; x < list[y].length; x++) {
-      b = list[y][x];
-      if (b != 0) {
-        var p = (y * list[y].length + x) * 4;
-        imageData.data[p] = color.red * 255;
-        imageData.data[p+1] = color.green * 255;
-        imageData.data[p+2] = color.blue * 255;
-        imageData.data[p+3] = color.alpha * 255;
-      }
-    }
-  }
-  raster.setImageData(imageData, new Point(0, 0));
-}
-function setRasterOld(raster, color, mask) {
-  var mask = mask.multiply(255);
-  var r = nj.multiply(mask, color.red);
-  var g = nj.multiply(mask, color.green);
-  var b = nj.multiply(mask, color.blue);
-  var a = mask;
-  var color_mask = nj.stack([r, g, b, a], -1);
-  var imageData = arrayToImageData(color_mask);
-
-  raster.setImageData(imageData, new Point(0, 0));
-}
-function editRaster(raster, color, pixels, rule) {
-  var imageData = raster.getImageData();
-  var clear = new Color(0,0,0,0);
-  for (var i = 0; i < pixels.length; i++) {
-    if (rule == "unite") {
-      setPixelColor(imageData, pixels[i], color);
-    } else if (rule == "subtract") {
-      setPixelColor(imageData, pixels[i], clear);
-    } else if (rule == "flip") {
-      var c = getPixelColor(imageData, pixels[i]);
-      if (c.alpha > 0.5) {
-        setPixelColor(imageData, pixels[i], clear);
-      } else {
-        setPixelColor(imageData, pixels[i], color);
-      }
-    }
-  }
-  raster.setImageData(imageData, new Point(0, 0));
-}
-function setPixelColor(imageData, pixel, color) {
-  var x = Math.round(pixel.x);
-  var y = Math.round(pixel.y);
-  if (x < 0 || y < 0
-    || x >= imageData.width || y >= imageData.height) {
-    return;
-  }
-  var p = (y * imageData.width + x) * 4;
-  imageData.data[p] = color.red * 255;
-  imageData.data[p+1] = color.green * 255;
-  imageData.data[p+2] = color.blue * 255;
-  imageData.data[p+3] = color.alpha * 255;
-}
-function getPixelColor(imageData, pixel) {
-  var x = Math.round(pixel.x);
-  var y = Math.round(pixel.y);
-  var p = (y * imageData.width + x) * 4;
-  var color = new Color();
-  color.red = imageData.data[p] / 255;
-  color.green = imageData.data[p+1]/ 255;
-  color.blue = imageData.data[p+2] / 255;
-  color.alpha = imageData.data[p+3] / 255;
-  return color;
-}
-function removeDuplicatePixels(pixels) {
-  var pixelsUnique = [];
-  var pixelsSet = new Set();
-  for (var i = 0; i < pixels.length; i++) {
-    var pixel = pixels[i].round();
-    var str = JSON.stringify(pixel);
-    if ( ! pixelsSet.has(str)) {
-      pixelsUnique.push(pixel);
-      pixelsSet.add(str);
-    }
-  }
-  return pixelsUnique;
-}
-
-
-//
-// Utils
-//
-function findBoundariesOpenCV(imageData) {
-  var src = cv.matFromImageData(imageData);
-  var dst = cv.Mat.zeros(src.cols, src.rows, cv.CV_8UC3);
-  cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
-  cv.threshold(src, src, 1, 255, cv.THRESH_BINARY);
-  var contours = new cv.MatVector();
-  var hierarchy = new cv.Mat();
-  // // You can try more different parameters
-  cv.findContours(src, contours, hierarchy, cv.RETR_LIST, cv.CHAIN_APPROX_NONE);
-
-  var boundaries = [];
-  for (var i = 0; i < contours.size(); i++) {
-    var cnt = contours.get(i);
-    var bnd = [];
-    for (var j = 0; j < cnt.rows; j++) {
-      bnd.push([cnt.data32S[j*2], cnt.data32S[j*2+1]])
-    }
-    if (bnd.length > 4) {
-      boundaries.push(bnd);
-    }
-    cnt.delete();
-  }
-  src.delete();
-  dst.delete();
-  contours.delete();
-  hierarchy.delete();
-  return boundaries;
-}
-
-//
 // Exports
 //
 function loadAnnotations(anns) {
@@ -390,9 +370,8 @@ function loadAnnotations(anns) {
 
     console.time(category);
     var mask = rleToMask(rle);
-    var annotation = new Annotation(category, mask);
-    annotation.updateRaster();
-    annotation.updateBoundary();
+    var annotation = new Annotation(category);
+    annotation.setMask(mask);
     console.timeEnd(category);
   }
   if (annotations.length == 0) {
@@ -408,8 +387,8 @@ function saveAnnotations() {
   var anns = [];
   for (var i = 0; i < annotations.length; i++) {
     var name = annotations[i].name;
-    annotations[i].updateMask();
-    var rle = maskToRLE(annotations[i].mask);
+    var mask = annotations[i].getMask();
+    var rle = maskToRLE(mask);
 
     var ann = {};
     ann["category"] = name;

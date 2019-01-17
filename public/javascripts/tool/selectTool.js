@@ -63,7 +63,7 @@ selectTool.deactivate = function() {
   deactivateButton(this.toolName);
 }
 selectTool.switch = function(annotation) {
-  var lastCurserPosition = (paper.tool.curser) ? paper.tool.curser.position : new Point(0,0);
+  var lastCurserPosition = (paper.tool.curser) ? paper.tool.curser.position : background.viewCenter;
   var lastToolSize = parseInt(toolSlider.value);
   
   this.toolName = "selectTool";

@@ -189,8 +189,7 @@ newTool.createAnnotation = function() {
   path.remove();
 
   this.annotation = new Annotation(this.name);
-  this.annotation.unite(path);
-  this.annotation.updateMask();
+  this.annotation.updateRaster(path);
   this.annotation.updateBoundary();
 }
 

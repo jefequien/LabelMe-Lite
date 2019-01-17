@@ -1,12 +1,13 @@
 
 window.onload = function() {
-    selectTool.switch();
+    // Default url
     if (Object.keys(params).length == 0) {
-        params.dataset = "ade20k_val";
-        params.ann_source = "pspnet";
+        params.dataset = "demo";
+        params.ann_source = "demo_anns";
         setWindowUrl(params);
     }
     
+    selectTool.switch();
     getAnnotations(function(res) {
         loadTool(res);
     });
@@ -15,20 +16,24 @@ window.onload = function() {
 
 function loadTool(task) {
     console.log(task);
+    setWindowUrl(task);
     $('#datasetName').text(task.dataset);
     $('#annotationSource').text(task.ann_source);
     $('#imageFileName').text(task.file_name);
-    background.setImage(task.image_url);
-    // scissors.setImage(task.image_url_backup);
-    // brush.setImage(task.image_url_backup);
-    
-    if (task.annotations) {
-        loadAnnotations(task.annotations);
-    } else {
-        loadAnnotations([]);
+
+    var image_url = task.image_url;
+    var annotations = task.annotations;
+    if (! image_url) {
+        image_url = getImageURL();
+    }
+    if (! annotations) {
+        annotations = [];
     }
 
-    setWindowUrl(task);
+    background.setImage(image_url);
+    // scissors.setImage(task.image_url_backup);
+    // brush.setImage(task.image_url_backup);
+    loadAnnotations(annotations);
 }
 
 var prevButton = document.getElementById('prevImage');
