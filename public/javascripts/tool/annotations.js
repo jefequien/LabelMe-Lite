@@ -19,24 +19,86 @@ function Annotation(name){
   this.redoHistory = [];
 
   // Styles
-  this.visible = true;
   this.color = new Color(Math.random(), Math.random(), Math.random(), 1);
   this.colorinv = this.color / 2;
+  this.visible = true;
   this.unhighlight();
 }
-Annotation.prototype.setMask = function(mask) {
-  this.raster.size = new Size(mask.shape[1], mask.shape[0]);
-  this.rasterinv.size = new Size(mask.shape[1], mask.shape[0]);
+Annotation.prototype.loadRLE = function(rle) {
+  console.time("loadRLE");
+  this.raster.size = new Size(rle["width"], rle["height"]);
+  this.rasterinv.size = new Size(rle["width"], rle["height"]);
   background.align(this);
 
-  setRasterWithMask(this.raster, this.color, mask);
-  this.updateBoundary();
-  this.updateRaster();
-}
-Annotation.prototype.getMask = function() {
   var imageData = this.raster.getImageData();
-  var mask = imageDataToMask(imageData);
-  return mask;
+  var color = [this.color.red * 255, this.color.green * 255, this.color.blue * 255, 255];
+
+  var counts = rle["counts"].split("#");
+  var b = 0;
+  var p = 0;
+  for (var i = 0; i < counts.length; i++) {
+    for (var j = 0; j < counts[i]; j++) {
+      if (b != 0) {
+        imageData.data[p] = color[0];
+        imageData.data[p+1] = color[1];
+        imageData.data[p+2] = color[2];
+        imageData.data[p+3] = color[3];
+      }
+      p += 4;
+    }
+    b = (b == 0) ? 1 : 0;
+  }
+  this.raster.setImageData(imageData, new Point(0,0));
+  console.timeEnd("loadRLE");
+}
+Annotation.prototype.getRLE = function() {
+  var imageData = this.raster.getImageData();
+
+  var b = 0;
+  var current_bit = 0;
+  var count = 0;
+  var counts = [];
+  for (var i = 0; i < imageData.data.length; i+=4) {
+    b = (imageData.data[i] == 0) ? 0 : 1;
+    if (b == current_bit) {
+      count += 1;
+    } else {
+      counts.push(count);
+      current_bit = b;
+      count = 1;
+    }
+  }
+  counts.push(count);
+
+  var rle = {};
+  rle["height"] = this.raster.height;
+  rle["width"] = this.raster.width;
+  rle["counts"] = counts.join("#");
+  return rle;
+}
+Annotation.prototype.updateBoundary = function() {
+  console.time("updateBoundary");
+  var imageData = this.raster.getImageData();
+  var boundaries = findBoundariesOpenCV(imageData);
+
+  var paths = [];
+  for (var i = 0; i < boundaries.length; i++) {
+    var path = new Path({ segments: boundaries[i] });
+    path.closed = true;
+    paths.push(path);
+  }
+  var paths = new CompoundPath({ children: paths });
+  paths.remove();
+
+  this.boundary.pathData = paths.pathData;
+  background.toPointSpace(this.boundary);
+  sortAnnotations();
+
+  if (this.undoHistory.length == 0 || paths.pathData != this.undoHistory[this.undoHistory.length-1]) {
+    this.undoHistory.push(paths.pathData);
+    this.redoHistory = [];
+  }
+  console.timeEnd("updateBoundary");
 }
 Annotation.prototype.updateRaster = function(boundary) {
   console.time("updateRaster");
@@ -54,29 +116,6 @@ Annotation.prototype.updateRaster = function(boundary) {
   boundaryinv.remove();
   setRasterWithPath(this.rasterinv, this.colorinv, boundaryinv);
   console.timeEnd("updateRaster");
-}
-Annotation.prototype.updateBoundary = function() {
-  console.time("updateBoundary");
-  var imageData = this.raster.getImageData();
-  var boundaries = findBoundariesOpenCV(imageData);
-
-  var paths = [];
-  for (var i = 0; i < boundaries.length; i++) {
-    var path = new Path({ segments: boundaries[i] });
-    path.closed = true;
-    paths.push(path);
-  }
-
-  var paths = new CompoundPath({ children: paths });
-  paths.remove();
-
-  this.boundary.pathData = paths.pathData;
-  background.toPointSpace(this.boundary);
-
-  this.undoHistory.push(paths.pathData);
-  this.redoHistory = [];
-  sortAnnotations();
-  console.timeEnd("updateBoundary");
 }
 Annotation.prototype.delete = function(noConfirm) {
   var confirmed = true;
@@ -114,7 +153,7 @@ Annotation.prototype.undo = function() {
   return false;
 }
 Annotation.prototype.redo = function() {
-  if (this.redoHistory != 0) {
+  if (this.redoHistory.length != 0) {
     var pathData = this.redoHistory.pop();
     this.undoHistory.push(pathData);
     var boundary = new CompoundPath(pathData);
@@ -187,10 +226,10 @@ Annotation.prototype.subtract = function(path) {
 function getRasterPixels(raster) {
   var pixels = [];
   var imageData = raster.getImageData();
-  var mask = imageDataToMask(imageData);
-  for (var x = 0; x < mask.shape[1]; x++) {
-    for (var y = 0; y < mask.shape[0]; y++) {
-      if (mask.get(y,x) != 0) {
+  for (var x = 0; x < raster.width; x++) {
+    for (var y = 0; y < raster.height; y++) {
+      var p = (y * raster.width + x) * 4;
+      if (imageData.data[p+3] != 0) {
         pixels.push(new Point(x,y));
       }
     }
@@ -258,7 +297,8 @@ function clearRaster(raster) {
 function rasterize(path, color) {
   var clone = path.clone();
   clone.fillColor = color;
-  clone.strokeWidth = 0;
+  clone.strokeColor = color;
+  clone.strokeWidth = 0.1;
   background.toPixelSpace(clone);
   clone.translate(new Point(0.5, 0.5)); // Align for rasterize.
 
@@ -363,21 +403,18 @@ Annotation.prototype.emphasizeBoundary = function() {
 //
 function loadAnnotations(anns) {
   console.time("Load");
-  tree.setMessage("Loading annotations...");
   for (var i = 0; i < anns.length; i++) {
     var category = anns[i]["category"];
     var rle = anns[i]["segmentation"];
 
     console.time(category);
-    var mask = rleToMask(rle);
     var annotation = new Annotation(category);
-    annotation.setMask(mask);
+    annotation.loadRLE(rle);
+    annotation.updateBoundary();
     console.timeEnd(category);
   }
   if (annotations.length == 0) {
     tree.setMessage("No annotations.");
-  } else {
-    tree.removeMessage();
   }
   console.timeEnd("Load");
 }
@@ -387,8 +424,7 @@ function saveAnnotations() {
   var anns = [];
   for (var i = 0; i < annotations.length; i++) {
     var name = annotations[i].name;
-    var mask = annotations[i].getMask();
-    var rle = maskToRLE(mask);
+    var rle = annotations[i].getRLE();
 
     var ann = {};
     ann["category"] = name;
@@ -409,6 +445,7 @@ function sortAnnotations() {
       var ann1 = annotations[i+1];
       if (Math.abs(ann0.boundary.area) > Math.abs(ann1.boundary.area)) {
         ann0.raster.insertBelow(ann1.raster);
+        ann0.rasterinv.insertBelow(ann1.rasterinv);
         annotations[i+1] = ann0;
         annotations[i] = ann1;
         changed = true;

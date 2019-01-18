@@ -4,48 +4,15 @@
 
 function Background() {
   this.setFocusRect();
-  this.clearImage();
-  this.makeFilter();
   this.addListeners();
 
   this.focusMaxScale = 4;
   this.maxScale = 8;
   this.minScale = 0.5;
-}
-Background.prototype.setImage = function(image, callback) {
-  var raster = new Raster(image);
-  raster.position = this.viewCenter;
-  raster.onLoad = function() {
-    if (background.image) {
-      background.image.remove();
-    }
-    background.image = raster;
-    for (var i = 0; i < annotations.length; i++) {
-      background.align(annotations[i]);
-    }
-    background.focus();
-    background.image.sendToBack();
-    background.makeFilter();
-    if (callback) {
-      callback();
-    }
-  }
-}
-Background.prototype.clearImage = function() {
-  if (this.image) {
-    this.image.remove();
-  }
-  this.image = new Path.Rectangle(this.focusRect).rasterize();
-}
-Background.prototype.makeFilter = function() {
-  if (this.filter) {
-    this.filter.remove();
-  }
 
-  this.image.blendMode = 'hard-light';
-  this.filter = new Path.Rectangle(this.image.bounds);
-  this.filter.fillColor = new Color(0.5);
-  this.filter.sendToBack();
+  this.image = new Path.Rectangle(this.focusRect).rasterize();
+  this.filter = new Path();
+  this.resetFilter();
 }
 Background.prototype.setFocusRect = function() {
   var h = paper.view.size.height;
@@ -55,13 +22,53 @@ Background.prototype.setFocusRect = function() {
   var br = this.viewCenter + new Point(0.45 * w, 0.45 * h);
   this.focusRect = new Rectangle(tl, br);
 }
-Background.prototype.setVisible = function() {
-  this.image.visible = true;
-  this.filter.visible = true;
+Background.prototype.setImage = function(image, callback) {
+  var raster = new Raster(image);
+  raster.position = this.viewCenter;
+  raster.sendToBack();
+
+  raster.onLoad = function() {
+    background.image.remove();
+    background.image = raster;
+    for (var i = 0; i < annotations.length; i++) {
+      background.align(annotations[i]);
+    }
+    background.focus();
+    background.resetFilter();
+    if (callback) {
+      callback();
+    }
+  }
 }
-Background.prototype.setInvisible = function() {
-  this.image.visible = false;
-  this.filter.visible = false;
+Background.prototype.clearImage = function() {
+  this.image.remove();
+}
+Background.prototype.resetFilter = function() {
+  this.image.blendMode = 'hard-light';
+  var path = new Path.Rectangle(this.image.bounds);
+  path.remove();
+  this.filter.segments = path.segments;
+  this.filter.fillColor = new Color(0.5);
+  this.filter.sendToBack();
+}
+Background.prototype.addListeners = function() {
+  var canvas = document.getElementById('toolCanvas');
+  canvas.addEventListener('wheel', function(e) {
+    var deltaY = e.deltaY;
+    if (e.ctrlKey) {
+      deltaY *= 2;
+    }
+    var scale = Math.abs(1 - 0.005 * deltaY);
+    var center = new Point(e.offsetX, e.offsetY);
+    background.scale(scale, center);
+    paper.tool.curser.position = center;
+    paper.tool.refreshTool();
+    e.preventDefault();
+  });
+}
+Background.prototype.setVisible = function(visible) {
+  this.image.visible = visible;
+  this.filter.visible = visible;
 }
 
 //
@@ -137,7 +144,6 @@ Background.prototype.focus = function(annotation) {
   this.moveTo(target.center);
   this.scaleTo(scale);
 }
-
 Background.prototype.align = function(annotation) {
   var img_bounds = this.image.bounds;
   var ann_bounds = annotation.raster.bounds;
@@ -145,36 +151,7 @@ Background.prototype.align = function(annotation) {
   var ann_scale = ann_bounds.height / annotation.raster.height;
   annotation.translate(img_bounds.topLeft - ann_bounds.topLeft);
   annotation.scale(img_scale / ann_scale, img_bounds.topLeft);
-}
-Background.prototype.setTempImage = function(imageData) {
-  if (this.tempImage) {
-    this.tempImage.remove();
-  }
-  this.tempImage = this.image.clone();
-  this.tempImage.blendMode = 'normal';
-  this.tempImage.setImageData(imageData, new Point(0,0));
-  this.tempImage.insertAbove(this.image);
-}
-Background.prototype.removeTempImage = function() {
-  this.tempImage.remove();
-}
-Background.prototype.addListeners = function() {
-  var canvas = document.getElementById('toolCanvas');
-  canvas.addEventListener('wheel', function(e) {
-    var deltaY = e.deltaY;
-    if (e.ctrlKey) {
-      deltaY *= 2;
-    }
-    var scale = Math.abs(1 - 0.005 * deltaY);
-    var center = new Point(e.offsetX, e.offsetY);
-    background.scale(scale, center);
-    paper.tool.curser.position = center;
-    paper.tool.refreshTool();
-    e.preventDefault();
-  });
-}
-Background.prototype.getPixelHeight = function() {
-  return this.image.bounds.height / this.image.height;
+  annotation.updateRaster(); // Fixes rasterinv
 }
 
 //
@@ -218,6 +195,22 @@ Background.prototype.toPointSpace = function(shape) {
 }
 
 //
+// Temporary image for visualization
+//
+Background.prototype.setTempImage = function(imageData) {
+  if (this.tempImage) {
+    this.tempImage.remove();
+  }
+  this.tempImage = this.image.clone();
+  this.tempImage.blendMode = 'normal';
+  this.tempImage.setImageData(imageData, new Point(0,0));
+  this.tempImage.insertAbove(this.image);
+}
+Background.prototype.removeTempImage = function() {
+  this.tempImage.remove();
+}
+
+//
 // Exports
 //
 function onResize(event) {
@@ -236,4 +229,4 @@ Background.prototype.decreaseBrightness = function() {
   }
 }
 window.background = new Background();
-paper.view._context.imageSmoothingEnabled = false; // Pixelates background
+paper.view._context.imageSmoothingEnabled = true; // Pixelates background

@@ -32,17 +32,6 @@ selectTool.onMouseUp = function(event) {
   }
 }
 selectTool.onKeyDown = function(event) {
-  this.editKeys(event);
-  if (event.key == 'escape') {
-    background.focus();
-  }
-  if (event.key == 'i') {
-    annotations.styleInverted = ( ! annotations.styleInverted);
-    this.refreshTool();
-  }
-  onKeyDownShared(event);
-}
-selectTool.editKeys = function(event) {
   if (event.key == 'u') {
     alert("Please select an annotation first.");
   }
@@ -52,6 +41,14 @@ selectTool.editKeys = function(event) {
   if (event.key == 'backspace') {
     alert("Please select an annotation first.");
   }
+  if (event.key == 'escape') {
+    background.focus();
+  }
+  if (event.key == 'i') {
+    annotations.styleInverted = ( ! annotations.styleInverted);
+    this.refreshTool();
+  }
+  onKeyDownShared(event);
 }
 selectTool.refreshTool = function() {
   selectTool.onMouseMove({point: selectTool.curser.position});
@@ -86,6 +83,18 @@ selectTool.getAnnotationAt = function(point) {
     }
   }
   return null;
+}
+selectTool.getNearestAnnotation = function(point) {
+  var minDist = null;
+  var nearestAnnotation = null;
+  for (var i = 0; i < annotations.length; i++) {
+    var dist = point.getDistance(annotations[i].boundary.getNearestPoint(point));
+    if (minDist == null || dist < minDist) {
+      minDist = dist;
+      nearestAnnotation = annotations[i];
+    }
+  }
+  return nearestAnnotation;
 }
 
 //

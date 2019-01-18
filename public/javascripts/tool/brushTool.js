@@ -10,8 +10,16 @@ brushTool.onMouseMove = function(event) {
   // Set this.annotation
   if ( ! this.annotationFixed) {
     this.annotation = selectTool.getAnnotationAt(this.curser.position);
+    if (this.annotation == null) {
+      this.annotation = selectTool.getNearestAnnotation(this.curser.position);
+    }
   }
-  this.setMode();
+
+  // Set this.mode
+  this.mode = "subtract";
+  if (this.annotation && this.annotation.containsPoint(this.curser.position)) {
+    this.mode = "unite";
+  }
 
   this.enforceStyles();
   this.writeHints();
@@ -21,16 +29,19 @@ brushTool.onMouseDrag = function(event) {
   this.curser.position = event.point;
   this.snapCurser();
 
-  this.editAnnotation();
+  if (this.annotation) {
+    if (this.mode == "unite") {
+      this.annotation.unite(this.curser);
+    } else {
+      this.annotation.subtract(this.curser);
+    }
+  }
 
   this.enforceStyles();
   this.writeHints();
 }
 brushTool.onMouseDown = function(event) {
-  if (this.annotation) {
-    this.annotationFixed = true;
-  }
-  this.onMouseMove(event);
+  this.annotationFixed = true;
   this.onMouseDrag(event);
 }
 brushTool.onMouseUp = function(event) {
@@ -39,13 +50,6 @@ brushTool.onMouseUp = function(event) {
   }
 }
 brushTool.onKeyDown = function(event) {
-  this.editKeys(event);
-  if (event.key == 'v') {
-    brush.toggleVisualize();
-  }
-  onKeyDownShared(event);
-}
-brushTool.editKeys = function(event) {
   if (event.key == 'u') {
     this.annotation.undo();
     flashButton("undo");
@@ -61,6 +65,7 @@ brushTool.editKeys = function(event) {
     }
     flashButton("delete");
   }
+  onKeyDownShared(event);
 }
 brushTool.deactivate = function() {
   this.curser.remove();
@@ -81,24 +86,10 @@ brushTool.switch = function(annotation) {
   this.toolSize = lastToolSize;
 
   this.annotationFixed = (this.annotation != null);
-
   this.refreshTool();
 }
 brushTool.refreshTool = function() {
   brushTool.onMouseMove({point: brushTool.curser.position});
-}
-
-//
-// Edit Actions
-//
-brushTool.editAnnotation = function() {
-  if (this.annotation) {
-    if (this.mode == "unite") {
-      this.annotation.unite(this.curser);
-    } else {
-      this.annotation.subtract(this.curser);
-    }
-  }
 }
 
 //
@@ -110,12 +101,6 @@ brushTool.snapCurser = function() {
     var rect = new Path.Rectangle(background.image.bounds);
     rect.remove();
     this.curser.position = rect.getNearestPoint(this.curser.position);
-  }
-}
-brushTool.setMode = function() {
-  this.mode = "subtract";
-  if (this.annotation && this.annotation.containsPoint(this.curser.position)) {
-    this.mode = "unite";
   }
 }
 brushTool.enforceStyles = function() {

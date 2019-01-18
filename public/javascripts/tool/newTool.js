@@ -69,13 +69,6 @@ newTool.onMouseUp = function(event) {
   }
 }
 newTool.onKeyDown = function(event) {
-  this.editKeys(event);
-  if (event.key == 't') {
-    scissors.toggleVisualize();
-  }
-  onKeyDownShared(event);
-}
-newTool.editKeys = function(event) {
   if (event.key == 'u') {
     this.undo();
     flashButton("undo");
@@ -93,6 +86,7 @@ newTool.editKeys = function(event) {
     this.refreshTool();
     flashButton("delete");
   }
+  onKeyDownShared(event);
 }
 newTool.deactivate = function() {
   this.curser.remove();

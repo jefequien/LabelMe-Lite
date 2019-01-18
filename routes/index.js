@@ -10,11 +10,6 @@ router.get('/amt', function(req, res, next) {
   res.render('amt', { title: 'Express' });
 });
 
-router.get('/labelme', function(req, res, next) {
-  res.render('labelme', { title: 'LabelMe interface' });
-});
-
-
 router.get('/', function(req, res, next) {
   res.redirect('tool');
   // res.render('index', { title: 'Express' });

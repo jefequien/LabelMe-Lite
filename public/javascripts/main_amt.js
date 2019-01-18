@@ -27,59 +27,50 @@ function loadTool(task) {
     $('#current').text(current_num + 1);
     $('#total').text(bundle.length);
 
-    background.setImage(task.image_url, function() {
-        background.focus(window.annotations[0]);
+    var image_url = task.image_url;
+    var anns = task.annotations;
+    if (! anns) {
+        anns = [];
+    }
+
+    background.setImage(image_url, function() {
+        background.focus(annotations[0]);
     });
     // scissors.setImage(task.image_url_backup);
     // brush.setImage(task.image_url_backup);
-
-    var annotations = [];
-    if (task.annotations) {
-        anns = task.annotations;
-    }
     loadAnnotations(anns);
 }
 
 var prevButton = document.getElementById('prevImage');
 prevButton.onclick = function() {
-    if (paper.tool == editTool || paper.tool == newTool) {
-        if (paper.tool.points.length > 0) {
-            alert("Warning: Unsaved changes. Press 'enter' to avoid losing any work.");
-            return;
-        }
-    }
-
-    prevButton.disabled = true;
     if (current_num > 0) {
         bundle[current_num].annotations = saveAnnotations();
+        background.clearImage();
         clearAnnotations();
 
         current_num -= 1;
         loadTool(bundle[current_num]);
         selectTool.switch();
     }
-    setTimeout(function() {prevButton.disabled = false;}, 500);
 }
 var nextButton = document.getElementById('nextImage');
 nextButton.onclick = function() {
-    if (paper.tool == editTool || paper.tool == newTool) {
-        if (paper.tool.points.length > 0) {
-            alert("Press 'enter' to avoid losing any changes.");
-            return;
-        }
-    }
-
-    nextButton.disabled = true;
     if (current_num < bundle.length - 1) {
         bundle[current_num].annotations = saveAnnotations();
+        background.clearImage();
         clearAnnotations();
 
         current_num += 1;
         loadTool(bundle[current_num]);
         selectTool.switch();
     }
-    setTimeout(function() {nextButton.disabled = false;}, 500);
 }
+
+document.addEventListener('keydown', function(event) {
+    if (event.keyCode == 13) { // Enter
+        nextButton.onclick();
+    }
+});
 
 function setWindowUrl(json) {
     var state = {id: json.id}

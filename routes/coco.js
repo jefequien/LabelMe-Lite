@@ -1,4 +1,19 @@
+var fs = require('fs');
 
+var COCOs = {};
+function loadCOCO(ann_fn) {
+    var coco = COCOs[ann_fn];
+    if (coco) {
+        return coco;
+    } else {
+        if (fs.existsSync(ann_fn)) {
+            console.time(ann_fn);
+            COCOs[ann_fn] = new COCO(ann_fn);
+            console.timeEnd(ann_fn);
+        }
+        return COCOs[ann_fn];
+    }
+}
 
 function COCO(ann_fn) {
     this.dataset = {};
@@ -11,7 +26,6 @@ function COCO(ann_fn) {
 
     this.ann_fn = ann_fn;
     if (ann_fn) {
-        var fs = require('fs');
         var json = fs.readFileSync(ann_fn);
         var dataset = JSON.parse(json);
         this.dataset = dataset;
@@ -93,6 +107,7 @@ COCO.prototype.loadAnns = function (ids=[]) {
 
 
 module.exports = {
-    COCO: COCO,
-    createIndex: COCO.prototype.createIndex
+    // COCO: COCO,
+    // createIndex: COCO.prototype.createIndex,
+    loadCOCO: loadCOCO
 }

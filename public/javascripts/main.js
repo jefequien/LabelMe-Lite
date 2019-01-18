@@ -8,8 +8,12 @@ window.onload = function() {
     }
     
     selectTool.switch();
-    getAnnotations(function(res) {
-        loadTool(res);
+    getAnnotations(function(response) {
+        if (response) {
+            loadTool(response);
+        } else {
+            console.log("Annotations not found.");
+        }
     });
 }
 
@@ -31,13 +35,15 @@ function loadTool(task) {
     }
 
     background.setImage(image_url);
+    loadAnnotations(annotations);
+
     // scissors.setImage(task.image_url_backup);
     // brush.setImage(task.image_url_backup);
-    loadAnnotations(annotations);
 }
 
 var prevButton = document.getElementById('prevImage');
 prevButton.onclick = function() {
+    background.clearImage();
     clearAnnotations();
     getPrevImage(function(json){
         setWindowUrl(json);
@@ -49,6 +55,7 @@ prevButton.onclick = function() {
 }
 var nextButton = document.getElementById('nextImage');
 nextButton.onclick = function() {
+    background.clearImage();
     clearAnnotations();
     getNextImage(function(json){
         setWindowUrl(json);

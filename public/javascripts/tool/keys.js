@@ -68,18 +68,21 @@ function viewKeys(event) {
         objects[i].visible = true;
       }
       objects.allHidden = false;
-      background.setVisible();
-      $('#hide').find('i').addClass('fa-eye-slash').removeClass('fa-eye');
     } else {
       for (var i = 0; i < objects.length; i++) {
         objects[i].visible = false;
       }
+      background.setVisible(true);
       objects.allHidden = true;
-      background.setVisible();
-      $('#hide').find('i').addClass('fa-eye').removeClass('fa-eye-slash');
     }
     paper.tool.refreshTool();
     flashButton("hide");
+
+    if (objects.allHidden) {
+      $('#hide').find('i').addClass('fa-eye').removeClass('fa-eye-slash');
+    } else {
+      $('#hide').find('i').addClass('fa-eye-slash').removeClass('fa-eye');
+    }
   }
   else if (event.key == 'c') {
     if (paper.tool.annotation) {
@@ -109,7 +112,7 @@ function zoomKeys(event) {
   }
   else if (event.key == 'f') {
     // Toggle focus on annotation
-    if (background.lastFocus != paper.tool.annotation) {
+    if (paper.tool.annotation) {
       background.focus(paper.tool.annotation);
     } else {
       background.focus();
