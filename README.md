@@ -9,28 +9,25 @@ Extensively uses [Paper.js](http://paperjs.org/)
 
 ## Running Locally
 
-Make sure you have [Node.js](http://nodejs.org/) and the [Heroku Toolbelt](https://toolbelt.heroku.com/) installed.
+Make sure you have [Node.js](http://nodejs.org/) installed.
 
 ```sh
-Need cocoapi, nodejs, bower
+Uses nodejs, bower
 
 git clone https://github.com/hujh14/LabelMe-Lite.git # or clone your own fork
 cd LabelMe-Lite
 npm install
 bower install
-sh setup_datasets.sh
 npm start
 ```
 
+## Adding dataset
+
+```sh
+Use cocoapi
+```
+
 Your app should now be running on [localhost:3000](http://localhost:3000/).
-
-## Deploying to Heroku
-
-```
-heroku create
-git push heroku master
-heroku open
-```
 
 Alternatively, you can deploy your own copy of the app using the web-based flow:
 
