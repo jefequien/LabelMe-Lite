@@ -21,7 +21,7 @@ router.get('/images/next', function(req, res) {
     var file_name = req.query.file_name;
 
     var dataset_dir = path.join(DATA_DIR, dataset_name);
-    var ann_fn = path.join(dataset_dir, ann_source + "_#.json");
+    var ann_fn = path.join(dataset_dir, ann_source + ".json");
     var coco = cocoapi.loadCOCO(ann_fn);
     if (coco == null) {
         res.status(404).send('Annotation source not found');
@@ -51,7 +51,7 @@ router.get('/images/prev', function(req, res) {
     var file_name = req.query.file_name;
 
     var dataset_dir = path.join(DATA_DIR, dataset_name);
-    var ann_fn = path.join(dataset_dir, ann_source + "_#.json");
+    var ann_fn = path.join(dataset_dir, ann_source + ".json");
     var coco = cocoapi.loadCOCO(ann_fn);
     if (coco == null) {
         res.status(404).send('Annotation source not found');
@@ -82,7 +82,7 @@ router.get('/annotations', function(req, res) {
     var imgId = null;
 
     var dataset_dir = path.join(DATA_DIR, dataset_name);
-    var ann_fn = path.join(dataset_dir, ann_source + "_#.json");
+    var ann_fn = path.join(dataset_dir, ann_source + ".json");
     var coco = cocoapi.loadCOCO(ann_fn);
     if (coco == null) {
         res.status(404).send('Annotation source not found');
@@ -122,7 +122,7 @@ router.get('/bundles', function(req, res) {
     var bundle_id = req.query.id;
 
     var bundle_dir = path.join(DATA_DIR, "bundles/");
-    var ann_fn = path.join(bundle_dir, bundle_id + "_#.json");
+    var ann_fn = path.join(bundle_dir, bundle_id + ".json");
     var coco = cocoapi.loadCOCO(ann_fn);
     if (coco == null) {
         res.status(404).send('Bundle not found');

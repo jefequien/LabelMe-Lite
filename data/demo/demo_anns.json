@@ -1,0 +1,73 @@
+{
+	"images": [
+		{
+			"file_name": "dog.jpg",
+			"id": 0
+		},
+		{
+			"file_name": "kitchen.jpg",
+			"id": 1
+		},
+		{
+			"file_name": "dashcam.jpg",
+			"id": 2
+		},
+		{
+			"file_name": "pathology.jpg",
+			"id": 3
+		}
+	],
+	"annotations": [
+		 {
+		    "category_id": 1,
+		    "image_id": 0,
+		    "id": 0,
+		    "segmentation": {
+		      "size": [183, 275],
+		      "counts": "SP51f5000O10000O10000O1000000O10000O10000O100O1O100O1O100O100O10000O10000O100O10000O10000O10000O10000O100O10000O100O100O1OO1MN2N2ZNYObNi0\\1[OaNP1T1UO\\NLQOP1m1SOYN9>KXOk0n1\\OSN5<Q1_1NVN7Y1\\2L4L3M4O1O1N1N3N2M3N1N3O02L3006KO0100O1O3NO1O1O1O1O1O1O1O1O1O1O1O1O1O1O1O1O1O1O001O000000000000O10000N2N2N2O1O100O1000000000O1O010O10O00001O001O1O2O0O10N2M2010O1001N2O2N4L;D4M3M9F3gLYNLLQ2m1RNXNJ6j1b1RNSN06N;o1\\1RN^Oo1b0oM^OS2S200N1O2N2N10100O01000FaL[N_3b1=K5M3O1O2N1L4O010O0G:O001O001OUK]Ob4l00000001O1F:O001O1O1N2O1O1CjJ7[501O001O02O1N2O1O1OO010O1O010O0010O01O01O00000001N2L4Mlf2"
+		    }
+		  }
+	],
+	"categories": [
+	    {
+	      "id": 1,
+	      "name": "dog"
+	    },
+	    {
+	      "id": 2,
+	      "name": "windowpane"
+	    },
+	    {
+	      "id": 3,
+	      "name": "cabinet"
+	    },
+	    {
+	      "id": 4,
+	      "name": "person"
+	    },
+	    {
+	      "id": 5,
+	      "name": "door"
+	    },
+	    {
+	      "id": 6,
+	      "name": "table"
+	    },
+	    {
+	      "id": 7,
+	      "name": "curtain"
+	    },
+	    {
+	      "id": 8,
+	      "name": "chair"
+	    },
+	    {
+	      "id": 9,
+	      "name": "car"
+	    },
+	    {
+	      "id": 10,
+	      "name": "painting"
+	    }
+	]
+}

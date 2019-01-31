@@ -24,60 +24,7 @@ function Annotation(name){
   this.visible = true;
   this.unhighlight();
 }
-Annotation.prototype.loadRLE = function(rle) {
-  console.time("loadRLE");
-  this.raster.size = new Size(rle["width"], rle["height"]);
-  this.rasterinv.size = new Size(rle["width"], rle["height"]);
-  background.align(this);
-
-  var imageData = this.raster.getImageData();
-  var color = [this.color.red * 255, this.color.green * 255, this.color.blue * 255, 255];
-
-  var counts = rle["counts"].split("#");
-  var b = 0;
-  var p = 0;
-  for (var i = 0; i < counts.length; i++) {
-    for (var j = 0; j < counts[i]; j++) {
-      if (b != 0) {
-        imageData.data[p] = color[0];
-        imageData.data[p+1] = color[1];
-        imageData.data[p+2] = color[2];
-        imageData.data[p+3] = color[3];
-      }
-      p += 4;
-    }
-    b = (b == 0) ? 1 : 0;
-  }
-  this.raster.setImageData(imageData, new Point(0,0));
-  console.timeEnd("loadRLE");
-}
-Annotation.prototype.getRLE = function() {
-  var imageData = this.raster.getImageData();
-
-  var b = 0;
-  var current_bit = 0;
-  var count = 0;
-  var counts = [];
-  for (var i = 0; i < imageData.data.length; i+=4) {
-    b = (imageData.data[i] == 0) ? 0 : 1;
-    if (b == current_bit) {
-      count += 1;
-    } else {
-      counts.push(count);
-      current_bit = b;
-      count = 1;
-    }
-  }
-  counts.push(count);
-
-  var rle = {};
-  rle["height"] = this.raster.height;
-  rle["width"] = this.raster.width;
-  rle["counts"] = counts.join("#");
-  return rle;
-}
 Annotation.prototype.updateBoundary = function() {
-  console.time("updateBoundary");
   var imageData = this.raster.getImageData();
   var boundaries = findBoundariesOpenCV(imageData);
 
@@ -98,24 +45,17 @@ Annotation.prototype.updateBoundary = function() {
     this.undoHistory.push(paths.pathData);
     this.redoHistory = [];
   }
-  console.timeEnd("updateBoundary");
 }
 Annotation.prototype.updateRaster = function(boundary) {
-  console.time("updateRaster");
-  if ( ! boundary) {
-    boundary = this.boundary;
-  }
-
-  // Update raster
-  setRasterWithPath(this.raster, this.color, boundary);
-  // Update rasterinv
+  var boundary = (boundary) ? boundary : this.boundary;
   var boundaryinv = new CompoundPath({
     children: [new Path.Rectangle(background.image.bounds), boundary.clone()],
     fillRule: "evenodd"
   });
   boundaryinv.remove();
+
+  setRasterWithPath(this.raster, this.color, boundary);
   setRasterWithPath(this.rasterinv, this.colorinv, boundaryinv);
-  console.timeEnd("updateRaster");
 }
 Annotation.prototype.delete = function(noConfirm) {
   var confirmed = true;
@@ -399,6 +339,118 @@ Annotation.prototype.emphasizeBoundary = function() {
 }
 
 //
+// RLE
+//
+Annotation.prototype.loadRLE = function(rle) {
+  var height = rle["size"][0];
+  var width = rle["size"][1];
+  var cnts = rleFrString(rle["counts"]);
+
+  this.raster.size = new Size(width, height);
+  this.rasterinv.size = new Size(width, height);
+  background.align(this);
+
+  var imageData = this.raster.getImageData();
+  var color = [this.color.red * 255, this.color.green * 255, this.color.blue * 255, 255];
+
+  var b = 0;
+  var t = 0;
+  for (var i = 0; i < cnts.length; i++) {
+    for (var j = 0; j < cnts[i]; j++) {
+      if (b != 0) {
+        var h = t % height;
+        var w = Math.floor(t / height);
+        var p = (h * width + w) * 4;
+        imageData.data[p] = color[0];
+        imageData.data[p+1] = color[1];
+        imageData.data[p+2] = color[2];
+        imageData.data[p+3] = color[3];
+      }
+      t += 1;
+    }
+    b = (b == 0) ? 1 : 0;
+  }
+  this.raster.setImageData(imageData, new Point(0,0));
+}
+Annotation.prototype.getRLE = function() {
+  var height = this.raster.height;
+  var width = this.raster.width;
+  var imageData = this.raster.getImageData();
+
+  var b = 0;
+  var b_ = 0;
+  var c = 0;
+  var cnts = [];
+  for (var t = 0; t < height * width; t++) {
+    var h = t % height;
+    var w = Math.floor(t / height);
+    var p = (h * width + w) * 4;
+    b = (imageData.data[p+3] == 0) ? 0 : 1;
+    if (b == b_) {
+      c += 1;
+    } else {
+      cnts.push(c);
+      b_ = b;
+      c = 1;
+    }
+  }
+  cnts.push(c);
+
+  var rle = {};
+  rle["size"] = [this.raster.height, this.raster.width];
+  rle["counts"] = rleToString(cnts)
+  return rle;
+}
+function rleFrString(s) {
+  var m = 0;
+  var p = 0;
+  var cnts = [];
+  while (p < s.length) {
+    var x = 0;
+    var k = 0;
+    var c = 0;
+    var more = 1;
+    while (more) {
+      c = s.charCodeAt(p) - 48;
+      x = x | ((c & 0x1f) << 5*k);
+      more = c & 0x20;
+      p += 1;
+      k += 1;
+      if (!more && (c & 0x10)) {
+        x = x | (-1 << 5*k);
+      }
+    }
+    if (m > 2) {
+      x += cnts[m-2];
+    }
+    m += 1;
+    cnts.push(x);
+  }
+  return cnts;
+}
+function rleToString(cnts) {
+  var s = "";
+  for (var i = 0 ; i < cnts.length; i++) {
+    var x = cnts[i];
+    if (i > 2) {
+      x -= cnts[i-2];
+    }
+    var more = 1;
+    while (more) {
+      c = x & 0x1f;
+      x >>= 5;
+      more = (c & 0x10) ? x!=-1 : x!=0;
+      if(more) {
+        c = c | 0x20;
+      }
+      c += 48;
+      s += String.fromCharCode(c);
+    }
+  }
+  return s;
+}
+
+//
 // Exports
 //
 function loadAnnotations(anns) {
@@ -411,6 +463,7 @@ function loadAnnotations(anns) {
     var annotation = new Annotation(category);
     annotation.loadRLE(rle);
     annotation.updateBoundary();
+    annotation.updateRaster();
     console.timeEnd(category);
   }
   if (annotations.length == 0) {

@@ -32,6 +32,7 @@ Background.prototype.setImage = function(image, callback) {
     background.image = raster;
     for (var i = 0; i < annotations.length; i++) {
       background.align(annotations[i]);
+      annotations[i].updateRaster(); // Fixes rasterinv
     }
     background.focus();
     background.resetFilter();
@@ -151,7 +152,6 @@ Background.prototype.align = function(annotation) {
   var ann_scale = ann_bounds.height / annotation.raster.height;
   annotation.translate(img_bounds.topLeft - ann_bounds.topLeft);
   annotation.scale(img_scale / ann_scale, img_bounds.topLeft);
-  annotation.updateRaster(); // Fixes rasterinv
 }
 
 //
