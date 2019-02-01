@@ -4,7 +4,7 @@
 
 function Background() {
   this.setFocusRect();
-  this.addListeners();
+  this.addMouseListeners();
 
   this.focusMaxScale = 4;
   this.maxScale = 8;
@@ -52,7 +52,7 @@ Background.prototype.resetFilter = function() {
   this.filter.fillColor = new Color(0.5);
   this.filter.sendToBack();
 }
-Background.prototype.addListeners = function() {
+Background.prototype.addMouseListeners = function() {
   var canvas = document.getElementById('toolCanvas');
   canvas.addEventListener('wheel', function(e) {
     var deltaY = e.deltaY;
@@ -66,10 +66,6 @@ Background.prototype.addListeners = function() {
     paper.tool.refreshTool();
     e.preventDefault();
   });
-}
-Background.prototype.setVisible = function(visible) {
-  this.image.visible = visible;
-  this.filter.visible = visible;
 }
 
 //
@@ -195,8 +191,12 @@ Background.prototype.toPointSpace = function(shape) {
 }
 
 //
-// Temporary image for visualization
+// Visualization
 //
+Background.prototype.setVisible = function(visible) {
+  this.image.visible = visible;
+  this.filter.visible = visible;
+}
 Background.prototype.setTempImage = function(imageData) {
   if (this.tempImage) {
     this.tempImage.remove();

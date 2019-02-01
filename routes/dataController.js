@@ -90,8 +90,9 @@ router.get('/annotations', function(req, res) {
     }
 
     if (file_name == null || file_name == "undefined") {
-        imgId = 0;
-        file_name = coco.imgs[imgId]["file_name"];
+        var first = coco.dataset["images"][0];
+        imgId = first["id"];
+        file_name = first["file_name"];
     } else {
         imgId = coco.fnToImgId[file_name];
         if (imgId == null) {
