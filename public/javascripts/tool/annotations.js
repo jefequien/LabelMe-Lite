@@ -49,7 +49,7 @@ Annotation.prototype.updateBoundary = function() {
 Annotation.prototype.updateRaster = function(boundary) {
   var boundary = (boundary) ? boundary : this.boundary;
   var boundaryinv = new CompoundPath({
-    children: [new Path.Rectangle(background.image.bounds), boundary.clone()],
+    children: [new Path.Rectangle(this.raster.bounds), boundary.clone()],
     fillRule: "evenodd"
   });
   boundaryinv.remove();

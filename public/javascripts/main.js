@@ -34,11 +34,10 @@ function loadTool(task) {
         annotations = [];
     }
 
-    background.setImage(image_url);
     loadAnnotations(annotations);
-
-    // scissors.setImage(task.image_url_backup);
-    // brush.setImage(task.image_url_backup);
+    background.setImage(image_url, function() {
+        background.focus();
+    });
 }
 
 var prevButton = document.getElementById('prevImage');

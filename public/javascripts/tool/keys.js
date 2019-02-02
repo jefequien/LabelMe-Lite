@@ -1,37 +1,25 @@
 
 
 function toolKeys(event) {
-  if (event.key == '1' || event.key == 'escape') {
-    if (paper.tool != selectTool) {
-      selectTool.switch();
-    }
+  if (event.key == '1') {
+    selectTool.switch();
   }
   else if (event.key == '2') {
-    if (paper.tool != editTool) {
-      if (paper.tool.annotation) {
-        editTool.switch(paper.tool.annotation);
-      } else if (annotations.length == 1) {
-        editTool.switch(annotations[0]);
-      } else {
-        editTool.switch();
-      }
+    if (paper.tool.annotation) {
+      editTool.switch(paper.tool.annotation);
+    } else {
+      editTool.switch();
     }
   }
-  else if (event.key == '3' || event.key == 'b') {
-    if (paper.tool != brushTool) {
-      if (paper.tool.annotation) {
-        brushTool.switch(paper.tool.annotation);
-      } else if (annotations.length == 1) {
-        brushTool.switch(annotations[0]);
-      } else {
-        brushTool.switch();
-      }
+  else if (event.key == '3') {
+    if (paper.tool.annotation) {
+      brushTool.switch(paper.tool.annotation);
+    } else {
+      brushTool.switch();
     }
   }
-  else if (event.key == '4' || event.key == 'n') {
-    if (paper.tool != newTool) {
-      newTool.switch();
-    }
+  else if (event.key == '4') {
+    newTool.switch();
   }
 }
 

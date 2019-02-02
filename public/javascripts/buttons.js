@@ -7,22 +7,22 @@ var buttons = {};
 // Tools
 //
 buttons["selectTool"] = document.getElementById('selectTool');
-buttons["selectTool"].title = "Select tool: 'esc' or '1'";
+buttons["selectTool"].title = "Select tool: '1'";
 buttons["selectTool"].onclick = function() {
     paper.tool.onKeyDown({key: '1'});
 }
 buttons["editTool"] = document.getElementById('editTool');
-buttons["editTool"].title = "Edit tool: 'click' or '2'";
+buttons["editTool"].title = "Edit tool: '2'";
 buttons["editTool"].onclick = function() {
     paper.tool.onKeyDown({key: '2'});
 }
 buttons["brushTool"] = document.getElementById('brushTool');
-buttons["brushTool"].title = "Brush tool: 'b' or '3'";
+buttons["brushTool"].title = "Brush tool: '3'";
 buttons["brushTool"].onclick = function() {
     paper.tool.onKeyDown({key: '3'});
 }
 buttons["newTool"] = document.getElementById('newTool');
-buttons["newTool"].title = "New tool: 'n' or '4'";
+buttons["newTool"].title = "New tool: '4'";
 buttons["newTool"].onclick = function() {
     paper.tool.onKeyDown({key: '4'});
 }
@@ -83,7 +83,12 @@ buttons["redo"].onclick = function() {
 buttons["delete"] = document.getElementById('delete');
 buttons["delete"].title = "Delete: 'backspace'";
 buttons["delete"].onclick = function() {
-    paper.tool.onKeyDown({key: 'backspace'});
+    if (paper.tool.annotation) {
+        var deleted = paper.tool.annotation.delete();
+        if (deleted) {
+          selectTool.switch();
+        }
+    }
 }
 
 //

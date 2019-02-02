@@ -112,7 +112,7 @@ selectTool.enforceStyles = function() {
 }
 selectTool.writeHints = function() {
   var hints = [];
-  hints.push("Click on an annotation to begin editing.");
+  hints.push("Click on an annotation or tool to begin editing.");
   
   $('#toolName').text(this.toolName);
   $('#toolMessage').text(hints[0]);

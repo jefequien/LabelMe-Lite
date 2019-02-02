@@ -58,12 +58,8 @@ brushTool.onKeyDown = function(event) {
     this.annotation.redo();
     flashButton("redo");
   }
-  else if (event.key == 'backspace') {
-    var deleted = this.annotation.delete();
-    if (deleted) {
-      selectTool.switch();
-    }
-    flashButton("delete");
+  else if (event.key == 'space') {
+    editTool.switch(this.annotation);
   }
   onKeyDownShared(event);
 }
@@ -137,17 +133,11 @@ brushTool.enforceStyles = function() {
   } else {
     this.curser.fillColor = "red";
   }
-  if ( ! this.annotationFixed) {
-    this.curser.fillColor = "red";
-  }
 }
 
 brushTool.writeHints = function() {
   var hints = [];
-  if ( ! this.annotationFixed) {
-    hints.push("Click on an annotation to begin editing.");
-  }
-  hints.push("Press '9' or '0' to change brush size.");
+  hints.push("Use slider or press 9, 0 to change brush size.");
   $('#toolName').text(this.toolName);
   $('#toolMessage').text(hints[0]);
 }

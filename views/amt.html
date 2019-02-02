@@ -52,13 +52,8 @@
     </div>
 
     <div class="navbar-text">
-      <!-- Dataset: <span id="datasetName">None</span>
-      Source: <span id="annotationSource">None</span>
-      <br>
-      Image: <span id="imageFileName">None</span> -->
-      Category: <span id="category">None</span>
-      <br>
-      Images Left: <span id="current">0</span> / <span id="total">0</span>
+      <span id="category">None</span> :
+      <span id="current">0</span> / <span id="total">0</span>
     </div>
 
     <div id="navButtons">
@@ -67,12 +62,6 @@
       <button type="button" class="btn btn-small" id="info" data-toggle="modal" data-target="#exampleModalLong">
         <i class="fa fa-info-circle"></i>
       </button>
-      <button type="button" class="btn btn-small" id="downloadImg">
-        <i class="fa material-icons">open_in_new</i>
-      </button>
-      <button type="button" class="btn btn-small" id="downloadAnn">
-        <i class="fa fi-page-export"></i>
-      </button>
     </div>
   </nav>
 
@@ -80,17 +69,11 @@
   <div class="sidebar leftbar">
 
     <div class="btn-group-vertical">
-      <button type="button" class="btn btn-square text-center" id="selectTool">
-        <i class="fa fa-mouse-pointer"></i><br>Select
-      </button>
       <button type="button" class="btn btn-square" id="editTool">
         <i class="fa fa-pencil-alt"></i><br>Edit
       </button>
       <button type="button" class="btn btn-square" id="brushTool">
         <i class="fa fa-paint-brush"></i><br>Brush
-      </button>
-      <button type="button" class="btn btn-square" id="newTool">
-        <i class="fa fa-plus"></i><br>New
       </button>
     </div>
 
@@ -107,7 +90,6 @@
     <div class="btn-group-vertical">
       <button type="button" class="btn btn-square" id="undo"><i class="fa fa-large material-icons">undo</i></button>
       <button type="button" class="btn btn-square" id="redo"><i class="fa fa-large material-icons">redo</i></button>
-      <button type="button" class="btn btn-square" id="delete"><i class="fa fa-trash"></i></button>
     </div>
 
     <hr>
@@ -248,9 +230,8 @@
     <script type="text/paperscript" src="javascripts/tool/tree.js" canvas="toolCanvas"></script>
     <script type="text/paperscript" src="javascripts/tool/keys.js" canvas="toolCanvas"></script>
 
-    <script type="text/javascript" src="javascripts/tool/buttons.js"></script>
     <script type="text/javascript" src="javascripts/endpoints.js"></script>
-    <!-- <script type="text/javascript" src="javascripts/main.js"></script> -->
+    <script type="text/javascript" src="javascripts/buttons_amt.js"></script>
     <script type="text/javascript" src="javascripts/main_amt.js"></script>
 
 </body>

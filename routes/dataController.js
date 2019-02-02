@@ -110,12 +110,16 @@ router.get('/annotations', function(req, res) {
         image_url = "http://places.csail.mit.edu/scaleplaces/datasets/places/images/" + file_name;
     }
 
+    var annIds = coco.getAnnIds([imgId]);
+    var anns = coco.loadAnns(annIds);
+
     var response = {};
+    response["image_url"] = image_url;
+    response["annotations"] = prepareAnnotations(coco, anns);
+
     response["dataset"] = dataset_name;
     response["ann_source"] = ann_source;
     response["file_name"] = file_name;
-    response["annotations"] = prepareAnnotations(coco, imgId);
-    response["image_url"] = image_url;
     res.json(response);
 });
 
@@ -131,42 +135,22 @@ router.get('/bundles', function(req, res) {
     }
 
     var responses = [];
-    for (var imgId in coco.imgs) {
-        var annotations = prepareAnnotations(coco, imgId);
-        for (var i = 0; i < annotations.length; i++) {
-            var file_name = coco.imgs[imgId]["file_name"];
-            var dataset_name = bundle_id; // Hack!!
-            var image_url = null;
-            if (dataset_name.includes("ade20k")) {
-                image_url = "http://places.csail.mit.edu/scaleplaces/datasets/ade20k/images/" + file_name;
-            } else if (dataset_name.includes("coco")) {
-                image_url = "http://places.csail.mit.edu/scaleplaces/datasets/coco/images/" + file_name;
-            } else if (dataset_name.includes("places")) {
-                image_url = "http://places.csail.mit.edu/scaleplaces/datasets/places/images/" + file_name;
-            }
+    for (var annId in coco.anns) {
+        var ann = coco.anns[annId];
+        var imgId = ann["image_id"];
 
-            var response = {};
-            response["file_name"] = file_name;
-            response["image_url"] = image_url;
-            response["annotations"] = [annotations[i]];
-            responses.push(response);
+        var file_name = coco.imgs[imgId]["file_name"];
+        var image_url = "http://places.csail.mit.edu/scaleplaces/datasets/places/images/" + file_name;
 
-            if (responses.length == 100) {
-                res.json(responses);
-                return;
-            }
-        }
+        var response = {};
+        response["image_url"] = image_url;
+        response["annotations"] = prepareAnnotations(coco, [ann]);
+        responses.push(response);
     }
     res.json(responses);
 });
 
-function prepareResponse(coco, imgId) {
-
-    return response;
-}
-function prepareAnnotations(coco, imgId) {
-    var annIds = coco.getAnnIds([imgId]);
-    var anns = coco.loadAnns(annIds);
+function prepareAnnotations(coco, anns) {
     var annotations = [];
     for (var i = 0; i < anns.length; i++) {
         var catId = anns[i]["category_id"];

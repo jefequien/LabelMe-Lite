@@ -8,9 +8,9 @@ function Background() {
 
   this.focusMaxScale = 4;
   this.maxScale = 8;
-  this.minScale = 0.5;
+  this.minScale = 0.75;
 
-  this.image = new Path.Rectangle(this.focusRect).rasterize();
+  this.image = new Path.Rectangle(this.focusRect).rasterize(paper.view.resolution / window.devicePixelRatio);
   this.filter = new Path();
   this.resetFilter();
 }
@@ -30,11 +30,9 @@ Background.prototype.setImage = function(image, callback) {
   raster.onLoad = function() {
     background.image.remove();
     background.image = raster;
-    for (var i = 0; i < annotations.length; i++) {
-      background.align(annotations[i]);
-      annotations[i].updateRaster(); // Fixes rasterinv
+    if (annotations.length > 0) {
+      background.alignSelf(annotations[0]);
     }
-    background.focus();
     background.resetFilter();
     if (callback) {
       callback();
@@ -148,6 +146,14 @@ Background.prototype.align = function(annotation) {
   var ann_scale = ann_bounds.height / annotation.raster.height;
   annotation.translate(img_bounds.topLeft - ann_bounds.topLeft);
   annotation.scale(img_scale / ann_scale, img_bounds.topLeft);
+}
+Background.prototype.alignSelf = function(annotation) {
+  var img_bounds = this.image.bounds;
+  var ann_bounds = annotation.raster.bounds;
+  var img_scale = img_bounds.height / this.image.height;
+  var ann_scale = ann_bounds.height / annotation.raster.height;
+  this.image.translate(ann_bounds.topLeft - img_bounds.topLeft);
+  this.image.scale(ann_scale / img_scale, ann_bounds.topLeft);
 }
 
 //

@@ -11,11 +11,10 @@ window.onload = function() {
         setWindowUrl(params);
     }
 
-    getBundle(function(res) {
-        if (res) {
-            bundle = res;
+    getBundle(function(response) {
+        if (response) {
+            bundle = response;
             loadTool(bundle[0]);
-            selectTool.switch();
         }
     });
 }
@@ -33,36 +32,28 @@ function loadTool(task) {
         anns = [];
     }
 
-    background.setImage(image_url, function() {
-        background.focus(annotations[0]);
-    });
-    // scissors.setImage(task.image_url_backup);
-    // brush.setImage(task.image_url_backup);
+    background.clearImage();
+    clearAnnotations();
     loadAnnotations(anns);
+    background.focus(annotations[0]);
+    editTool.switch(annotations[0]);
+    background.setImage(image_url);
 }
 
 var prevButton = document.getElementById('prevImage');
 prevButton.onclick = function() {
     if (current_num > 0) {
         bundle[current_num].annotations = saveAnnotations();
-        background.clearImage();
-        clearAnnotations();
-
         current_num -= 1;
         loadTool(bundle[current_num]);
-        selectTool.switch();
     }
 }
 var nextButton = document.getElementById('nextImage');
 nextButton.onclick = function() {
     if (current_num < bundle.length - 1) {
         bundle[current_num].annotations = saveAnnotations();
-        background.clearImage();
-        clearAnnotations();
-
         current_num += 1;
         loadTool(bundle[current_num]);
-        selectTool.switch();
     }
 }
 
