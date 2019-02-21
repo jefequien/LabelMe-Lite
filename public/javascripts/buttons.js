@@ -7,24 +7,20 @@ var buttons = {};
 // Tools
 //
 buttons["selectTool"] = document.getElementById('selectTool');
-buttons["selectTool"].title = "Select tool: '1'";
 buttons["selectTool"].onclick = function() {
-    paper.tool.onKeyDown({key: '1'});
+    selectTool.switch();
 }
 buttons["editTool"] = document.getElementById('editTool');
-buttons["editTool"].title = "Edit tool: '2'";
 buttons["editTool"].onclick = function() {
-    paper.tool.onKeyDown({key: '2'});
+    editTool.switch();
 }
 buttons["brushTool"] = document.getElementById('brushTool');
-buttons["brushTool"].title = "Brush tool: '3'";
 buttons["brushTool"].onclick = function() {
-    paper.tool.onKeyDown({key: '3'});
+    brushTool.switch();
 }
 buttons["newTool"] = document.getElementById('newTool');
-buttons["newTool"].title = "New tool: '4'";
 buttons["newTool"].onclick = function() {
-    paper.tool.onKeyDown({key: '4'});
+    newTool.switch();
 }
 
 

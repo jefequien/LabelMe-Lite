@@ -22,7 +22,6 @@ brushTool.onMouseMove = function(event) {
   }
 
   this.enforceStyles();
-  this.writeHints();
 }
 
 brushTool.onMouseDrag = function(event) {
@@ -38,7 +37,6 @@ brushTool.onMouseDrag = function(event) {
   }
 
   this.enforceStyles();
-  this.writeHints();
 }
 brushTool.onMouseDown = function(event) {
   this.annotationFixed = true;
@@ -51,15 +49,18 @@ brushTool.onMouseUp = function(event) {
 }
 brushTool.onKeyDown = function(event) {
   if (event.key == 'u') {
-    this.annotation.undo();
     flashButton("undo");
+    this.annotation.undo();
+    this.refreshTool();
   }
   else if (event.key == 'y') {
-    this.annotation.redo();
     flashButton("redo");
+    this.annotation.redo();
+    this.refreshTool();
   }
-  else if (event.key == 'space') {
-    editTool.switch(this.annotation);
+  
+  if (event.key == 'escape') {
+    selectTool.switch();
   }
   onKeyDownShared(event);
 }
@@ -68,6 +69,7 @@ brushTool.deactivate = function() {
   deactivateButton(this.toolName);
 }
 brushTool.switch = function(annotation) {
+  var lastAnnotation = paper.tool.annotation;
   var lastCurserPosition = paper.tool.curser.position;
   var lastToolSize = paper.tool.toolSize;
 
@@ -77,11 +79,11 @@ brushTool.switch = function(annotation) {
   this.activate();
   activateButton(this.toolName);
 
-  this.annotation = annotation;
+  this.annotation = lastAnnotation;
+  this.annotationFixed = (this.annotation != null);
   this.curser = new Shape.Circle(lastCurserPosition, 1);
   this.toolSize = lastToolSize;
 
-  this.annotationFixed = (this.annotation != null);
   this.refreshTool();
 }
 brushTool.refreshTool = function() {
@@ -133,13 +135,6 @@ brushTool.enforceStyles = function() {
   } else {
     this.curser.fillColor = "red";
   }
-}
-
-brushTool.writeHints = function() {
-  var hints = [];
-  hints.push("Use slider or press 9, 0 to change brush size.");
-  $('#toolName').text(this.toolName);
-  $('#toolMessage').text(hints[0]);
 }
 
 

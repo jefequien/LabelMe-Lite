@@ -7,7 +7,6 @@ selectTool.onMouseMove = function(event) {
   this.annotation = this.getAnnotationAt(this.curser.position);
 
   this.enforceStyles();
-  this.writeHints();
 }
 selectTool.onMouseClick = function(event) {
   this.onMouseMove(event);
@@ -15,7 +14,7 @@ selectTool.onMouseClick = function(event) {
     if (background.lastFocus != this.annotation) {
       background.focus(this.annotation);
     }
-    editTool.switch(this.annotation);
+    editTool.switch();
   }
 }
 selectTool.onMouseDown = function(event) {
@@ -41,12 +40,13 @@ selectTool.onKeyDown = function(event) {
   if (event.key == 'backspace') {
     alert("Please select an annotation first.");
   }
-  if (event.key == 'escape') {
-    background.focus();
-  }
   if (event.key == 'i') {
     annotations.styleInverted = ( ! annotations.styleInverted);
     this.refreshTool();
+  }
+  
+  if (event.key == 'escape') {
+    background.focus();
   }
   onKeyDownShared(event);
 }
@@ -59,7 +59,8 @@ selectTool.deactivate = function() {
   }
   deactivateButton(this.toolName);
 }
-selectTool.switch = function(annotation) {
+selectTool.switch = function() {
+  var lastAnnotation = paper.tool.annotation;
   var lastCurserPosition = (paper.tool.curser) ? paper.tool.curser.position : background.viewCenter;
   var lastToolSize = parseInt(toolSlider.value);
   
@@ -69,7 +70,7 @@ selectTool.switch = function(annotation) {
   this.activate();
   activateButton(this.toolName);
 
-  this.annotation = annotation;
+  this.annotation = lastAnnotation;
   this.curser = new Shape.Circle(lastCurserPosition, 1);
   this.toolSize = lastToolSize;
 
@@ -109,13 +110,6 @@ selectTool.enforceStyles = function() {
       this.annotation.highlight();
     }
   }
-}
-selectTool.writeHints = function() {
-  var hints = [];
-  hints.push("Click on an annotation or tool to begin editing.");
-  
-  $('#toolName').text(this.toolName);
-  $('#toolMessage').text(hints[0]);
 }
 
 window.paper = paper;

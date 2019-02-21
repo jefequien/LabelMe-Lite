@@ -38,9 +38,10 @@ Annotation.prototype.updateBoundary = function() {
   paths.remove();
 
   this.boundary.pathData = paths.pathData;
-  background.toPointSpace(this.boundary);
+  this.toPointSpace(this.boundary);
   sortAnnotations();
 
+  // Undo history
   if (this.undoHistory.length == 0 || paths.pathData != this.undoHistory[this.undoHistory.length-1]) {
     this.undoHistory.push(paths.pathData);
     this.redoHistory = [];
@@ -54,8 +55,27 @@ Annotation.prototype.updateRaster = function(boundary) {
   });
   boundaryinv.remove();
 
-  setRasterWithPath(this.raster, this.color, boundary);
-  setRasterWithPath(this.rasterinv, this.colorinv, boundaryinv);
+  var boundary_raster = this.rasterize(boundary, this.color);
+  var boundaryinv_raster = this.rasterize(boundaryinv, this.colorinv);
+  boundary_raster.remove();
+  boundaryinv_raster.remove();
+
+  // Clear rasters
+  var cv = document.createElement('canvas');
+  var ctx = cv.getContext('2d');
+  var imageData = ctx.getImageData(0, 0, this.raster.width, this.raster.height);
+  this.raster.setImageData(imageData, new Point(0, 0));
+  this.rasterinv.setImageData(imageData, new Point(0, 0));
+
+  // Set rasters
+  if (boundary_raster.height != 0 && boundary_raster.width != 0) {
+    var imageData = boundary_raster.getImageData();
+    this.raster.setImageData(imageData, boundary_raster.bounds.topLeft);
+  }
+  if (boundaryinv_raster.height != 0 && boundaryinv_raster.width != 0) {
+    var imageData = boundaryinv_raster.getImageData();
+    this.rasterinv.setImageData(imageData, boundaryinv_raster.bounds.topLeft);
+  }
 }
 Annotation.prototype.delete = function(noConfirm) {
   var confirmed = true;
@@ -81,13 +101,11 @@ Annotation.prototype.undo = function() {
     this.redoHistory.push(currentBoundary);
     var pathData = this.undoHistory[this.undoHistory.length-1];
     var boundary = new CompoundPath(pathData);
-    background.toPointSpace(boundary);
+    this.toPointSpace(boundary);
     boundary.remove();
 
     this.boundary.pathData = boundary.pathData;
     this.updateRaster();
-
-    paper.tool.refreshTool();
     return true;
   }
   return false;
@@ -97,23 +115,14 @@ Annotation.prototype.redo = function() {
     var pathData = this.redoHistory.pop();
     this.undoHistory.push(pathData);
     var boundary = new CompoundPath(pathData);
-    background.toPointSpace(boundary);
+    this.toPointSpace(boundary);
     boundary.remove();
 
     this.boundary.pathData = boundary.pathData;
     this.updateRaster();
-
-    paper.tool.refreshTool();
     return true;
   }
   return false;
-}
-Annotation.prototype.changeColor = function() {
-  this.color = new Color(Math.random(), Math.random(), Math.random(), 1);
-  this.colorinv = this.color / 2;
-
-  this.boundary.strokeColor = this.color;
-  this.updateRaster();
 }
 
 //
@@ -129,20 +138,66 @@ Annotation.prototype.scale = function(scale, center) {
   this.rasterinv.scale(scale, center);
   this.boundary.scale(scale, center);
 }
-Annotation.prototype.containsPoint = function(point) {
-  var pixel = background.getPixel(point);
-  return this.containsPixel(pixel);
+Annotation.prototype.changeColor = function() {
+  this.color = new Color(Math.random(), Math.random(), Math.random(), 1);
+  this.colorinv = this.color / 2;
+  this.boundary.strokeColor = this.color;
+  this.updateRaster();
 }
+
+//
+// Point to Pixel
+//
 Annotation.prototype.containsPixel = function(pixel) {
   var c = this.raster.getPixel(pixel);
   return c.alpha > 0.5;
 }
+Annotation.prototype.containsPoint = function(point) {
+  var pixel = this.getPixel(point);
+  return this.containsPixel(pixel);
+}
+Annotation.prototype.getPixel = function(point) {
+  var bounds = this.raster.bounds;
+  var size = this.raster.size;
+  var tl = bounds.topLeft;
+
+  var x = (point.x - tl.x) * (size.height/ bounds.height) - 0.5;
+  var y = (point.y - tl.y) * (size.height/ bounds.height) - 0.5;
+  return new Point(x, y);
+}
+Annotation.prototype.getPoint = function(pixel) {
+  var bounds = this.raster.bounds;
+  var size = this.raster.size;
+  var tl = bounds.topLeft;
+
+  var x = (pixel.x + 0.5) * (bounds.height / size.height) + tl.x;
+  var y = (pixel.y + 0.5) * (bounds.height / size.height) + tl.y;
+  return new Point(x, y);
+}
+Annotation.prototype.toPixelSpace = function(path) {
+  var bounds = this.raster.bounds;
+  var size = this.raster.size;
+  var tl = bounds.topLeft;
+
+  path.translate(-tl);
+  path.scale(size.height / bounds.height, new Point(0, 0));
+  path.translate(new Point(-0.5, -0.5));
+}
+Annotation.prototype.toPointSpace = function(path) {
+  var bounds = this.raster.bounds;
+  var size = this.raster.size;
+  var tl = bounds.topLeft;
+
+  path.translate(new Point(0.5, 0.5));
+  path.scale(bounds.height / size.height, new Point(0, 0));
+  path.translate(tl);
+}
 
 //
-// Edit Annotation
+// Edit Annotation with brushTool
 //
 Annotation.prototype.unite = function(path) {
-  var path_raster = rasterize(path, "red");
+  var path_raster = this.rasterize(path, "red");
   path_raster.remove();
   if (path_raster.height == 0 || path_raster.width == 0) {
     return;
@@ -153,7 +208,7 @@ Annotation.prototype.unite = function(path) {
   editRasterCrop(this.rasterinv, path_raster.bounds, pixels, new Color(0,0,0,0));
 }
 Annotation.prototype.subtract = function(path) {
-  var path_raster = rasterize(path, "red");
+  var path_raster = this.rasterize(path, "red");
   path_raster.remove();
   if (path_raster.height == 0 || path_raster.width == 0) {
     return;
@@ -162,6 +217,18 @@ Annotation.prototype.subtract = function(path) {
   var pixels = getRasterPixels(path_raster);
   editRasterCrop(this.raster, path_raster.bounds, pixels, new Color(0,0,0,0));
   editRasterCrop(this.rasterinv, path_raster.bounds, pixels, this.colorinv);
+}
+Annotation.prototype.rasterize = function(path, color) {
+  var clone = path.clone();
+  clone.fillColor = color;
+  clone.strokeColor = color;
+  clone.strokeWidth = 0.1;
+  this.toPixelSpace(clone);
+  clone.translate(new Point(0.5, 0.5)); // Align for rasterize.
+
+  var path_raster = clone.rasterize(paper.view.resolution / window.devicePixelRatio);
+  clone.remove();
+  return path_raster;
 }
 function getRasterPixels(raster) {
   var pixels = [];
@@ -195,56 +262,6 @@ function setPixelColor(imageData, pixel, color) {
   imageData.data[p+1] = color.green * 255;
   imageData.data[p+2] = color.blue * 255;
   imageData.data[p+3] = color.alpha * 255;
-}
-function setRasterWithPath(raster, color, path) {
-  clearRaster(raster);
-
-  var path_raster = rasterize(path, color);
-  path_raster.remove();
-  if (path_raster.height == 0 || path_raster.width == 0) {
-    return;
-  }
-  var imageData = path_raster.getImageData();
-  var tl = path_raster.bounds.topLeft;
-  raster.setImageData(imageData, tl);
-}
-function setRasterWithMask(raster, color, mask) {
-  var cv = document.createElement('canvas');
-  var ctx = cv.getContext('2d');
-  var imageData = ctx.getImageData(0,0,mask.shape[1], mask.shape[0]);
-
-  var list = mask.tolist();
-  for (var y = 0; y < list.length; y++) {
-    for (var x = 0; x < list[y].length; x++) {
-      b = list[y][x];
-      if (b != 0) {
-        var p = (y * list[y].length + x) * 4;
-        imageData.data[p] = color.red * 255;
-        imageData.data[p+1] = color.green * 255;
-        imageData.data[p+2] = color.blue * 255;
-        imageData.data[p+3] = color.alpha * 255;
-      }
-    }
-  }
-  raster.setImageData(imageData, new Point(0, 0));
-}
-function clearRaster(raster) {
-  var cv = document.createElement('canvas');
-  var ctx = cv.getContext('2d');
-  var imageData = ctx.getImageData(0, 0, raster.width, raster.height);
-  raster.setImageData(imageData, new Point(0, 0));
-}
-function rasterize(path, color) {
-  var clone = path.clone();
-  clone.fillColor = color;
-  clone.strokeColor = color;
-  clone.strokeWidth = 0.1;
-  background.toPixelSpace(clone);
-  clone.translate(new Point(0.5, 0.5)); // Align for rasterize.
-
-  var path_raster = clone.rasterize(paper.view.resolution / window.devicePixelRatio);
-  clone.remove();
-  return path_raster;
 }
 
 //
@@ -514,11 +531,8 @@ function clearAnnotations() {
   tree.removeMessage();
 }
 
-//
-// Exports
-//
-window.Annotation = Annotation;
 window.annotations = [];
+window.Annotation = Annotation;
 window.loadAnnotations = loadAnnotations;
 window.saveAnnotations = saveAnnotations;
 window.clearAnnotations = clearAnnotations;

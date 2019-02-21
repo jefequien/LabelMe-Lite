@@ -13,7 +13,6 @@ newTool.onMouseMove = function(event) {
   }
 
   this.enforceStyles();
-  this.writeHints();
 }
 newTool.onMouseClick = function(event) {
   this.onMouseMove(event);
@@ -86,6 +85,10 @@ newTool.onKeyDown = function(event) {
     this.refreshTool();
     flashButton("delete");
   }
+  
+  if (event.key == 'escape') {
+    selectTool.switch();
+  }
   onKeyDownShared(event);
 }
 newTool.deactivate = function() {
@@ -99,7 +102,7 @@ newTool.deactivate = function() {
 
   deactivateButton(this.toolName);
 }
-newTool.switch = function () {
+newTool.switch = function() {
   var lastCurserPosition = paper.tool.curser.position;
   var lastToolSize = paper.tool.toolSize;
 
@@ -253,20 +256,6 @@ newTool.enforceStyles = function() {
   for (var i = 0; i < this.points.length; i++) {
     this.points[i].visible = ! this.curserLoopedBack;
   }
-}
-
-newTool.writeHints = function() {
-  var hints = [];
-  if (this.points.length <= 2) {
-    hints.push("Click to drop points. Points are draggable.");
-  }
-  if (this.points.length <= 4) {
-    hints.push("Close loop to create new annotation.");
-  }
-  hints.push("Press 'esc' to quit.");
-
-  $('#toolName').text(this.toolName);
-  $('#toolMessage').text(hints[0]);
 }
 
 //

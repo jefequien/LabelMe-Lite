@@ -4,13 +4,14 @@ var answers = [];
 var current_num = 0;
 
 window.onload = function() {
-    annotations.styleInverted = true;
-    selectTool.switch();
+    // Default url
     if (Object.keys(params).length == 0) {
         params.id = "examples/ade20k_val_maskrcnnc_15";
         setWindowUrl(params);
     }
+    annotations.styleInverted = true;
 
+    selectTool.switch();
     getBundle(function(response) {
         if (response) {
             bundle = response;
@@ -32,12 +33,13 @@ function loadTool(task) {
         anns = [];
     }
 
-    background.clearImage();
+    loadBackground(image_url);
     clearAnnotations();
     loadAnnotations(anns);
+
     background.focus(annotations[0]);
-    editTool.switch(annotations[0]);
-    background.setImage(image_url);
+    selectTool.switch();
+    editTool.switch();
 }
 
 var prevButton = document.getElementById('prevImage');

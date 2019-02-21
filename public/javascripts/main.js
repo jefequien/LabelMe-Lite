@@ -1,4 +1,5 @@
 
+
 window.onload = function() {
     // Default url
     if (Object.keys(params).length == 0) {
@@ -34,33 +35,30 @@ function loadTool(task) {
         annotations = [];
     }
 
-    loadAnnotations(annotations);
-    background.setImage(image_url, function() {
+    loadBackground(image_url, function() {
         background.focus();
     });
+    clearAnnotations();
+    loadAnnotations(annotations);
+
+    selectTool.switch();
 }
 
 var prevButton = document.getElementById('prevImage');
 prevButton.onclick = function() {
-    background.clearImage();
-    clearAnnotations();
     getPrevImage(function(json){
         setWindowUrl(json);
         getAnnotations(function(res) {
             loadTool(res);
-            selectTool.switch();
         });
     });
 }
 var nextButton = document.getElementById('nextImage');
 nextButton.onclick = function() {
-    background.clearImage();
-    clearAnnotations();
     getNextImage(function(json){
         setWindowUrl(json);
         getAnnotations(function(res) {
             loadTool(res);
-            selectTool.switch();
         });
     });
 }

@@ -6,73 +6,75 @@ editTool.onMouseMove = function(event) {
   this.curser.position = event.point;
   this.snapCurser();
 
-  // Set this.annotation
-  if ( ! this.annotationFixed) {
-    this.annotation = selectTool.getAnnotationAt(this.curser.position);
-    if (this.annotation == null) {
-      this.annotation = selectTool.getNearestAnnotation(this.curser.position);
-    }
-  }
-
-  // Update last point of trace
   if (this.trace.segments.length > 0) {
     this.trace.removeSegment(this.trace.segments.length-1);
   }
+
   this.trace.add(this.curser.position);
-
-  this.splitAnnotationBoundary();
-  this.drawBoundaryLines();
-  this.drawEditedBoundary();
-  this.drawSelectedArea();
-
-  this.enforceStyles();
-  this.writeHints();
+  this.drawAll();
 }
 editTool.onMouseDrag = function(event) {
   this.curser.position = event.point;
   this.snapCurser();
-  this.trace.add(this.curser.position);
-  this.onMouseMove(event);
 
   this.dragging = true;
+
+  this.trace.add(this.curser.position);
+  this.drawAll();
 }
 editTool.onMouseDown = function(event) {
   this.curser.position = event.point;
   this.snapCurser();
-  this.trace.add(this.curser.position);
-  this.onMouseMove(event);
 
   this.annotationFixed = true;
-  this.dragging = false;
+
+  this.trace.add(this.curser.position);
+  this.drawAll();
 }
 editTool.onMouseUp = function(event) {
-  if (this.dragging) {
-    this.editAnnotation();
-    this.trace.segments = [];
-    this.inverted = false;
-  }
-  this.onMouseMove(event);
+  this.curser.position = event.point;
+  this.snapCurser();
 
-  this.dragging = false;
+  if (this.dragging || this.clicked) {
+    this.editAnnotation();
+    this.trace.removeSegments();
+    this.dragging = false;
+    this.clicked = false;
+  } else {
+    this.dragging = false;
+    this.clicked = true;
+  }
+
+  this.trace.add(this.curser.position);
+  this.drawAll();
 }
 editTool.onKeyDown = function(event) {
   if (event.key == 'u') {
-    this.annotation.undo();
     flashButton("undo");
+    this.annotation.undo();
+    this.refreshTool();
   }
   else if (event.key == 'y') {
-    this.annotation.redo();
     flashButton("redo");
+    this.annotation.redo();
+    this.refreshTool();
   }
   else if (event.key == 'backspace') {
-    this.deleteClosestBoundary();
+    if (this.trace.segments.length > 1) {
+      this.trace.removeSegments();
+      this.trace.add(this.curser.position);
+    } else {
+      this.deleteClosestBoundary();
+    }
+    this.refreshTool();
   }
-  else if (event.key == 'm') {
+  else if (event.key == 'i') {
     this.inverted = ! this.inverted;
     this.refreshTool();
   }
-  else if (event.key == 'space') {
-    brushTool.switch(this.annotation);
+  
+  if (event.key == 'escape') {
+    selectTool.switch();
   }
   onKeyDownShared(event);
 }
@@ -88,7 +90,8 @@ editTool.deactivate = function() {
 
   deactivateButton(this.toolName);
 }
-editTool.switch = function(annotation) {
+editTool.switch = function() {
+  var lastAnnotation = paper.tool.annotation;
   var lastCurserPosition = paper.tool.curser.position;
   var lastToolSize = paper.tool.toolSize;
 
@@ -98,10 +101,12 @@ editTool.switch = function(annotation) {
   this.activate();
   activateButton(this.toolName);
 
-  this.annotation = annotation;
+  this.annotation = lastAnnotation;
+  this.annotationFixed = (this.annotation != null);
   this.curser = new Shape.Circle(lastCurserPosition, 1);
   this.toolSize = lastToolSize;
 
+  // Setup tool
   this.trace = new Path();
   this.closestBoundary = new Path({closed: true});
   this.otherBoundaries = new CompoundPath({fillRule: "evenodd"});
@@ -109,8 +114,6 @@ editTool.switch = function(annotation) {
   this.bl1 = new Path();
   this.editedBoundary = new Path({closed: true});
   this.selectedArea = new CompoundPath({fillRule: "evenodd"});
-
-  this.annotationFixed = (this.annotation != null);
 
   this.refreshTool();
 }
@@ -121,6 +124,24 @@ editTool.refreshTool = function() {
 //
 // Draw
 //
+editTool.drawAll = function() {
+  // Visualize all
+  this.setAnnotation();
+  this.splitAnnotationBoundary();
+  this.drawBoundaryLines();
+  this.drawEditedBoundary();
+  this.drawSelectedArea();
+  this.enforceStyles();
+}
+editTool.setAnnotation = function() {
+  // Set this.annotation
+  if ( ! this.annotationFixed) {
+    this.annotation = selectTool.getAnnotationAt(this.curser.position);
+    if (this.annotation == null) {
+      this.annotation = selectTool.getNearestAnnotation(this.curser.position);
+    }
+  }
+}
 editTool.splitAnnotationBoundary = function() {
   this.closestBoundary.segments = [];
   this.otherBoundaries.children = [];
@@ -210,7 +231,7 @@ editTool.editAnnotation = function() {
   if (this.annotation) {
     this.annotation.updateRaster(this.selectedArea);
     this.annotation.updateBoundary();
-    this.refreshTool();
+    this.inverted = false;
   }
 }
 editTool.deleteClosestBoundary = function() {
@@ -313,14 +334,6 @@ editTool.getPathUsingBoundary = function(point0, point1, boundary) {
   }
   other.reverse();
   return [path, other];
-}
-
-editTool.writeHints = function() {
-  var hints = [];
-  hints.push("Drag, click, or press 'delete' to edit annotation.");
-
-  $('#toolName').text(this.toolName);
-  $('#toolMessage').text(hints[0]);
 }
 
 //

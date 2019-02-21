@@ -18,29 +18,9 @@ Background.prototype.setFocusRect = function() {
   var h = paper.view.size.height;
   var w = paper.view.size.width;
   this.viewCenter = new Point(0.5 * w, 0.5 * h);
-  var tl = this.viewCenter - new Point(0.45 * w, 0.45 * h);
-  var br = this.viewCenter + new Point(0.45 * w, 0.45 * h);
+  var tl = this.viewCenter - new Point(0.35 * w, 0.35 * h);
+  var br = this.viewCenter + new Point(0.35 * w, 0.35 * h);
   this.focusRect = new Rectangle(tl, br);
-}
-Background.prototype.setImage = function(image, callback) {
-  var raster = new Raster(image);
-  raster.position = this.viewCenter;
-  raster.sendToBack();
-
-  raster.onLoad = function() {
-    background.image.remove();
-    background.image = raster;
-    if (annotations.length > 0) {
-      background.alignSelf(annotations[0]);
-    }
-    background.resetFilter();
-    if (callback) {
-      callback();
-    }
-  }
-}
-Background.prototype.clearImage = function() {
-  this.image.remove();
 }
 Background.prototype.resetFilter = function() {
   this.image.blendMode = 'hard-light';
@@ -131,9 +111,7 @@ Background.prototype.focus = function(annotation) {
     }
   }
 
-  var height = Math.max(1, target.height);
-  var width = Math.max(1, target.width);
-  var scale = Math.min(this.image.bounds.height/height, this.image.bounds.width/width);
+  var scale = Math.min(this.image.bounds.height / target.height, this.image.bounds.width / target.width);
   scale = Math.min(this.focusMaxScale, scale);
   // Move before scaling
   this.moveTo(target.center);
@@ -142,23 +120,19 @@ Background.prototype.focus = function(annotation) {
 Background.prototype.align = function(annotation) {
   var img_bounds = this.image.bounds;
   var ann_bounds = annotation.raster.bounds;
-  var img_scale = img_bounds.height / this.image.height;
-  var ann_scale = ann_bounds.height / annotation.raster.height;
   annotation.translate(img_bounds.topLeft - ann_bounds.topLeft);
-  annotation.scale(img_scale / ann_scale, img_bounds.topLeft);
+  annotation.scale(img_bounds.height / ann_bounds.height, img_bounds.topLeft);
 }
 Background.prototype.alignSelf = function(annotation) {
   var img_bounds = this.image.bounds;
   var ann_bounds = annotation.raster.bounds;
-  var img_scale = img_bounds.height / this.image.height;
-  var ann_scale = ann_bounds.height / annotation.raster.height;
   this.image.translate(ann_bounds.topLeft - img_bounds.topLeft);
-  this.image.scale(ann_scale / img_scale, ann_bounds.topLeft);
+  this.image.scale(ann_bounds.height / img_bounds.height, ann_bounds.topLeft);
 }
 
 //
-// Point to Pixel
-//
+// Used by New tool
+// Delete soon
 Background.prototype.getPixel = function(point) {
   var bounds = this.image.bounds;
   var size = this.image.size;
@@ -177,25 +151,6 @@ Background.prototype.getPoint = function(pixel) {
   var y = (pixel.y + 0.5) * (bounds.height / size.height) + tl.y;
   return new Point(x, y);
 }
-Background.prototype.toPixelSpace = function(shape) {
-  var bounds = this.image.bounds;
-  var size = this.image.size;
-  var tl = bounds.topLeft;
-
-  shape.translate(-tl);
-  shape.scale(size.height / bounds.height, new Point(0, 0));
-  shape.translate(new Point(-0.5, -0.5));
-}
-Background.prototype.toPointSpace = function(shape) {
-  var bounds = this.image.bounds;
-  var size = this.image.size;
-  var tl = bounds.topLeft;
-
-  shape.translate(new Point(0.5, 0.5));
-  shape.scale(bounds.height / size.height, new Point(0, 0));
-  shape.translate(tl);
-}
-
 //
 // Visualization
 //
@@ -215,13 +170,6 @@ Background.prototype.setTempImage = function(imageData) {
 Background.prototype.removeTempImage = function() {
   this.tempImage.remove();
 }
-
-//
-// Exports
-//
-function onResize(event) {
-  background.setFocusRect();
-}
 Background.prototype.increaseBrightness = function() {
   background.filter.fillColor += 0.05;
   if (background.filter.fillColor.gray > 1) {
@@ -234,5 +182,38 @@ Background.prototype.decreaseBrightness = function() {
     background.filter.fillColor.gray = 0;
   }
 }
+
+//
+// Exports
+//
+function loadBackground(image_url, callback) {
+  var raster = new Raster(image_url);
+  raster.position = background.viewCenter;
+  raster.sendToBack();
+  raster.onLoad = function() {
+    background.image.remove();
+    background.image = raster;
+    if (annotations.length > 0) {
+      background.alignSelf(annotations[0]);
+    }
+    background.resetFilter();
+
+    if (callback) {
+      callback();
+    }
+  }
+}
+
+function clearBackground() {
+  background.image.remove();
+}
+
+function onResize(event) {
+  background.setFocusRect();
+}
+
 window.background = new Background();
+window.loadBackground = loadBackground;
+window.clearBackground = clearBackground;
+
 paper.view._context.imageSmoothingEnabled = true; // Pixelates background

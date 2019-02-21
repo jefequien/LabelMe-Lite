@@ -1,26 +1,18 @@
 
 
 function toolKeys(event) {
-  if (event.key == '1') {
-    selectTool.switch();
-  }
-  else if (event.key == '2') {
-    if (paper.tool.annotation) {
-      editTool.switch(paper.tool.annotation);
-    } else {
-      editTool.switch();
-    }
-  }
-  else if (event.key == '3') {
-    if (paper.tool.annotation) {
-      brushTool.switch(paper.tool.annotation);
-    } else {
-      brushTool.switch();
-    }
-  }
-  else if (event.key == '4') {
-    newTool.switch();
-  }
+  // if (event.key == '1') {
+  //   selectTool.switch();
+  // }
+  // else if (event.key == '2') {
+  //   editTool.switch();
+  // }
+  // else if (event.key == '3') {
+  //   brushTool.switch();
+  // }
+  // else if (event.key == '4') {
+  //   newTool.switch();
+  // }
 }
 
 function sliderKeys(event) {

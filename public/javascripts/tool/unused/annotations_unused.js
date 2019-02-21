@@ -56,3 +56,35 @@ function getPixelColor(imageData, pixel) {
   color.alpha = imageData.data[p+3] / 255;
   return color;
 }
+function setRasterWithPath(raster, color, path) {
+  clearRaster(raster);
+
+  var path_raster = this.rasterize(path, color);
+  path_raster.remove();
+  if (path_raster.height == 0 || path_raster.width == 0) {
+    return;
+  }
+  var imageData = path_raster.getImageData();
+  var tl = path_raster.bounds.topLeft;
+  raster.setImageData(imageData, tl);
+}
+function setRasterWithMask(raster, color, mask) {
+  var cv = document.createElement('canvas');
+  var ctx = cv.getContext('2d');
+  var imageData = ctx.getImageData(0,0,mask.shape[1], mask.shape[0]);
+
+  var list = mask.tolist();
+  for (var y = 0; y < list.length; y++) {
+    for (var x = 0; x < list[y].length; x++) {
+      b = list[y][x];
+      if (b != 0) {
+        var p = (y * list[y].length + x) * 4;
+        imageData.data[p] = color.red * 255;
+        imageData.data[p+1] = color.green * 255;
+        imageData.data[p+2] = color.blue * 255;
+        imageData.data[p+3] = color.alpha * 255;
+      }
+    }
+  }
+  raster.setImageData(imageData, new Point(0, 0));
+}

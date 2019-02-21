@@ -28,7 +28,8 @@
 
     <!-- Custom CSS -->
     <link href="stylesheets/button.css" rel="stylesheet">
-    <link href="stylesheets/labelme-lite.css" rel="stylesheet">
+    <link href="stylesheets/labelmelite.css" rel="stylesheet">
+    <link href="stylesheets/amt.css" rel="stylesheet">
 
 
 </head>
@@ -46,61 +47,20 @@
       </button>
       <button type="button" class="btn btn-small" id="color"><i class="fa material-icons">color_lens</i></button>
       <button type="button" class="btn btn-small" id="hide"><i class="fa fa-eye-slash"></i></button>
-      <div class="btn btn-slider">
+      <div class="btn btn-slider" style="display: none;">
         <input type="range" min="3" max="15" step="0.5" id="toolSlider">
       </div>
     </div>
 
-    <div class="navbar-text">
-      <span id="category">None</span> :
-      <span id="current">0</span> / <span id="total">0</span>
-    </div>
-
     <div id="navButtons">
-      <button type="button" class="btn btn-small" id="prevImage"><i class="fa fa-arrow-circle-left"></i></button>
-      <button type="button" class="btn btn-small" id="nextImage"><i class="fa fa-arrow-circle-right"></i></button>
+      <button type="button" class="btn btn-small" id="undo"><i class="fa material-icons">undo</i></button>
+      <button type="button" class="btn btn-small" id="redo"><i class="fa material-icons">redo</i></button>
       <button type="button" class="btn btn-small" id="info" data-toggle="modal" data-target="#exampleModalLong">
         <i class="fa fa-info-circle"></i>
       </button>
     </div>
   </nav>
 
-
-  <div class="sidebar leftbar">
-
-    <div class="btn-group-vertical">
-      <button type="button" class="btn btn-square" id="editTool">
-        <i class="fa fa-pencil-alt"></i><br>Edit
-      </button>
-      <button type="button" class="btn btn-square" id="brushTool">
-        <i class="fa fa-paint-brush"></i><br>Brush
-      </button>
-    </div>
-
-    <hr>
-
-    <div class="btn-group-vertical">
-      <button type="button" class="btn btn-square" id="zoomIn"><i class="fa fa-search-plus"></i></i></button>
-      <button type="button" class="btn btn-square" id="zoomOut"><i class="fa fa-search-minus"></i></button>
-      <button type="button" class="btn btn-square" id="focus"><i class="fa fi-arrows-out"></i></button>
-    </div>
-
-    <hr>
-
-    <div class="btn-group-vertical">
-      <button type="button" class="btn btn-square" id="undo"><i class="fa fa-large material-icons">undo</i></button>
-      <button type="button" class="btn btn-square" id="redo"><i class="fa fa-large material-icons">redo</i></button>
-    </div>
-
-    <hr>
-
-    <div id="movementButtons" class="btn-matrix">
-      <button type="button" class="btn btn-square btn-small" id="up"><i class="fa fa-small fa-arrow-up"></i></button>
-      <button type="button" class="btn btn-square btn-small" id="down"><i class="fa fa-small fa-arrow-down"></i></button>
-      <button type="button" class="btn btn-square btn-small" id="left"><i class="fa fa-small fa-arrow-left"></i></button>
-      <button type="button" class="btn btn-square btn-small" id="right"><i class="fa fa-small fa-arrow-right"></i></button>
-    </div>
-  </div>
 
   <div class="sidebar rightbar">
     <div class="panel-heading">
@@ -115,15 +75,24 @@
     <canvas id="toolCanvas" resize></canvas>
   </div>
 
-  <div id="helpPanel" class="panel">
+  <div id="questionPanel" class="panel">
+    <div class="panel-left">
+      <button type="button" class="btn" id="prevImage"><i class="fa fa-large fa-arrow-circle-left"></i></button>
+    </div>
     <div class="container-fluid">
-      <b>Hint: </b><span id="toolMessage">None</span>
+      <b>Suggested Category: </b><span id="category">None</span>
+      <br>
+      <span id="current">0</span> / <span id="total">0</span>
+    </div>
+
+    <div class="panel-right">
+      <button type="button" class="btn" id="nextImage"><i class="fa fa-large fa-arrow-circle-right"></i></button>
     </div>
   </div>
 
     <!-- Settings Modal --> 
     <div class="modal fade" id="exampleModalLong" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
-      <div class="modal-dialog" role="document">
+      <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
           <div class="modal-header">
             <h3 class="modal-title" id="exampleModalLongTitle">Instructions</h3>
