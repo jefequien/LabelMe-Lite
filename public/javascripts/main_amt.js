@@ -6,7 +6,7 @@ var current_num = 0;
 window.onload = function() {
     // Default url
     if (Object.keys(params).length == 0) {
-        params.id = "examples/ade20k_val_maskrcnnc_15";
+        params.id = "0037ff2455074da18282bab1c96410ed";
         setWindowUrl(params);
     }
     annotations.styleInverted = true;
