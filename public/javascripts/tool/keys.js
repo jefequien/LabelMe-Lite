@@ -103,19 +103,19 @@ function zoomKeys(event) {
 }
 
 function movementKeys(event) {
-  if (event.key == 'left' || event.key == 'a') {
+  if (event.key == 'a') {
     background.move(new Point(100, 0));
     flashButton("left");
   }
-  else if (event.key == 'right' || event.key == 'd') {
+  else if (event.key == 'd') {
     background.move(new Point(-100, 0));
     flashButton("right");
   }
-  else if (event.key == 'up' || event.key == 'w') {
+  else if (event.key == 'w') {
     background.move(new Point(0, 100));
     flashButton("up");
   }
-  else if (event.key == 'down' || event.key == 's') {
+  else if (event.key == 's') {
     background.move(new Point(0, -100));
     flashButton("down");
   }

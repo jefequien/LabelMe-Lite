@@ -60,8 +60,11 @@ nextButton.onclick = function() {
 }
 
 document.addEventListener('keydown', function(event) {
-    if (event.keyCode == 13) { // Enter
+    if (event.keyCode == 39) { // Right
         nextButton.onclick();
+    }
+    if (event.keyCode == 37) { // Left
+        prevButton.onclick();
     }
 });
 

@@ -370,22 +370,22 @@ Annotation.prototype.loadRLE = function(rle) {
   var imageData = this.raster.getImageData();
   var color = [this.color.red * 255, this.color.green * 255, this.color.blue * 255, 255];
 
-  var b = 0;
-  var t = 0;
+  var sum = 0;
   for (var i = 0; i < cnts.length; i++) {
-    for (var j = 0; j < cnts[i]; j++) {
-      if (b != 0) {
-        var h = t % height;
-        var w = Math.floor(t / height);
-        var p = (h * width + w) * 4;
-        imageData.data[p] = color[0];
-        imageData.data[p+1] = color[1];
-        imageData.data[p+2] = color[2];
-        imageData.data[p+3] = color[3];
+    if (i % 2 == 0) {
+      sum += cnts[i];
+    } else {
+      for (var j = sum; j < sum + cnts[i]; j++) {
+        var y = j % height;
+        var x = Math.floor(j / height);
+        var index = (y * width + x) * 4;
+        imageData.data[index] = color[0];
+        imageData.data[index+1] = color[1];
+        imageData.data[index+2] = color[2];
+        imageData.data[index+3] = color[3];
       }
-      t += 1;
+      sum += cnts[i];
     }
-    b = (b == 0) ? 1 : 0;
   }
   this.raster.setImageData(imageData, new Point(0,0));
 }
@@ -394,28 +394,50 @@ Annotation.prototype.getRLE = function() {
   var width = this.raster.width;
   var imageData = this.raster.getImageData();
 
-  var b = 0;
-  var b_ = 0;
-  var c = 0;
-  var cnts = [];
-  for (var t = 0; t < height * width; t++) {
-    var h = t % height;
-    var w = Math.floor(t / height);
-    var p = (h * width + w) * 4;
-    b = (imageData.data[p+3] == 0) ? 0 : 1;
-    if (b == b_) {
-      c += 1;
+  // Get bbox for faster computation
+  var tl = this.getPixel(this.boundary.bounds.topLeft).round();
+  var br = this.getPixel(this.boundary.bounds.bottomRight).round();
+
+  var cnts = [tl.x * height, 0];
+  for (var x = tl.x; x <= br.x; x++) {
+    // Handle column
+    var run_start = 0;
+    var last_b = 0;
+    for (var y = tl.y; y <= br.y; y++) {
+      var index = (y * width + x) * 4;
+      var b = (imageData.data[index+3] == 0) ? 0 : 1;
+      if (b != last_b) {
+        cnts.push(y - run_start);
+        run_start = y;
+        last_b = b;
+      }
+    }
+    if (last_b == 1) {
+      cnts.push((br.y + 1) - run_start);
+      run_start = br.y + 1;
+    }
+    cnts.push(height - run_start); // cnt for 0s
+    cnts.push(0); // cnt for 1s
+  }
+  cnts.push((width - (br.x + 1)) * height);
+
+  // Remove zeros
+  cnts_compressed = [];
+  while (cnts.length > 0) {
+    var c = cnts.shift();
+    if (c == 0 && cnts_compressed.length > 0 && cnts.length > 0) {
+      cnts_compressed[cnts_compressed.length-1] += cnts.shift();
     } else {
-      cnts.push(c);
-      b_ = b;
-      c = 1;
+      cnts_compressed.push(c);
     }
   }
-  cnts.push(c);
+  if (cnts_compressed[cnts_compressed.length-1] == 0) {
+    cnts_compressed.pop();
+  }
 
   var rle = {};
   rle["size"] = [this.raster.height, this.raster.width];
-  rle["counts"] = rleToString(cnts)
+  rle["counts"] = rleToString(cnts_compressed);
   return rle;
 }
 function rleFrString(s) {
@@ -478,9 +500,15 @@ function loadAnnotations(anns) {
 
     console.time(category);
     var annotation = new Annotation(category);
+    console.time("rle");
     annotation.loadRLE(rle);
+    console.timeEnd("rle");
+    console.time("boundary");
     annotation.updateBoundary();
+    console.timeEnd("boundary");
+    console.time("raster");
     annotation.updateRaster();
+    console.timeEnd("raster");
     console.timeEnd(category);
   }
   if (annotations.length == 0) {

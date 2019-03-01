@@ -18,8 +18,8 @@ Background.prototype.setFocusRect = function() {
   var h = paper.view.size.height;
   var w = paper.view.size.width;
   this.viewCenter = new Point(0.5 * w, 0.5 * h);
-  var tl = this.viewCenter - new Point(0.35 * w, 0.35 * h);
-  var br = this.viewCenter + new Point(0.35 * w, 0.35 * h);
+  var tl = this.viewCenter - new Point(0.4 * w, 0.4 * h);
+  var br = this.viewCenter + new Point(0.4 * w, 0.4 * h);
   this.focusRect = new Rectangle(tl, br);
 }
 Background.prototype.resetFilter = function() {
