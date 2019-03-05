@@ -4,15 +4,12 @@ var url = href.split('?')[0];
 var query = href.split('?')[1];
 
 var base_url = parseBaseURL(url);
-var params = {};
-if (query) {
-  params = parseParams(query);
-}
+var params = parseParams(query);
 
 //
 // Get Requests
 //
-function getImageURL(src) {
+function getImageURL() {
     var endpoint = base_url + "/data/images?" + query;
     return endpoint;
 }
@@ -33,10 +30,6 @@ function getBundle(callback) {
     var endpoint = base_url + "/data/bundles?" + query;
     get_async(endpoint, callback);
 }
-function get_annotation_tree(callback) {
-    var endpoint = base_url + "/annotations/trees?" + query;
-    get_async(endpoint, callback);
-}
 
 //
 // Post Requests
@@ -46,6 +39,9 @@ function postAnnotations(json) {
     post(endpoint, json);
 }
 
+//
+// XHR functions
+//
 function get_async(url, callback) {
   var xhr = new XMLHttpRequest();
   xhr.onreadystatechange = function() { 
@@ -84,8 +80,12 @@ function parseBaseURL(url) {
   return base_url
 }
 function parseParams(query) {
-  var query_split = query.split("&");
   var params = {}
+  if ( ! query) {
+    return params;
+  }
+  
+  var query_split = query.split("&");
   for (var i in query_split) {
     split = query_split[i].split("=");
     key = split[0];

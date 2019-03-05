@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Pixel-accurate Annotation Tool">
+    <meta name="author" content="Jeffrey Hu">
+    <title>LabelMeLite</title>
+
+    <!-- JQuery -->
+    <script src="//code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script src="//code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.4.2/css/all.css" integrity="sha384-/rXc/GQVaYpyDdyxK+ecHPVYJSN9bmVFBvjA/9eOB+pb3F2w2N6fc5qB9Ew5yIns" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/foundicons/3.0.0/foundation-icons.min.css" integrity="sha256-Q9c+RVayp4Y4gEKE3jaABDEwnMlDf6cFEWEQSzFaOB8=" crossorigin="anonymous" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <!-- Fancytree -->
+    <link href="components/fancytree/skin-bootstrap/ui.fancytree.css" rel="stylesheet">
+    <script src="components/fancytree/jquery.fancytree-all.min.js"></script>
+
+    <!-- Custom CSS -->
+    <link href="stylesheets/button.css" rel="stylesheet">
+    <link href="stylesheets/labelmelite.css" rel="stylesheet">
+    <link href="stylesheets/amt.css" rel="stylesheet">
+
+
+</head>
+<body>
+
+  <div class="main">
+    <nav class="navbar">
+      <a class="navbar-brand" href="/">LabelMe</a>
+      <!-- Top left buttons -->
+      <div id="viewButtons">
+        <button type="button" class="btn btn-small" id="decreaseBrightness">
+          <i class="fa material-icons">brightness_low</i>
+        </button>
+        <button type="button" class="btn btn-small" id="increaseBrightness">
+          <i class="fa material-icons">brightness_4</i>
+        </button>
+        <button type="button" class="btn btn-small" id="color"><i class="fa material-icons">color_lens</i></button>
+        <button type="button" class="btn btn-small" id="hide"><i class="fa fa-eye-slash"></i></button>
+        <div class="btn btn-slider">
+          <input type="range" min="3" max="15" step="0.5" id="toolSlider">
+        </div>
+      </div>
+      <!-- Top right buttons -->
+      <div id="navButtons">
+        <button type="button" class="btn btn-small" id="undo"><i class="fa material-icons">undo</i></button>
+        <button type="button" class="btn btn-small" id="redo"><i class="fa material-icons">redo</i></button>
+        <button type="button" class="btn btn-small" id="info" data-toggle="modal" data-target="#exampleModalLong">
+          <i class="fa fa-info-circle"></i>
+        </button>
+      </div>
+    </nav>
+
+    <canvas id="toolCanvas" resize></canvas>
+
+    <div class="rightbar sidebar">
+      <div class="panel-heading">
+        <h3 class="panel-title">Annotations</h3>
+      </div>
+      <div class="panel-body">
+        <div id="tree" class="panel-body fancytree-fade-expander"></div> 
+      </div>
+    </div>
+
+    <div class="bottombar sidebar">
+      <div class="left">
+        <button type="button" class="btn" id="prevImage"><i class="fa fa-large fa-arrow-circle-left"></i></button>
+      </div>
+      <div class="container-fluid">
+        <span id="current">0</span> / <span id="total">0</span> <span id="category">None</span>
+      </div>
+
+      <div class="right">
+        <button type="button" class="btn" id="nextImage"><i class="fa fa-large fa-arrow-circle-right"></i></button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Fancy tools 
+  <script type="text/javascript" src="components/numjs/dist/numjs.min.js"></script>
+  <script type="text/javascript" src="components/google-closure-library-compiler/compiled.js"></script>-->
+
+  <!-- Custom Javascript -->
+  <script type="text/javascript" src="javascripts/opencv.js"></script>
+  <script type="text/javascript" src="javascripts/rle.js"></script>
+  <script type="text/javascript" src="components/paper/dist/paper-full.js"></script>
+  
+  <script type="text/paperscript" src="javascripts/tool/selectTool.js" canvas="toolCanvas"></script>
+  <script type="text/paperscript" src="javascripts/tool/brushTool.js" canvas="toolCanvas"></script>
+  <script type="text/paperscript" src="javascripts/tool/editTool.js" canvas="toolCanvas"></script>
+  <script type="text/paperscript" src="javascripts/tool/newTool.js" canvas="toolCanvas"></script>
+  <script type="text/paperscript" src="javascripts/tool/annotations.js" canvas="toolCanvas"></script>
+  <script type="text/paperscript" src="javascripts/tool/background.js" canvas="toolCanvas"></script>
+  <script type="text/paperscript" src="javascripts/tool/tree.js" canvas="toolCanvas"></script>
+  <script type="text/paperscript" src="javascripts/tool/keys.js" canvas="toolCanvas"></script>
+
+  <script type="text/javascript" src="javascripts/endpoints.js"></script>
+  <script type="text/javascript" src="javascripts/buttons_amt.js"></script>
+  <script type="text/javascript" src="javascripts/main_amt.js"></script>
+
+</body>
+
+</html>

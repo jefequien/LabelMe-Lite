@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Pixel-accurate Annotation Tool">
+    <meta name="author" content="Jeffrey Hu">
+    <title>LabelMeLite</title>
+
+    <!-- JQuery -->
+    <script src="//code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script src="//code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.4.2/css/all.css" integrity="sha384-/rXc/GQVaYpyDdyxK+ecHPVYJSN9bmVFBvjA/9eOB+pb3F2w2N6fc5qB9Ew5yIns" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/foundicons/3.0.0/foundation-icons.min.css" integrity="sha256-Q9c+RVayp4Y4gEKE3jaABDEwnMlDf6cFEWEQSzFaOB8=" crossorigin="anonymous" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <!-- Fancytree -->
+    <link href="components/fancytree/skin-bootstrap/ui.fancytree.css" rel="stylesheet">
+    <script src="components/fancytree/jquery.fancytree-all.min.js"></script>
+
+    <!-- Custom CSS -->
+    <link href="stylesheets/button.css" rel="stylesheet">
+    <link href="stylesheets/labelmelite.css" rel="stylesheet">
+
+</head>
+<body>
+
+  <nav class="navbar">
+    <a class="navbar-brand" href="/">LabelMe</a>
+
+    <div id="viewButtons">
+      <button type="button" class="btn btn-small" id="decreaseBrightness">
+        <i class="fa material-icons">brightness_low</i>
+      </button>
+      <button type="button" class="btn btn-small" id="increaseBrightness">
+        <i class="fa material-icons">brightness_4</i>
+      </button>
+      <button type="button" class="btn btn-small" id="color"><i class="fa material-icons">color_lens</i></button>
+      <button type="button" class="btn btn-small" id="hide"><i class="fa fa-eye-slash"></i></button>
+      <div class="btn btn-slider">
+        <input type="range" min="3" max="15" step="0.5" id="toolSlider">
+      </div>
+    </div>
+
+    <div class="navbar-text">
+      Dataset: <span id="datasetName">None</span>
+      Source: <span id="annotationSource">None</span>
+      <br>
+      Image: <span id="imageFileName">None</span>
+      <!-- Category: <span id="category">None</span>
+      <br>
+      <span id="current">0</span> / <span id="total">0</span> -->
+    </div>
+
+    <div id="navButtons">
+      <button type="button" class="btn btn-small" id="prevImage"><i class="fa fa-arrow-circle-left"></i></button>
+      <button type="button" class="btn btn-small" id="nextImage"><i class="fa fa-arrow-circle-right"></i></button>
+      <button type="button" class="btn btn-small" id="info" data-toggle="modal" data-target="#exampleModalLong">
+        <i class="fa fa-info-circle"></i>
+      </button>
+      <button type="button" class="btn btn-small" id="downloadImg">
+        <i class="fa material-icons">open_in_new</i>
+      </button>
+      <button type="button" class="btn btn-small" id="downloadAnn">
+        <i class="fa fi-page-export"></i>
+      </button>
+    </div>
+  </nav>
+
+  <canvas id="toolCanvas" resize></canvas>
+
+  <div class="sidebar leftbar">
+    <div class="btn-group-vertical">
+      <button type="button" class="btn btn-square text-center" id="selectTool">
+        <i class="fa fa-mouse-pointer"></i><br>Select
+      </button>
+      <button type="button" class="btn btn-square" id="editTool">
+        <i class="fa fa-pencil-alt"></i><br>Edit
+      </button>
+      <button type="button" class="btn btn-square" id="brushTool">
+        <i class="fa fa-paint-brush"></i><br>Brush
+      </button>
+      <button type="button" class="btn btn-square" id="newTool">
+        <i class="fa fa-plus"></i><br>New
+      </button>
+    </div>
+
+    <hr>
+
+    <div class="btn-group-vertical">
+      <button type="button" class="btn btn-square" id="zoomIn"><i class="fa fa-search-plus"></i></i></button>
+      <button type="button" class="btn btn-square" id="zoomOut"><i class="fa fa-search-minus"></i></button>
+      <button type="button" class="btn btn-square" id="focus"><i class="fa fi-arrows-out"></i></button>
+    </div>
+
+    <hr>
+
+    <div class="btn-group-vertical">
+      <button type="button" class="btn btn-square" id="undo"><i class="fa fa-large material-icons">undo</i></button>
+      <button type="button" class="btn btn-square" id="redo"><i class="fa fa-large material-icons">redo</i></button>
+      <button type="button" class="btn btn-square" id="delete"><i class="fa fa-trash"></i></button>
+    </div>
+
+    <hr>
+
+    <div id="movementButtons" class="btn-matrix">
+      <button type="button" class="btn btn-square btn-small" id="up"><i class="fa fa-small fa-arrow-up"></i></button>
+      <button type="button" class="btn btn-square btn-small" id="down"><i class="fa fa-small fa-arrow-down"></i></button>
+      <button type="button" class="btn btn-square btn-small" id="left"><i class="fa fa-small fa-arrow-left"></i></button>
+      <button type="button" class="btn btn-square btn-small" id="right"><i class="fa fa-small fa-arrow-right"></i></button>
+    </div>
+  </div>
+
+  <div class="sidebar rightbar">
+    <div class="panel-heading">
+      <h3 class="panel-title">Annotations</h3>
+    </div>
+    <div class="panel-body">
+      <div id="tree" class="panel-body fancytree-fade-expander"></div> 
+    </div>
+  </div>
+
+  <!-- Settings Modal --> 
+  <div class="modal fade" id="exampleModalLong" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 class="modal-title" id="exampleModalLongTitle">Instructions</h3>
+        </div>
+        <div class="modal-body">
+          <p> Welcome to <b>LabelMe-Lite</b>, a newly developed in-browser annotation tool by the MIT Computer Vision Group that leverages crowd-sourcing and state-of-the-art computer vision networks in the annotation process. We break up the complex task of densely annotating an image into manageable pieces and leave you, the human annotator, with the crucial task of refining the boundary and determining whether the annotation is correct or not.</p>
+
+          <p> All annotations begin as a prediction from a computer vision neural network. <b>Please do not click through the annotations with minimal modifications.</b> Nearly every annotation can be improved and any mistake you spot, especially along the edges, is a mistake by our algorithms and extremely important to us. </p>
+
+          <h4>Instructions:</h4>
+          <p> You are currently annotating a bundle. Each bundle consists of 30 tasks for a single category. 
+          For each task, please annotate exactly one instance of the category. If initially, more than one instance is highlighted, please correct the annotation to cover only one instance. If the category is not present, please delete the annotation and press next.</p>
+
+          <p> In each bundle, we have embedded 2-4 tests. Tests are tasks for which we have ground truth for. To pass a test, >90% of pixels close the the boundary must the same as our test. If you fail two tests, the entire bundle will be rejected. </p>
+
+          <p> For examples and specific questions for each category, please click the question mark next to the category name. </p>
+
+          <h4>Controls:</h4>
+          <p>Here is a non-exhaustive list of controls and keyboard shortcuts. LabelMe-Lite is designed to be as intuitive as possible so play around to comfortable with this tool. Mouse over the buttons in the toolbar to discover even more shortcuts.</p>
+          <table>
+            <tr>
+              <th>Key</th>
+              <th>Action</th> 
+            </tr>
+            <tr>
+              <td>'wasd' or arrow keys</td>
+              <td>Move the image. Controls may appear inverted at first but they make more intuitive sense when zoomed in. </td> 
+            </tr>
+            <tr>
+              <td>'q'</td>
+              <td>Zoom out.</td> 
+            </tr>
+            <tr>
+              <td>'e'</td>
+              <td>Zoom in.</td> 
+            </tr>
+            <tr>
+              <td>'f'</td>
+              <td>Focus on a specific annotation or the image as a whole</td> 
+            </tr>
+            <tr>
+              <td>'v'</td>
+              <td>Hide/show all annotations.</td> 
+            </tr>
+            <tr>
+              <td>'c'</td>
+              <td>Change color of current annotation or random annotation.</td> 
+            </tr>
+            <tr>
+              <td>'u'</td>
+              <td>Undo the current annotation.</td> 
+            </tr>
+            <tr>
+              <td>'y'</td>
+              <td>Redo the current annotation.</td> 
+            </tr>
+            <tr>
+              <td>'backspace'</td>
+              <td>Delete the current selected annotation.</td> 
+            </tr>
+            <tr>
+              <td>'z'</td>
+              <td>Undo the current tool.</td> 
+            </tr>
+            <tr>
+              <td>'esc'</td>
+              <td>Escape the current tool.</td> 
+            </tr>
+          </table>
+
+          <br>
+          <p>Label-Lite implements 4 tools: Select tool, Edit tool, Brush tool, and New Tool. Press 'h' or the help button in the tool bar to learn more.</p>
+
+          <h4>FAQ:</h4>
+          <p><b>How long should each annotation take?</b></p>
+          <p>With practice, we expected each annotation to take around 10 seconds. Of course, certain categories are more complex than others. We try and break up difficult categories into smaller pieces so all tasks take the same amount of time.</p>
+          
+          <p><b>How many of these jobs can we expect?</b></p>
+          <p>We are aiming to densely annotate 1 million images. With ~60 tasks per image, you can expect 2 million tasks. Of course, this is all contingent on high quality work on your part. Previous attempts at crowdsourcing annotations are plagued by low quality unusable annotations. We hope that our combination of  and an intuitive annotation tool can overcome these problems. </p>
+
+          <h4>Author's Note:</h4>
+          <p>If you are a fellow researcher and would like to support this tool and project. Collecting a dataset is an expensive proposition. If you would like to support this project and get early access to the dataset, please reach out to me at @. </p>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fancy tools 
+  <script type="text/javascript" src="components/numjs/dist/numjs.min.js"></script>
+  <script type="text/javascript" src="components/google-closure-library-compiler/compiled.js"></script>-->
+
+  <!-- Custom Javascript -->
+  <script type="text/javascript" src="javascripts/opencv.js"></script>
+  <script type="text/javascript" src="javascripts/rle.js"></script>
+  <script type="text/javascript" src="components/paper/dist/paper-full.js"></script>
+  
+  <script type="text/paperscript" src="javascripts/tool/selectTool.js" canvas="toolCanvas"></script>
+  <script type="text/paperscript" src="javascripts/tool/brushTool.js" canvas="toolCanvas"></script>
+  <script type="text/paperscript" src="javascripts/tool/editTool.js" canvas="toolCanvas"></script>
+  <script type="text/paperscript" src="javascripts/tool/newTool.js" canvas="toolCanvas"></script>
+  <script type="text/paperscript" src="javascripts/tool/annotations.js" canvas="toolCanvas"></script>
+  <script type="text/paperscript" src="javascripts/tool/background.js" canvas="toolCanvas"></script>
+  <script type="text/paperscript" src="javascripts/tool/tree.js" canvas="toolCanvas"></script>
+  <script type="text/paperscript" src="javascripts/tool/keys.js" canvas="toolCanvas"></script>
+
+  <script type="text/javascript" src="javascripts/endpoints.js"></script>
+  <script type="text/javascript" src="javascripts/buttons.js"></script>
+  <script type="text/javascript" src="javascripts/main.js"></script>
+
+</body>
+
+</html>

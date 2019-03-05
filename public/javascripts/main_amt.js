@@ -42,16 +42,7 @@ function loadTool(task) {
     editTool.switch();
 }
 
-var prevButton = document.getElementById('prevImage');
-prevButton.onclick = function() {
-    if (current_num > 0) {
-        bundle[current_num].annotations = saveAnnotations();
-        current_num -= 1;
-        loadTool(bundle[current_num]);
-    }
-}
-var nextButton = document.getElementById('nextImage');
-nextButton.onclick = function() {
+function nextImage() {
     if (current_num < bundle.length - 1) {
         bundle[current_num].annotations = saveAnnotations();
         current_num += 1;
@@ -59,12 +50,28 @@ nextButton.onclick = function() {
     }
 }
 
+function prevImage() {
+    if (current_num > 0) {
+        bundle[current_num].annotations = saveAnnotations();
+        current_num -= 1;
+        loadTool(bundle[current_num]);
+    }
+}
+
+//
+// Event Handlers
+//
+var prevButton = document.getElementById('prevImage');
+prevButton.onclick = prevImage();
+var nextButton = document.getElementById('nextImage');
+nextButton.onclick = nextImage();
+
 document.addEventListener('keydown', function(event) {
     if (event.keyCode == 39) { // Right
-        nextButton.onclick();
+        nextImage();
     }
     if (event.keyCode == 37) { // Left
-        prevButton.onclick();
+        prevImage();
     }
 });
 

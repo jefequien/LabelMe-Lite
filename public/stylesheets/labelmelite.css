@@ -1,24 +1,26 @@
 html, body {
-    display:block;
     height:100%;
     width:100%;
 }
 canvas {
-    height:100%;
-    width:100%;
+    position: absolute;
+    height:calc(100% - 70px);
+    width:calc(100% - 280px);
+    left:80px;
+    z-index: 0;
+
+    border-top: 6px solid lightgray;
     background-image: url(/images/black_grid.jpg);
     background-size: 300px;
 }
 .navbar {
-    display: flex;
-    align-items: center;
-    z-index: 10;
+    position: static;
     height: 70px;
+    width: 100%;
+    z-index: 1;
 
-    color:white;
     background-color: #2e2e2e;
-    border-bottom: 10px solid yellow;
-    margin-bottom: 0px;
+    border-bottom: 9px solid yellow;
 }
 .navbar-brand {
     color: white;
@@ -29,67 +31,67 @@ canvas {
     color: gray;
 }
 .navbar-text{
+    color: white;
     font-size: 14px;
     margin-left: 10px;
 }
 .sidebar {
     position: absolute;
     height: calc(100% - 70px);
+    width: 50px;
     z-index: 1;
+
+    color: white;
     background-color: #6b6b6b;
-    border-top: 6px solid lightgray;
     overflow-y: scroll;
-}
-.main {
-    position: absolute;
-    height:calc(100% - 70px);
-    width:calc(100% - 280px);
-    z-index: 0;
-    background-color: white;
-    border-top: 6px solid lightgray;
-    left:80px;
+    text-align: center;
 }
 .leftbar {
     width: 80px;
     left: 0;
+
+    border-top: 6px solid lightgray;
     border-right: 6px solid lightgray;
-    text-align: center;
 }
 .rightbar {
     width: 200px;
     right: 0;
+
+    border-top: 6px solid lightgray;
     border-left: 6px solid lightgray;
+    text-align: left;
 }
+.bottombar {
+    height: 50px;
+    width: 100%;
+    bottom: 0;
 
-
-
-table, th, td {
-    border: 1px solid black;
-    padding: 3px
-}
-ul.fancytree-container {
-  height: 100%;
-  width: 100%;
-  overflow: auto;
-  position: relative;
-}
-
-.panel {
-    color:white;
-    border-color: gray;
-    border-width: 4px;
+    border-top: 6px solid lightgray;
     background: black;
-    margin-bottom: 0px;
+    font-size: 24px;
+    padding: 10px;
 }
-.panel-title {
-  font-size: 20px;
-  color:white;
-  margin: 0;
+
+/* For annotation*/
+ul.fancytree-container {
+    position: relative;
+    height: 100%;
+    width: 100%;
+    overflow: auto;
 }
 .panel-heading {    
     padding: 10px 15px;
     background-color: #2e2e2e;
 }
+.panel-title {
+    font-size: 20px;
+    margin: 0;
+}
 .panel-body {
-  padding: 5px;
+    padding: 5px;
+}
+
+table, th, td {
+    border: 1px solid black;
+    padding: 3px
 }
