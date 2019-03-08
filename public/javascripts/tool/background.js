@@ -187,6 +187,8 @@ Background.prototype.decreaseBrightness = function() {
 // Exports
 //
 function loadBackground(image_url, callback) {
+  background.image.remove();
+  
   var raster = new Raster(image_url);
   raster.position = background.viewCenter;
   raster.sendToBack();

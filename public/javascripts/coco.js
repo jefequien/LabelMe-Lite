@@ -1,38 +1,16 @@
-var fs = require('fs');
 
-var COCOs = {};
-function loadCOCO(ann_fn) {
-    var coco = COCOs[ann_fn];
-    if (coco) {
-        return coco;
-    } else {
-        if (fs.existsSync(ann_fn)) {
-            console.time(ann_fn);
-            COCOs[ann_fn] = new COCO(ann_fn);
-            console.timeEnd(ann_fn);
-        }
-        return COCOs[ann_fn];
-    }
-}
-
-function COCO(ann_fn) {
-    this.dataset = {};
+function COCO(dataset) {
+    this.dataset = dataset;
     this.anns = {};
     this.cats = {};
     this.imgs = {};
     this.imgToAnns = {};
     this.catToImgs = {};
     this.fnToImgId = {};
-
-    this.ann_fn = ann_fn;
-    if (ann_fn) {
-        var json = fs.readFileSync(ann_fn);
-        var dataset = JSON.parse(json);
-        this.dataset = dataset;
+    if (dataset) {
         this.createIndex();
     }
 }
-
 
 COCO.prototype.createIndex = function () {
     if ("annotations" in this.dataset) {
@@ -105,9 +83,8 @@ COCO.prototype.loadAnns = function (ids=[]) {
     return anns;
 }
 
-
-module.exports = {
-    // COCO: COCO,
-    // createIndex: COCO.prototype.createIndex,
-    loadCOCO: loadCOCO
-}
+try {
+    module.exports = {
+        COCO: COCO
+    }
+} catch (e) {}

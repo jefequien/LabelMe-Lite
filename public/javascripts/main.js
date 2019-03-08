@@ -1,71 +1,81 @@
 
 
+var params = parseURLParams();
+if (Object.keys(params).length == 0) {
+    // Default params
+    params.dataset = "demo";
+    params.ann_source = "demo_anns";
+    setURLParams(params);
+}
+
 window.onload = function() {
-    // Default url
-    if (Object.keys(params).length == 0) {
-        params.dataset = "demo";
-        params.ann_source = "demo_anns";
-        setWindowUrl(params);
-    }
-    
     selectTool.switch();
-    getAnnotations(function(response) {
-        if (response) {
-            loadTool(response);
-        } else {
-            console.log("Annotations not found.");
-        }
+
+    getAnnotations(params, function(res) {
+        var coco = new COCO(res);
+        loadTool(coco);
     });
 }
 
-
-function loadTool(task) {
-    console.log(task);
-    setWindowUrl(task);
-    $('#datasetName').text(task.dataset);
-    $('#annotationSource').text(task.ann_source);
-    $('#imageFileName').text(task.file_name);
-
-    var image_url = task.image_url;
-    var annotations = task.annotations;
-    if (! image_url) {
-        image_url = getImageURL();
-    }
-    if (! annotations) {
-        annotations = [];
+function loadTool(coco) {
+    clearBackground();
+    clearAnnotations();
+    selectTool.switch();
+    if ( ! coco.dataset) {
+        return;
     }
 
+    var imgs = coco.dataset.images;
+    var anns = coco.dataset.annotations;
+    var cats = coco.dataset.categories;
+
+    var img = imgs[0];
+    for (var i = 0; i < anns.length; i++) {
+        var catId = anns[i]["category_id"];
+        var cat = coco.cats[catId];
+        anns[i]["category_name"] = cat["name"];
+    }
+
+    var image_url = getImageURL(params);
     loadBackground(image_url, function() {
         background.focus();
     });
-    clearAnnotations();
-    loadAnnotations(annotations);
+    loadAnnotations(anns);
 
-    selectTool.switch();
+
+    // Update params
+    $('#datasetName').text(params.dataset);
+    $('#annotationSource').text(params.ann_source);
+    $('#imageFileName').text(params.file_name);
+    params.file_name = img.file_name || "";
+    params.img_id = img.id;
+    setURLParams(params);
 }
 
+function nextImage() {
+    params.img_id = parseInt(params.img_id) + 1;
+    params.file_name = "";
+    setURLParams(params);
+    getAnnotations(params, function(res) {
+        var coco = new COCO(res);
+        loadTool(coco);
+    });
+}
+function prevImage() {
+    params.img_id = parseInt(params.img_id) - 1;
+    params.img_id = Math.max(params.img_id, 1);
+    params.file_name = "";
+    setURLParams(params);
+    getAnnotations(params, function(res) {
+        var coco = new COCO(res);
+        loadTool(coco);
+    });
+}
+
+//
+// Event Handlers
+//
 var prevButton = document.getElementById('prevImage');
-prevButton.onclick = function() {
-    getPrevImage(function(json){
-        setWindowUrl(json);
-        getAnnotations(function(res) {
-            loadTool(res);
-        });
-    });
-}
+prevButton.onclick = prevImage;
 var nextButton = document.getElementById('nextImage');
-nextButton.onclick = function() {
-    getNextImage(function(json){
-        setWindowUrl(json);
-        getAnnotations(function(res) {
-            loadTool(res);
-        });
-    });
-}
-
-function setWindowUrl(json) {
-    var state = {dataset: json.dataset,
-                ann_source: json.ann_source, 
-                file_name: json.file_name}
-    window.history.pushState(null, null, "/tool?" + buildQuery(state));
-}
+nextButton.onclick = nextImage;

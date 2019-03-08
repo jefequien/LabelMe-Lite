@@ -383,20 +383,14 @@ Annotation.prototype.getRLE = function() {
 function loadAnnotations(anns) {
   console.time("Load");
   for (var i = 0; i < anns.length; i++) {
-    var category = anns[i]["category"];
+    var category = anns[i]["category_name"];
     var rle = anns[i]["segmentation"];
 
     console.time(category);
     var annotation = new Annotation(category);
-    console.time("rle");
     annotation.loadRLE(rle);
-    console.timeEnd("rle");
-    console.time("boundary");
     annotation.updateBoundary();
-    console.timeEnd("boundary");
-    console.time("raster");
     annotation.updateRaster();
-    console.timeEnd("raster");
     console.timeEnd(category);
   }
   if (annotations.length == 0) {
@@ -413,7 +407,7 @@ function saveAnnotations() {
     var rle = annotations[i].getRLE();
 
     var ann = {};
-    ann["category"] = name;
+    ann["category_name"] = name;
     ann["segmentation"] = rle;
     anns.push(ann);
   }
