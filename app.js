@@ -6,7 +6,7 @@ var logger = require('morgan');
 var cors = require('cors');
 
 var index = require('./routes/index');
-var apiController = require('./routes/dataController');
+var dataController = require('./routes/dataController');
 
 var app = express();
 
@@ -22,9 +22,9 @@ app.use(cors());
 
 // Routing
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.static(path.join(__dirname, 'data')));
+app.use('/data', express.static(path.join(__dirname, 'data')));
+app.use('/data', dataController);
 app.use('/', index);
-app.use('/data', apiController);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
