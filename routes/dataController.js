@@ -1,7 +1,7 @@
 var express = require('express');
 var path = require('path');
 var fs = require('fs');
-var cocoapi = require('../public/javascripts/coco');
+var cocoapi = require('../public/javascripts/utils/coco');
 var router = express.Router();
 
 var DATA_DIR = path.join(__dirname, "../data");

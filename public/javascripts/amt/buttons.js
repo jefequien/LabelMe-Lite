@@ -30,11 +30,6 @@ buttons["increaseBrightness"].title = "Increase brightness";
 buttons["increaseBrightness"].onclick = function() {
     background.increaseBrightness();
 }
-buttons["color"] = document.getElementById('color');
-buttons["color"].title = "Change colors: 'c'";
-buttons["color"].onclick = function() {
-    paper.tool.onKeyDown({key: 'c'});
-}
 buttons["hide"] = document.getElementById('hide');
 buttons["hide"].title = "Hide/show: 'h'";
 buttons["hide"].onclick = function() {

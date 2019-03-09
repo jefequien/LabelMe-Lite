@@ -10,13 +10,14 @@ function getAnnotations(params, callback) {
     get_async(endpoint, callback);
 }
 function getBundle(params, callback) {
-    var endpoint = base_url + "/data/bundles/" + params.id + ".json";
+    var endpoint = base_url + "/data/bundles/" + params.bundle_id + ".json";
     get_async(endpoint, callback);
 }
 function getImageURL(params) {
   var image_dir = base_url + "/data";
   if (params.dataset == "ade20k" || params.dataset == "coco" || params.dataset == "places") {
-      image_dir = "http://places.csail.mit.edu/scaleplaces/datasets";
+      // image_dir = "http://places.csail.mit.edu/scaleplaces/datasets";
+      image_dir = "http://labelmelite.csail.mit.edu/data";
   }
 
   var endpoint = image_dir + "/" + params.dataset + "/images/" + params.file_name;
@@ -26,8 +27,8 @@ function getImageURL(params) {
 //
 // Post Requests
 //
-function postAnnotations(json) {
-    var endpoint = base_url + "/data/annotations?" + query;
+function postAnnotations(params, json) {
+    var endpoint = base_url + "/data/annotations?" + buildQuery(params);
     post(endpoint, json);
 }
 

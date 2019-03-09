@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Amazon Mechnical Turk Yes/No Interface">
+    <meta name="author" content="Jeffrey Hu">
+    <title>YesNoInterface</title>
+
+    <link href="stylesheets/yesno.css" rel="stylesheet">
+
+</head>
+<body>
+    <div id="questionDiv">
+        <button onclick="toggleClarification(); " type="button">Instruction</button>
+        <span> Does this annotation have IOU > 0.7? </span>
+        <input type="submit" id="submitButton" value="Submit (? images left)" disabled onclick="return confirmSubmit()">
+    </div>
+ 
+    <div id="clarificationDiv">
+        <dl>
+            <dt>Todo: </dt>
+                <dd>- one</dd>
+                <dd>- two</dd>
+                <dd>- three</dd>
+        </ul>
+    </div>
+
+    <div id="categoryDiv">
+        <b>Category: </b><span>None</span>
+    </div>
+
+    <div id="yesnoDiv">
+        <div id="holderDiv-3" class="holderDiv focus3"><p>No</p><p>Yes</p><canvas></canvas></div>
+        <div id="holderDiv-2" class="holderDiv focus2"><p>No</p><p>Yes</p><canvas></canvas></div>
+        <div id="holderDiv-1" class="holderDiv focus1"><p>No</p><p>Yes</p><canvas></canvas></div>
+        <div id="holderDiv0" class="holderDiv focus"><p>No</p><p>Yes</p><canvas></canvas></div>
+        <div id="holderDiv1" class="holderDiv focus1"><p>No</p><p>Yes</p><canvas></canvas></div>
+        <div id="holderDiv2" class="holderDiv focus2"><p>No</p><p>Yes</p><canvas></canvas></div>
+        <div id="holderDiv3" class="holderDiv focus3"><p>No</p><p>Yes</p><canvas></canvas></div>
+    </div>
+
+    <!-- jQuery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+
+    <!-- Bootstrap Core JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+    <!-- Util Javascripts -->
+    <script type="text/javascript" src="javascripts/utils/coco.js"></script>
+    <script type="text/javascript" src="javascripts/utils/opencv.js"></script>
+    <script type="text/javascript" src="javascripts/utils/rle.js"></script>
+    <script type="text/javascript" src="javascripts/utils/endpoints.js"></script>
+
+    <!-- Main Javascripts -->
+    <script src="javascripts/amt/yesno.js"></script>
+    <script src="javascripts/amt/main_yesno.js"></script>
+</body>
+
+</html>

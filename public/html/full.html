@@ -27,7 +27,7 @@
     <script src="components/fancytree/jquery.fancytree-all.min.js"></script>
 
     <!-- Custom CSS -->
-    <link href="stylesheets/button.css" rel="stylesheet">
+    <link href="stylesheets/buttons.css" rel="stylesheet">
     <link href="stylesheets/labelmelite.css" rel="stylesheet">
 
 </head>
@@ -55,9 +55,6 @@
       Source: <span id="annotationSource">None</span>
       <br>
       Image: <span id="imageFileName">None</span>
-      <!-- Category: <span id="category">None</span>
-      <br>
-      <span id="current">0</span> / <span id="total">0</span> -->
     </div>
 
     <div id="navButtons">
@@ -77,7 +74,7 @@
 
   <canvas id="toolCanvas" resize></canvas>
 
-  <div class="sidebar leftbar">
+  <div id="leftbar" class="sidebar">
     <div class="btn-group-vertical">
       <button type="button" class="btn btn-square text-center" id="selectTool">
         <i class="fa fa-mouse-pointer"></i><br>Select
@@ -119,7 +116,7 @@
     </div>
   </div>
 
-  <div class="sidebar rightbar">
+  <div id="rightbar" class="sidebar">
     <div class="panel-heading">
       <h3 class="panel-title">Annotations</h3>
     </div>
@@ -226,12 +223,14 @@
   <script type="text/javascript" src="components/numjs/dist/numjs.min.js"></script>
   <script type="text/javascript" src="components/google-closure-library-compiler/compiled.js"></script>-->
 
-  <!-- Custom Javascript -->
-  <script type="text/javascript" src="javascripts/opencv.js"></script>
-  <script type="text/javascript" src="javascripts/rle.js"></script>
-  <script type="text/javascript" src="javascripts/coco.js"></script>
-  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/paper.js/0.12.0/paper-full.min.js"></script>
+  <!-- Util Javascripts -->
+  <script type="text/javascript" src="javascripts/utils/coco.js"></script>
+  <script type="text/javascript" src="javascripts/utils/opencv.js"></script>
+  <script type="text/javascript" src="javascripts/utils/rle.js"></script>
+  <script type="text/javascript" src="javascripts/utils/endpoints.js"></script>
   
+  <!-- Tool Javascripts -->
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/paper.js/0.12.0/paper-full.min.js"></script>
   <script type="text/paperscript" src="javascripts/tool/selectTool.js" canvas="toolCanvas"></script>
   <script type="text/paperscript" src="javascripts/tool/brushTool.js" canvas="toolCanvas"></script>
   <script type="text/paperscript" src="javascripts/tool/editTool.js" canvas="toolCanvas"></script>
@@ -241,9 +240,9 @@
   <script type="text/paperscript" src="javascripts/tool/tree.js" canvas="toolCanvas"></script>
   <script type="text/paperscript" src="javascripts/tool/keys.js" canvas="toolCanvas"></script>
 
-  <script type="text/javascript" src="javascripts/endpoints.js"></script>
-  <script type="text/javascript" src="javascripts/buttons.js"></script>
-  <script type="text/javascript" src="javascripts/main.js"></script>
+  <!-- Main Javascripts -->
+  <script type="text/javascript" src="javascripts/full/buttons.js"></script>
+  <script type="text/javascript" src="javascripts/full/main.js"></script>
 
 </body>
 

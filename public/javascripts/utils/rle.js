@@ -25,10 +25,11 @@ function loadRLE(rle, color) {
   return imageData;
 }
 
-function getRLE(imageData, tl, br) {
+function getRLE(imageData, bbox) {
   var height = imageData.height;
   var width = imageData.width;
-  // Use bbox for faster computation
+  var tl = {x: bbox[0], y:bbox[1]};
+  var br = {x: bbox[0]+bbox[2], y:bbox[1]+bbox[3]};
 
   var cnts = [tl.x * height, 0];
   for (var x = tl.x; x <= br.x; x++) {

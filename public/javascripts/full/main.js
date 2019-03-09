@@ -10,7 +10,6 @@ if (Object.keys(params).length == 0) {
 
 window.onload = function() {
     selectTool.switch();
-
     getAnnotations(params, function(res) {
         var coco = new COCO(res);
         loadTool(coco);
@@ -24,25 +23,14 @@ function loadTool(coco) {
     if ( ! coco.dataset) {
         return;
     }
-
-    var imgs = coco.dataset.images;
-    var anns = coco.dataset.annotations;
-    var cats = coco.dataset.categories;
-
-    var img = imgs[0];
-    for (var i = 0; i < anns.length; i++) {
-        var catId = anns[i]["category_id"];
-        var cat = coco.cats[catId];
-        anns[i]["category_name"] = cat["name"];
-    }
-
+    
+    var img = coco.dataset.images[0];
     var img_params = {"dataset": params.dataset, "file_name": img.file_name}
     var image_url = getImageURL(img_params);
-    console.log(params);
     loadBackground(image_url, function() {
         background.focus();
     });
-    loadAnnotations(anns);
+    loadAnnotations(coco);
 
 
     // Update params

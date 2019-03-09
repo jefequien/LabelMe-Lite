@@ -1,25 +1,32 @@
-.main {
+
+#toolDiv {
     position: absolute;
-    height: 80%;
-    width: 40%;
-    transform: translate(50%, 10%);
+    height: 550px;
+    width: 450px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 100;
 }
-canvas {
+
+
+#toolCanvas {
     height: calc(100% - 140px);
     width: calc(100%);
     left: 0px;
 }
-.leftbar {
+#leftbar {
     width: 0px;
     border-right: none;
 }
-.rightbar {
+#rightbar {
     width: 0px;
     border-left: none;
 }
-.bottombar {
+#bottombar {
     height: 70px;
 }
+
 
 .btn-slider {
     display: none;

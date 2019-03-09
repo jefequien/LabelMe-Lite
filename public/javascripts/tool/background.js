@@ -6,8 +6,8 @@ function Background() {
   this.setFocusRect();
   this.addMouseListeners();
 
-  this.focusMaxScale = 4;
-  this.maxScale = 8;
+  this.focusMaxScale = 6;
+  this.maxScale = 10;
   this.minScale = 0.75;
 
   this.image = new Path.Rectangle(this.focusRect).rasterize(paper.view.resolution / window.devicePixelRatio);

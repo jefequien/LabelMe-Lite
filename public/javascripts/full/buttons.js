@@ -31,8 +31,8 @@ buttons["downloadImg"].onclick = function() {
 buttons["downloadAnn"] = document.getElementById('downloadAnn');
 buttons["downloadAnn"].onclick = function() {
     var newTab = window.open();
-    var anns = saveAnnotations();
-    newTab.document.write('<textarea disabled style="width:100%;height:100%">' + JSON.stringify(anns, null, 2) + "</textarea>");
+    var coco = saveAnnotations();
+    newTab.document.write('<textarea disabled style="width:100%;height:100%">' + JSON.stringify(coco.dataset, null, 2) + "</textarea>");
     newTab.document.close();
 }
 

@@ -90,7 +90,6 @@ Annotation.prototype.delete = function(noConfirm) {
     annotations.splice(annotations.indexOf(this), 1);
     tree.deleteAnnotation(this);
     this.deleted = true;
-    console.log("Deleted annotation.");
     return true;
   }
   return false;
@@ -370,49 +369,62 @@ Annotation.prototype.loadRLE = function(rle) {
   background.align(this);
 }
 Annotation.prototype.getRLE = function() {
+  var imageData = this.raster.getImageData();
+  var bbox = this.getBbox();
+  var rle = getRLE(imageData, bbox);
+  return rle;
+}
+Annotation.prototype.getBbox = function() {
   var tl = this.getPixel(this.boundary.bounds.topLeft).round();
   var br = this.getPixel(this.boundary.bounds.bottomRight).round();
-  var imageData = this.raster.getImageData();
-  var rle = getRLE(imageData, tl, br);
-  return rle;
+  var bbox = [tl.x, tl.y, br.x - tl.x, br.y - tl.y];
+  return bbox;
 }
 
 //
 // Exports
 //
-function loadAnnotations(anns) {
+function loadAnnotations(coco) {
   console.time("Load");
-  for (var i = 0; i < anns.length; i++) {
-    var category = anns[i]["category_name"];
-    var rle = anns[i]["segmentation"];
+  var img = coco.dataset.images[0];
+  var annIds = coco.getAnnIds([img["id"]]);
+  var anns = coco.loadAnns(annIds);
 
-    console.time(category);
-    var annotation = new Annotation(category);
+  for (var i = 0; i < anns.length; i++) {
+    var ann = anns[i];
+    var cat = coco.cats[ann["category_id"]]["name"];
+    var rle = ann["segmentation"];
+
+    console.time(cat);
+    var annotation = new Annotation(cat);
     annotation.loadRLE(rle);
     annotation.updateBoundary();
     annotation.updateRaster();
-    console.timeEnd(category);
-  }
-  if (annotations.length == 0) {
-    tree.setMessage("No annotations.");
+    console.timeEnd(cat);
   }
   console.timeEnd("Load");
 }
 
 function saveAnnotations() {
   console.time("Save");
+  var imgs = [];
   var anns = [];
+  var cats = [];
   for (var i = 0; i < annotations.length; i++) {
     var name = annotations[i].name;
     var rle = annotations[i].getRLE();
+    var bbox = annotations[i].getBbox();
 
     var ann = {};
-    ann["category_name"] = name;
     ann["segmentation"] = rle;
+    ann["bbox"] = bbox;
+    ann["category_name"] = name;
     anns.push(ann);
   }
+  var data = {"images": imgs, "annotations": anns, "categories": cats};
+  var coco = new COCO(data);
   console.timeEnd("Save");
-  return anns;
+  return coco;
 }
 
 function sortAnnotations() {

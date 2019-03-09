@@ -1,0 +1,180 @@
+body {
+  padding: 50px;
+}
+
+a {
+  color: #00B7FF;
+}
+
+#questionDiv {
+    width: 1000px;
+    height: 30px;
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+    font-size:25px;
+    font-weight:bold;
+    font: "Lucida Grande", Helvetica, Arial, sans-serif;
+}
+#submitButton {
+  display: inline-block;
+}
+
+#clarificationDiv {
+  width: 822px;
+  margin-top: 15px;
+  margin-left: auto;
+  margin-right: auto;
+  z-index: 10px;
+  text-align: left; 
+  display:none;
+}
+
+#categoryDiv {
+  width: 822px;
+  height:30px;
+  margin-top: 15px;
+  margin-left: auto;
+  margin-right: auto;
+  font-size: 15px;
+  text-align: center;
+}
+
+#yesnoDiv {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+
+  width: 1000px;
+  height: 300px;
+  display: table;
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
+  font-size: 13pt;
+}
+
+canvas {
+  background: black;
+  border: solid lightgray;
+}
+
+.holderDiv {
+  visibility: hidden;
+}
+
+.target{
+  color: #0D0;
+}
+.target canvas{
+  border: 3px solid #0D0;
+}
+.target p:first-child{
+  display: none;
+}
+.target p:nth-child(2){
+  display: inline;
+}
+.noise{
+  color: #F00;
+}
+.noise canvas{
+  border: 3px solid #F00;
+}
+.noise p:first-child{
+  display: inline;
+}
+.noise p:nth-child(2){
+  display: none;
+}
+
+.focus { 
+  display: table-cell;
+    vertical-align: middle; 
+    padding-left: 12px;   
+    padding-right: 12px;    
+    padding-top: 0px;   
+    padding-bottom: 0px;    
+  width: 500px; height: 100%;
+} 
+.focus1{ 
+  display: table-cell;
+    vertical-align: middle; 
+    padding: 6px;   
+  width: 150px; height: 100%;
+} 
+.focus2{ 
+  display: table-cell;
+    vertical-align: middle; 
+    padding: 4px;   
+  width: 50px;  height: 100%; 
+} 
+.focus3{ 
+  display: table-cell;
+    vertical-align: middle; 
+    padding: 2px;   
+  width: 25px;  height: 100%; 
+} 
+
+.focus canvas{ 
+  max-width: 600px;
+  max-height: 400px;
+  min-width: 300px;
+  min-height: 300px;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 0px;   
+  border-width: 12px;
+} 
+
+.focus1 canvas{ 
+  max-width: 150px;
+  max-height: 150px;
+  min-width: 50px;
+  min-height: 50px;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 0px;
+  border-width: 6px; 
+} 
+
+.focus2 canvas{ 
+  max-width: 42px;
+  max-height: 42px;
+  min-width: 20px;
+  min-height: 20px;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 0px;
+  border-width: 4px; 
+} 
+.focus3 canvas{ 
+  max-width: 21px;
+  max-height: 21px;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 0px;
+  border-width: 2px; 
+} 
+
+.focus p{ 
+  display: none;
+  font-weight: bolder; font-size: 28pt; 
+}
+.focus1 p{ 
+  display: none;
+  font-weight: normal; font-size: 16pt; 
+}
+.focus2 p{ 
+  display: none;    
+  font-weight: normal; font-size: 9pt; 
+}
+.focus3 p{ 
+  display: none;  
+  font-weight: normal; font-size: 6pt; 
+}

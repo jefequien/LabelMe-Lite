@@ -3,11 +3,15 @@ var router = express.Router();
 
 /* GET home page. */
 router.get('/tool', function(req, res, next) {
-  res.render('tool', { title: 'LabelMe-Lite' });
+  res.render('full', { title: 'LabelMe-Lite' });
 });
 
 router.get('/amt', function(req, res, next) {
-  res.render('amt', { title: 'Express' });
+  res.render('amt', { title: 'AMT' });
+});
+
+router.get('/yesno', function(req, res, next) {
+  res.render('yesno', { title: 'YesNo Interface' });
 });
 
 router.get('/', function(req, res, next) {

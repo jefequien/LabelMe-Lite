@@ -27,15 +27,18 @@
     <script src="components/fancytree/jquery.fancytree-all.min.js"></script>
 
     <!-- Custom CSS -->
-    <link href="stylesheets/button.css" rel="stylesheet">
+    <link href="stylesheets/buttons.css" rel="stylesheet">
     <link href="stylesheets/labelmelite.css" rel="stylesheet">
+    <link href="stylesheets/yesno.css" rel="stylesheet">
     <link href="stylesheets/amt.css" rel="stylesheet">
-
 
 </head>
 <body>
 
-  <div class="main">
+
+  <!-- TOOL -->
+  <div id="toolDiv">
+
     <nav class="navbar">
       <a class="navbar-brand" href="/">LabelMe</a>
       <!-- Top left buttons -->
@@ -46,7 +49,6 @@
         <button type="button" class="btn btn-small" id="increaseBrightness">
           <i class="fa material-icons">brightness_4</i>
         </button>
-        <button type="button" class="btn btn-small" id="color"><i class="fa material-icons">color_lens</i></button>
         <button type="button" class="btn btn-small" id="hide"><i class="fa fa-eye-slash"></i></button>
         <div class="btn btn-slider">
           <input type="range" min="3" max="15" step="0.5" id="toolSlider">
@@ -64,7 +66,7 @@
 
     <canvas id="toolCanvas" resize></canvas>
 
-    <div class="rightbar sidebar">
+    <div id="rightbar" class="sidebar">
       <div class="panel-heading">
         <h3 class="panel-title">Annotations</h3>
       </div>
@@ -73,7 +75,7 @@
       </div>
     </div>
 
-    <div class="bottombar sidebar">
+    <div id="bottombar" class="sidebar">
       <div class="left">
         <button type="button" class="btn" id="prevImage"><i class="fa fa-large fa-arrow-circle-left"></i></button>
       </div>
@@ -85,18 +87,33 @@
         <button type="button" class="btn" id="nextImage"><i class="fa fa-large fa-arrow-circle-right"></i></button>
       </div>
     </div>
+
+  </div>
+
+
+
+  <div id="yesnoDiv">
+      <div id="holderDiv-3" class="holderDiv focus3"><p>No</p><p>Yes</p><canvas></canvas></div>
+      <div id="holderDiv-2" class="holderDiv focus2"><p>No</p><p>Yes</p><canvas></canvas></div>
+      <div id="holderDiv-1" class="holderDiv focus1"><p>No</p><p>Yes</p><canvas></canvas></div>
+      <div id="holderDiv0" class="holderDiv focus"><p>No</p><p>Yes</p><canvas height="100" width="100"></canvas></div> 
+      <div id="holderDiv1" class="holderDiv focus1"><p>No</p><p>Yes</p><canvas></canvas></div>
+      <div id="holderDiv2" class="holderDiv focus2"><p>No</p><p>Yes</p><canvas></canvas></div>
+      <div id="holderDiv3" class="holderDiv focus3"><p>No</p><p>Yes</p><canvas></canvas></div>
   </div>
   
   <!-- Fancy tools 
   <script type="text/javascript" src="components/numjs/dist/numjs.min.js"></script>
   <script type="text/javascript" src="components/google-closure-library-compiler/compiled.js"></script>-->
 
-  <!-- Custom Javascript -->
-  <script type="text/javascript" src="javascripts/opencv.js"></script>
-  <script type="text/javascript" src="javascripts/rle.js"></script>
-  <script type="text/javascript" src="javascripts/coco.js"></script>
-  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/paper.js/0.12.0/paper-full.min.js"></script>
+  <!-- Util Javascripts -->
+  <script type="text/javascript" src="javascripts/utils/coco.js"></script>
+  <script type="text/javascript" src="javascripts/utils/opencv.js"></script>
+  <script type="text/javascript" src="javascripts/utils/rle.js"></script>
+  <script type="text/javascript" src="javascripts/utils/endpoints.js"></script>
   
+  <!-- Tool Javascripts -->
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/paper.js/0.12.0/paper-full.min.js"></script>
   <script type="text/paperscript" src="javascripts/tool/selectTool.js" canvas="toolCanvas"></script>
   <script type="text/paperscript" src="javascripts/tool/brushTool.js" canvas="toolCanvas"></script>
   <script type="text/paperscript" src="javascripts/tool/editTool.js" canvas="toolCanvas"></script>
@@ -106,9 +123,10 @@
   <script type="text/paperscript" src="javascripts/tool/tree.js" canvas="toolCanvas"></script>
   <script type="text/paperscript" src="javascripts/tool/keys.js" canvas="toolCanvas"></script>
 
-  <script type="text/javascript" src="javascripts/endpoints.js"></script>
-  <script type="text/javascript" src="javascripts/buttons_amt.js"></script>
-  <script type="text/javascript" src="javascripts/main_amt.js"></script>
+  <!-- Main Javascripts -->
+  <script type="text/javascript" src="javascripts/amt/buttons.js"></script>
+  <script type="text/javascript" src="javascripts/amt/yesno.js"></script>
+  <script type="text/javascript" src="javascripts/amt/main.js"></script>
 
 </body>
 
