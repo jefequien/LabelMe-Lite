@@ -36,7 +36,9 @@ function loadTool(coco) {
         anns[i]["category_name"] = cat["name"];
     }
 
-    var image_url = getImageURL(params);
+    var img_params = {"dataset": params.dataset, "file_name": img.file_name}
+    var image_url = getImageURL(img_params);
+    console.log(params);
     loadBackground(image_url, function() {
         background.focus();
     });
