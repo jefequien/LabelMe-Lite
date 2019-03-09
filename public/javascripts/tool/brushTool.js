@@ -15,6 +15,10 @@ brushTool.onMouseMove = function(event) {
     }
   }
 
+  if (this.annotation && ! this.annotation.rasterinvUpToDate) {
+    this.annotation.updateRaster();
+  }
+
   // Set this.mode
   this.mode = "subtract";
   if (this.annotation && this.annotation.containsPoint(this.curser.position)) {

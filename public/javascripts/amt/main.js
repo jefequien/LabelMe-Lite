@@ -2,7 +2,7 @@
 var params = parseURLParams();
 if (Object.keys(params).length == 0) {
     // Default params
-    params.bundle_id = "0037ff2455074da18282bab1c96410ed";
+    params.bundle_id = "033367d2221f4f9f961995e18c979282";
     setURLParams(params);
 }
 

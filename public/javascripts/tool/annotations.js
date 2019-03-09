@@ -76,6 +76,7 @@ Annotation.prototype.updateRaster = function(boundary) {
     var imageData = boundaryinv_raster.getImageData();
     this.rasterinv.setImageData(imageData, boundaryinv_raster.bounds.topLeft);
   }
+  this.rasterinvUpToDate = true;
 }
 Annotation.prototype.delete = function(noConfirm) {
   var confirmed = true;
@@ -399,7 +400,6 @@ function loadAnnotations(coco) {
     var annotation = new Annotation(cat);
     annotation.loadRLE(rle);
     annotation.updateBoundary();
-    annotation.updateRaster();
     console.timeEnd(cat);
   }
   console.timeEnd("Load");
