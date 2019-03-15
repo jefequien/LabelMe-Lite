@@ -8,27 +8,47 @@
     <meta name="author" content="Jeffrey Hu">
     <title>YesNoInterface</title>
 
+    <link href="stylesheets/question.css" rel="stylesheet">
     <link href="stylesheets/yesno.css" rel="stylesheet">
 
 </head>
 <body>
+
     <div id="questionDiv">
-        <button onclick="toggleClarification(); " type="button">Instruction</button>
-        <span> Does this annotation have IOU > 0.7? </span>
-        <input type="submit" id="submitButton" value="Submit (? images left)" disabled onclick="return confirmSubmit()">
-    </div>
- 
-    <div id="clarificationDiv">
-        <dl>
-            <dt>Todo: </dt>
-                <dd>- one</dd>
-                <dd>- two</dd>
-                <dd>- three</dd>
-        </ul>
+        <div>
+            <button onclick="toggleInstruction(); " type="button">Instruction</button>
+            <b>Is this a good annotation of <span id="category">category</span>?</b>
+            <input type="submit" id="submitButton" value="Submit (? images left)" disabled onclick="return confirmSubmit()">
+        </div>
+        <div id="definitionDiv">
+            <b>Definition: </b><span id="definition">None</span>
+        </div>
     </div>
 
-    <div id="categoryDiv">
-        <b>Category: </b><span>None</span>
+    <div id="instructionDiv">
+        <h3>Task</h3>
+        <ul>
+            <p>For each of the <b id="imageCount" style="color: #00F;">N</b> images, answer yes or no to the above question. Only answer <b style="color: #0B0;">Yes</b> to <b style="color: #00F;">real photos</b>. Always answer <b style="color: #F00;">No</b> to  <b style="color: #F00;">cartoon</b>, <b style="color: #F00;">drawing</b>, <b style="color: #F00;">CG rendering</b>, or real photos with a <b style="color: #F00;">large text overlay</b> on the photo. Here are some examples:</p>
+        </ul>
+
+        <div id="exampleDiv" style="text-align: center; margin-top: 0;">
+        </div>
+
+        <h3>Examples</h3>
+
+        <h3>Usage</h3>
+        <ul>
+            <li>Keep the right arrow [&rarr;] key pressed down to move continuously from an image to the next. Release the key when you see an image for which the answer should be YES.</li>
+            <li>Use [space] key to toggle the answer to YES. The default answer is NO.</li>
+            <li>Use the left arrow [&larr;] key to go back to the previously seen images, if you skipped an image accidentaly.</li>
+        </ul>
+        <h3>Submit</h3>
+        <ul>
+            <li>After you answer all the images, the [submit] button will be enabled.</li>
+            <li><b style="color: #00F;">If your accuracy is too low, it won't allow you to submit. You will have to improve your answers first.</b></li>
+        </ul>   
+
+        <p style="font-size: 8pt; color: #999;">By making judgments about these images, you are participating in a study being performed by XXX. If you have questions about this research, please contact XXX at XXX. Your participation in this research is voluntary. You may decline further participation, at any time, without adverse consequences. Your anonymity is assured; the researchers who have requested your participation will not receive any personal information about you.</p>
     </div>
 
     <div id="yesnoDiv">
@@ -54,6 +74,7 @@
     <script type="text/javascript" src="javascripts/utils/endpoints.js"></script>
 
     <!-- Main Javascripts -->
+    <script src="javascripts/amt/question.js"></script>
     <script src="javascripts/amt/yesno.js"></script>
     <script src="javascripts/amt/main_yesno.js"></script>
 </body>

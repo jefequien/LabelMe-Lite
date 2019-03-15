@@ -1,0 +1,38 @@
+
+
+#questionDiv {
+    width: 100%;
+    height: 30px;
+    padding: 50px;
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+
+    font-size: 30px;
+    font: "Lucida Grande", Helvetica, Arial, sans-serif;
+}
+
+#definitionDiv {
+  height: 30px;
+  margin-top: 15px;
+  margin-left: auto;
+  margin-right: auto;
+
+  font-size: 20px;
+  text-align: center;
+}
+
+#submitButton {
+  display: inline-block;
+}
+
+#instructionDiv {
+  width: 60%;
+  margin-top: 15px;
+  margin-left: auto;
+  margin-right: auto;
+
+  z-index: 10px;
+  text-align: left; 
+  display: none;
+}

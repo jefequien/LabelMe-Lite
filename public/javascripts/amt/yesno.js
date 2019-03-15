@@ -27,12 +27,6 @@ function loadYNTool(coco, current_num, hideAnswer, hideOri) {
         // Load img
         loadImage(img, ann, holderDiv, hideOri);
 
-        // Load cat
-        if (ann_num == current_num) {
-            var cat = coco.cats[ann["category_id"]];
-            $('#categoryDiv span').text(cat["name"]);
-        }
-
         // Load style
         if (ann["answer"] == true) {
             $(holderDiv).toggleClass("target", true);
@@ -76,8 +70,7 @@ function loadImage(img, ann, holderDiv, hideOri) {
     var y = yc - s/2;
 
     // Load img
-    var img_params = {"dataset": "places", "file_name": img.file_name}
-    var img_url = getImageURL(img_params);
+    var img_url = getImageURL("places", img);
     var image = new Image();
     image.crossOrigin = "Anonymous";
     image.src = img_url;

@@ -12,34 +12,18 @@ window.onload = function() {
     selectTool.switch();
     getAnnotations(params, function(res) {
         var coco = new COCO(res);
-        loadTool(coco);
+        loadInterface(coco);
     });
 }
 
-function loadTool(coco) {
-    clearBackground();
-    clearAnnotations();
-    selectTool.switch();
-    if ( ! coco.dataset) {
-        return;
-    }
-    
-    var img = coco.dataset.images[0];
-    var img_params = {"dataset": params.dataset, "file_name": img.file_name}
-    var image_url = getImageURL(img_params);
-    loadBackground(image_url, function() {
-        background.focus();
-    });
-    loadAnnotations(coco);
-
+function loadInterface(coco) {
+    loadTool(coco, params);
 
     // Update params
+    setURLParams(params);
     $('#datasetName').text(params.dataset);
     $('#annotationSource').text(params.ann_source);
     $('#imageFileName').text(params.file_name);
-    params.file_name = img.file_name || "";
-    params.img_id = img.id;
-    setURLParams(params);
 }
 
 function nextImage() {

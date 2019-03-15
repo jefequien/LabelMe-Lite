@@ -12,23 +12,28 @@ var current_num = 0;
 window.onload = function() {
     getBundle(params, function(res) {
         coco = new COCO(res);
-        loadYNTool(coco, current_num);
-        updateSubmitButton();
+        loadInterface(coco, current_num);
     });
+}
+
+function loadInterface(coco, current_num) {
+    loadQuestion(coco, current_num);
+    loadYNTool(coco, current_num);
+    updateSubmitButton();
 }
 
 function nextImage() {
     var anns = coco.dataset.annotations;
     if (current_num < anns.length - 1) {
         current_num += 1;
-        loadYNTool(coco, current_num);
+        loadInterface(coco, current_num);
         updateSubmitButton();
     }
 }
 function prevImage() {
     if (current_num > 0) {
         current_num -= 1;
-        loadYNTool(coco, current_num);
+        loadInterface(coco, current_num);
         updateSubmitButton();
     }
 }
@@ -61,8 +66,9 @@ function toggleAnswer() {
 function confirmSubmit() {
     confirm(coco.dataset.annotations);
 }
-function toggleClarification() {
-    $("#clarificationDiv").toggle()
+function toggleInstruction() {
+    $("#instructionDiv").toggle();
+    $("#yesnoDiv").toggle();
 }
 
 
