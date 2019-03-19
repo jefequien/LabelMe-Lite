@@ -5,7 +5,7 @@ function Dictionary(dataset) {
     this.dataset = dataset;
     this.entries = {};
 
-    this.wordToEntry = {};
+    this.wordToEntries = {};
     this.adeToEntry = {};
 
     if (dataset) {
@@ -28,7 +28,11 @@ Dictionary.prototype.createIndex = function () {
         var entry = this.entries[id];
         var keywords = entry.lemma.split(",").map(item => item.trim());
         for (var i = 0; i < keywords.length; i++) {
-            this.wordToEntry[keywords[i]] = entry;
+            if (keywords[i] in this.wordToEntries) {
+                this.wordToEntries[keywords[i]].push(entry);
+            } else {
+                this.wordToEntries[keywords[i]] = [entry];
+            }
         }
     }
 

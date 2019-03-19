@@ -11,11 +11,11 @@ router.get('/annotations', function(req, res) {
     var annSource = req.query.ann_source || "";
     var imgIds = [];
     var catIds = [];
-    if (req.query.img_id) {
-        imgIds = req.query.img_id.split(',').map(Number);;
+    if (req.query.img_id && req.query.img_id != 'undefined') {
+        imgIds = req.query.img_id.split(',').map(Number);
     }
-    if (req.query.cat_id) {
-        catIds = req.query.cat_id.split(',').map(Number);;
+    if (req.query.cat_id && req.query.cat_id != 'undefined') {
+        catIds = req.query.cat_id.split(',').map(Number);
     }
 
     // Get COCO

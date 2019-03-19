@@ -11,6 +11,7 @@ var current_num = 0;
 
 window.onload = function() {
     getBundle(params, function(res) {
+        console.log("Bundle:", res);
         coco = new COCO(res);
         loadInterface(coco, current_num);
     });

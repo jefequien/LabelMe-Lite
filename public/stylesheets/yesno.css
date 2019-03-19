@@ -20,6 +20,13 @@ canvas {
 .holderDiv {
   text-align: center;
 }
+.holderDiv b {
+  color: #00F;
+  font-size: 14pt;
+
+  position:absolute;
+  transform: translate(100px, 10px);
+}
 
 .target{
   color: #0D0;

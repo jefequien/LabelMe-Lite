@@ -11,12 +11,12 @@ router.get('/definitions', function(req, res) {
     var keyword = req.query.keyword || "";
     keyword = keyword.toLowerCase().replace(" ", "_");
 
-    var entry = dictionary.wordToEntry[keyword];
-    if (entry == null) {
+    var entries = dictionary.wordToEntries[keyword];
+    if (entries == null) {
         res.status(404).send('Keyword not found: ' + keyword);
         return;
     }
-    res.json(entry);
+    res.json(entries);
 });
 
 router.get('/amt_browser', function(req, res) {

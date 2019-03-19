@@ -16,23 +16,28 @@ function loadInstructions(coco, current_num) {
         keyword = cat["name"];
 
         getDefinition(keyword, function(res) {
-            updateCategory(res);
+            console.log("Definitions: ", res);
+            if (res) {
+                entry = res[0];
+                updateCategory(entry);
+            }
         });
     }
 }
 
 function updateCategory(entry) {
     if (entry == null) {
+        // No definition
         $('#definition').text("None");
         return;
+    } else {
+        $('#definition').text(entry.definition);
     }
 
-    // Update definition
-    $('#definition').text(entry.definition);
-
-    // Update examples
+    // Get examples
     var query = {"dataset": "ade20k", "ann_source": "iou_examples", "cat_id": entry.ade_ids};
     getAnnotations(query, function(res) {
+        console.log("Definition examples: ", res);
         var coco_examples = new COCO(res);
         var anns = coco_examples.dataset.annotations;
 
@@ -44,12 +49,14 @@ function updateCategory(entry) {
                 var holderDiv = "#exampleYes" + yesCounter.toString();
                 var img = coco_examples.imgs[ann["image_id"]];
                 loadImageIntoHolderDiv(img, ann, holderDiv);
+                $(holderDiv + " b").html("IoU=" + ann.iou.toFixed(3));
                 yesCounter += 1;
             }
             if (ann.iou < 0.6 && noCounter < 3) {
                 var holderDiv = "#exampleNo" + noCounter.toString();
                 var img = coco_examples.imgs[ann["image_id"]];
                 loadImageIntoHolderDiv(img, ann, holderDiv);
+                $(holderDiv + " b").html("IoU=" + ann.iou.toFixed(3));
                 noCounter += 1;
             }
         }
