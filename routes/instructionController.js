@@ -19,6 +19,38 @@ router.get('/definitions', function(req, res) {
     res.json(entry);
 });
 
+router.get('/amt_browser', function(req, res) {
+    var bundle_dir = "./data/bundles";
+    var prefix = "vision01.csail.mit.edu:3000/amt?bundle_id=";
+
+    fs.readdir(bundle_dir, function(err, items) {
+        var html = "";
+        for (var i = 0; i < items.length; i++) {
+            var bundle_id = items[i].replace(".json", "");
+            var link = prefix + bundle_id;
+            var href = "<a href=\"" + link + "\">" + link + "</a> <br>";
+            html += href;
+        }
+        res.send(html);
+    });
+});
+
+router.get('/yesno_browser', function(req, res) {
+    var bundle_dir = "./data/bundles";
+    var prefix = "vision01.csail.mit.edu:3000/yesno?bundle_id=";
+
+    fs.readdir(bundle_dir, function(err, items) {
+        var html = "";
+        for (var i = 0; i < items.length; i++) {
+            var bundle_id = items[i].replace(".json", "");
+            var link = prefix + bundle_id;
+            var href = "<a href=\"" + link + "\">" + link + "</a> <br>";
+            html += href;
+        }
+        res.send(html);
+    });
+});
+
 
 function loadDictionary(info_fn) {
     var dictionary = {};
