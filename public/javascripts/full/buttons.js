@@ -79,6 +79,7 @@ buttons["redo"].onclick = function() {
 buttons["delete"] = document.getElementById('delete');
 buttons["delete"].title = "Delete: 'backspace'";
 buttons["delete"].onclick = function() {
+    // confirmed = confirm('Are you sure you want to delete the annotation of ' + this.name +'?');
     if (paper.tool.annotation) {
         var deleted = paper.tool.annotation.delete();
         if (deleted) {

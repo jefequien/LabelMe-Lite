@@ -5,6 +5,7 @@ if (Object.keys(params).length == 0) {
     // Default params
     params.dataset = "demo";
     params.ann_source = "demo_anns";
+    params.img_id = 1;
     setURLParams(params);
 }
 
@@ -19,16 +20,13 @@ window.onload = function() {
 function loadInterface(coco) {
     loadTool(coco, params);
 
-    // Update params
-    setURLParams(params);
     $('#datasetName').text(params.dataset);
     $('#annotationSource').text(params.ann_source);
-    $('#imageFileName').text(params.file_name);
+    $('#imageFileName').text(coco.dataset.images[0].file_name);
 }
 
 function nextImage() {
     params.img_id = parseInt(params.img_id) + 1;
-    params.file_name = "";
     setURLParams(params);
     getAnnotations(params, function(res) {
         var coco = new COCO(res);
@@ -38,7 +36,6 @@ function nextImage() {
 function prevImage() {
     params.img_id = parseInt(params.img_id) - 1;
     params.img_id = Math.max(params.img_id, 1);
-    params.file_name = "";
     setURLParams(params);
     getAnnotations(params, function(res) {
         var coco = new COCO(res);

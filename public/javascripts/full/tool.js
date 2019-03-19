@@ -1,6 +1,6 @@
 
 
-function loadTool(coco, params) {
+function loadTool(coco) {
     clearBackground();
     clearAnnotations();
     selectTool.switch();
@@ -9,14 +9,10 @@ function loadTool(coco, params) {
     }
     
     var img = coco.dataset.images[0];
-
-    var image_url = getImageURL(params.dataset, img);
+    
+    var image_url = getImageURL(img);
     loadBackground(image_url, function() {
         background.focus();
     });
     loadAnnotations(coco);
-
-    // Update url params
-    params.file_name = img.file_name || "";
-    params.img_id = img.id;
 }

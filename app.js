@@ -7,6 +7,7 @@ var cors = require('cors');
 
 var index = require('./routes/index');
 var dataController = require('./routes/dataController');
+var instructionController = require('./routes/instructionController');
 
 var app = express();
 
@@ -24,6 +25,7 @@ app.use(cors());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/data', express.static(path.join(__dirname, 'data')));
 app.use('/data', dataController);
+app.use('/data', instructionController);
 app.use('/', index);
 
 // catch 404 and forward to error handler

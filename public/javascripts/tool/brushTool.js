@@ -16,7 +16,7 @@ brushTool.onMouseMove = function(event) {
   }
 
   if (this.annotation && ! this.annotation.rasterinvUpToDate) {
-    this.annotation.updateRaster();
+    this.annotation.updateRasterInv();
   }
 
   // Set this.mode

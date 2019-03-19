@@ -9,8 +9,14 @@ var DATA_DIR = path.join(__dirname, "../data");
 router.get('/annotations', function(req, res) {
     var datasetName = req.query.dataset || "";
     var annSource = req.query.ann_source || "";
-    var fileName = req.query.file_name || "";
-    var imgId = req.query.img_id || 1;
+    var imgIds = [];
+    var catIds = [];
+    if (req.query.img_id) {
+        imgIds = req.query.img_id.split(',').map(Number);;
+    }
+    if (req.query.cat_id) {
+        catIds = req.query.cat_id.split(',').map(Number);;
+    }
 
     // Get COCO
     var datasetDir = path.join(DATA_DIR, datasetName);
@@ -21,18 +27,11 @@ router.get('/annotations', function(req, res) {
         return;
     }
 
-    imgId = coco.fnToImgId[fileName] || imgId;
-    var img = coco.imgs[imgId];
-    if (img == null) {
-        res.status(404).send('Image annotation not found');
-        return;
-    }
-
-    // Get annotations
-    var annIds = coco.getAnnIds([imgId]);
+    var annIds = coco.getAnnIds(imgIds, catIds);
     var anns = coco.loadAnns(annIds);
-    var imgs = [img];
-    var cats = coco.dataset["categories"];
+
+    var imgs = imgIds.length != 0 ? coco.loadImgs(imgIds) : coco.dataset.images;
+    var cats = catIds.length != 0 ? coco.loadCats(catIds) : coco.dataset.categories;
 
     var response = {};
     response["images"] = imgs;

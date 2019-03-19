@@ -2,12 +2,11 @@
 
 #yesnoDiv {
   position: absolute;
+  height: 500px;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
 
-  width: 1000px;
-  height: 300px;
   display: table;
   text-align: center;
   font-size: 13pt;
@@ -19,7 +18,7 @@ canvas {
 }
 
 .holderDiv {
-  visibility: hidden;
+  text-align: center;
 }
 
 .target{
@@ -50,11 +49,17 @@ canvas {
 .focus { 
   display: table-cell;
     vertical-align: middle; 
-    padding-left: 12px;   
-    padding-right: 12px;    
-    padding-top: 0px;   
-    padding-bottom: 0px;    
+    padding-left: 12px;
+    padding-right: 12px;
+    padding-top: 0px;
+    padding-bottom: 0px;
   width: 500px; height: 100%;
+} 
+.focus0{ 
+  display: table-cell;
+    vertical-align: middle; 
+    padding: 9px;   
+  width: 400px; height: 100%;
 } 
 .focus1{ 
   display: table-cell;
@@ -75,35 +80,32 @@ canvas {
   width: 25px;  height: 100%; 
 } 
 
-.focus canvas{ 
-  max-width: 600px;
-  max-height: 400px;
-  min-width: 300px;
-  min-height: 300px;
+.focus canvas{
+  height: 350px;
   display: block;
   margin-left: auto;
   margin-right: auto;
   margin-bottom: 0px;   
   border-width: 12px;
-} 
-
+}
+.focus0 canvas{
+  height: 200px;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 0px;
+  border-width: 9px; 
+}
 .focus1 canvas{ 
-  max-width: 150px;
-  max-height: 150px;
-  min-width: 50px;
-  min-height: 50px;
+  width: 150px;
   display: block;
   margin-left: auto;
   margin-right: auto;
   margin-bottom: 0px;
   border-width: 6px; 
-} 
-
-.focus2 canvas{ 
-  max-width: 42px;
-  max-height: 42px;
-  min-width: 20px;
-  min-height: 20px;
+}
+.focus2 canvas{
+  width: 60px;
   display: block;
   margin-left: auto;
   margin-right: auto;
@@ -123,6 +125,10 @@ canvas {
 .focus p{ 
   display: none;
   font-weight: bolder; font-size: 28pt; 
+}
+.focus0 p{ 
+  display: none;
+  font-weight: normal; font-size: 20pt; 
 }
 .focus1 p{ 
   display: none;

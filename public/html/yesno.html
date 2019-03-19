@@ -17,24 +17,37 @@
     <div id="questionDiv">
         <div>
             <button onclick="toggleInstruction(); " type="button">Instruction</button>
-            <b>Is this a good annotation of <span id="category">category</span>?</b>
+            <span>Is this a good annotation of <b id="category">category</b>?</span>
             <input type="submit" id="submitButton" value="Submit (? images left)" disabled onclick="return confirmSubmit()">
         </div>
         <div id="definitionDiv">
-            <b>Definition: </b><span id="definition">None</span>
+            <b>Definition: </b><span id="definition">Loading...</span>
         </div>
     </div>
 
     <div id="instructionDiv">
         <h3>Task</h3>
         <ul>
-            <p>For each of the <b id="imageCount" style="color: #00F;">N</b> images, answer yes or no to the above question. Only answer <b style="color: #0B0;">Yes</b> to <b style="color: #00F;">real photos</b>. Always answer <b style="color: #F00;">No</b> to  <b style="color: #F00;">cartoon</b>, <b style="color: #F00;">drawing</b>, <b style="color: #F00;">CG rendering</b>, or real photos with a <b style="color: #F00;">large text overlay</b> on the photo. Here are some examples:</p>
+            <p>For each of the <b id="imageCount" style="color: #00F;">N</b> images, answer yes or no to the above question. Only answer <b style="color: #0B0;">Yes</b> to images with annotations that have intersection over union <b style="color: #0B0;">IOU > 0.8</b>. Always answer <b style="color: #F00;">No</b> to annotations with <b style="color: #F00;">IOU < 0.8</b>. Intersection over union means </p>
         </ul>
 
-        <div id="exampleDiv" style="text-align: center; margin-top: 0;">
+        <h3>Examples</h3>
+
+        <div id="exampleDiv">
+            <div>
+                <div id="exampleYes0" class="holderDiv focus0 target"><p>No</p><p>Yes</p><canvas></canvas></div>
+                <div id="exampleNo0" class="holderDiv focus0 noise"><p>No</p><p>Yes</p><canvas></canvas></div>
+            </div>
+            <div>
+                <div id="exampleYes1" class="holderDiv focus0 target"><p>No</p><p>Yes</p><canvas></canvas></div>
+                <div id="exampleNo1" class="holderDiv focus0 noise"><p>No</p><p>Yes</p><canvas></canvas></div>
+            </div>
+            <div>
+                <div id="exampleYes2" class="holderDiv focus0 target"><p>No</p><p>Yes</p><canvas></canvas></div>
+                <div id="exampleNo2" class="holderDiv focus0 noise"><p>No</p><p>Yes</p><canvas></canvas></div>
+            </div>
         </div>
 
-        <h3>Examples</h3>
 
         <h3>Usage</h3>
         <ul>
@@ -74,7 +87,7 @@
     <script type="text/javascript" src="javascripts/utils/endpoints.js"></script>
 
     <!-- Main Javascripts -->
-    <script src="javascripts/amt/question.js"></script>
+    <script src="javascripts/amt/instructions.js"></script>
     <script src="javascripts/amt/yesno.js"></script>
     <script src="javascripts/amt/main_yesno.js"></script>
 </body>

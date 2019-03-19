@@ -13,7 +13,12 @@ function getBundle(params, callback) {
     var endpoint = base_url + "/data/bundles/" + params.bundle_id + ".json";
     get_async(endpoint, callback);
 }
-function getImageURL(dataset, img) {
+function getImageURL(img) {
+  var dataset = params.dataset;
+  if (dataset == null) {
+    dataset = inferImageDataset(img);
+  }
+
   var source_dir = base_url + "/data";
   if (dataset == "ade20k" || dataset == "coco" || dataset == "places") {
       // source_dir = "http://places.csail.mit.edu/scaleplaces/datasets";
@@ -22,6 +27,24 @@ function getImageURL(dataset, img) {
 
   var endpoint = source_dir + "/" + dataset + "/images/" + img.file_name;
   return endpoint;
+}
+function inferImageDataset(img) {
+  if (img.file_name.includes("ADE")) {
+    return "ade20k";
+  }
+  var path_split = img.file_name.split("/");
+  if (path_split.length == 3) {
+    return "places";
+  }
+  return "coco";
+}
+function getDefinition(keyword, callback) {
+  var endpoint = base_url + "/data/definitions?" + buildQuery({"keyword": keyword});
+  get_async(endpoint, callback);
+}
+function getExamples(keyword, callback) {
+    var endpoint = base_url + "/data/ade20k/instances_val.json";
+    get_async(endpoint, callback);
 }
 
 //

@@ -2,7 +2,7 @@
 var params = parseURLParams();
 if (Object.keys(params).length == 0) {
     // Default params
-    params.bundle_id = "033367d2221f4f9f961995e18c979282";
+    params.bundle_id = "0202ba55407e420fa40964c2812edfbb";
     setURLParams(params);
 }
 
@@ -17,9 +17,16 @@ window.onload = function() {
 }
 
 function loadInterface(coco, current_num) {
-    loadQuestion(coco, current_num);
+    setDefaultAnswer(coco, current_num);
+    loadInstructions(coco, current_num);
     loadYNTool(coco, current_num);
-    updateSubmitButton();
+}
+
+function setDefaultAnswer(coco, current_num) {
+    var ann = coco.dataset.annotations[current_num];
+    if (ann["answer"] == null) {
+        ann["answer"] = false;
+    }
 }
 
 function nextImage() {
@@ -27,40 +34,21 @@ function nextImage() {
     if (current_num < anns.length - 1) {
         current_num += 1;
         loadInterface(coco, current_num);
-        updateSubmitButton();
     }
 }
 function prevImage() {
     if (current_num > 0) {
         current_num -= 1;
         loadInterface(coco, current_num);
-        updateSubmitButton();
-    }
-}
-
-function updateSubmitButton() {
-    var anns = coco.dataset.annotations;
-    var images_left = 0;
-    for (var i = 0; i < anns.length; i++) {
-        if (anns[i]["answer"] == null) {
-            images_left += 1;
-        }
-    }
-
-    $("#submitButton").attr('value', "Submit (" + images_left + " images left)"); 
-    $("#submitButton").prop('disabled', true); 
-
-    if (images_left == 0) {
-        $("#submitButton").attr('value', "Submit"); 
-        $("#submitButton").prop('disabled', false); 
     }
 }
 
 function toggleAnswer() {
-    var anns = coco.dataset.annotations;
-    var ann = anns[current_num];
-    ann["answer"] = !(ann["answer"]);
-    loadYNTool(coco, current_num);
+    var ann = coco.dataset.annotations[current_num];
+    if (ann) {
+        ann["answer"] = !(ann["answer"]);
+        loadYNTool(coco, current_num);
+    }
 }
 
 function confirmSubmit() {

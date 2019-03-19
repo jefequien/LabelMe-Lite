@@ -2,7 +2,7 @@
 var params = parseURLParams();
 if (Object.keys(params).length == 0) {
     // Default params
-    params.bundle_id = "033367d2221f4f9f961995e18c979282";
+    params.bundle_id = "0202ba55407e420fa40964c2812edfbb";
     setURLParams(params);
 }
 
@@ -18,13 +18,8 @@ window.onload = function() {
 }
 
 function loadInterface(coco, current_num) {
-    loadYNTool(coco, current_num, true, true);
+    loadYNTool(coco, current_num, true);
     loadTool(coco, current_num);
-
-    // Interface
-    $('#category').text(cat["name"]);
-    $('#current').text(current_num + 1);
-    $('#total').text(coco.dataset.annotations.length);
 }
 
 function nextImage() {

@@ -3,30 +3,39 @@
  */
 
 function Background() {
-  this.setFocusRect();
+  this.setViewParameters();
   this.addMouseListeners();
 
-  this.focusMaxScale = 6;
-  this.maxScale = 10;
+  this.maxScale = 12;
   this.minScale = 0.75;
+  this.focusMaxScale = 5;
 
-  this.image = new Path.Rectangle(this.focusRect).rasterize(paper.view.resolution / window.devicePixelRatio);
+  this.image = new Path();
   this.filter = new Path();
-  this.resetFilter();
+
+  var raster = new Path.Rectangle(this.viewRect).rasterize(paper.view.resolution / window.devicePixelRatio);
+  this.setImage(raster);
 }
-Background.prototype.setFocusRect = function() {
+Background.prototype.setViewParameters = function() {
   var h = paper.view.size.height;
   var w = paper.view.size.width;
   this.viewCenter = new Point(0.5 * w, 0.5 * h);
+
   var tl = this.viewCenter - new Point(0.4 * w, 0.4 * h);
   var br = this.viewCenter + new Point(0.4 * w, 0.4 * h);
-  this.focusRect = new Rectangle(tl, br);
+  this.viewRect = new Rectangle(tl, br);
 }
-Background.prototype.resetFilter = function() {
+Background.prototype.setImage = function(image) {
+  this.image.remove();
+  this.image = image;
+
+  this.alignImage(this.image);
+  this.image.insertAbove(this.filter);
+
+  // Setup this.filter
   this.image.blendMode = 'hard-light';
-  var path = new Path.Rectangle(this.image.bounds);
-  path.remove();
-  this.filter.segments = path.segments;
+  var bounds = this.image.bounds;
+  this.filter.segments = [bounds.topLeft, bounds.topRight, bounds.bottomRight, bounds.bottomLeft];
   this.filter.fillColor = new Color(0.5);
   this.filter.sendToBack();
 }
@@ -72,7 +81,7 @@ Background.prototype.scaleTo = function(scale) {
 }
 Background.prototype.getCurrentScale = function() {
   // Defines what scale means
-  var scale = Math.max(this.image.bounds.height / this.focusRect.height, this.image.bounds.width / this.focusRect.width);
+  var scale = Math.max(this.image.bounds.height / this.viewRect.height, this.image.bounds.width / this.viewRect.width);
   return scale;
 }
 Background.prototype.snapBounds = function() {
@@ -123,11 +132,15 @@ Background.prototype.align = function(annotation) {
   annotation.translate(img_bounds.topLeft - ann_bounds.topLeft);
   annotation.scale(img_bounds.height / ann_bounds.height, img_bounds.topLeft);
 }
-Background.prototype.alignSelf = function(annotation) {
-  var img_bounds = this.image.bounds;
-  var ann_bounds = annotation.raster.bounds;
-  this.image.translate(ann_bounds.topLeft - img_bounds.topLeft);
-  this.image.scale(ann_bounds.height / img_bounds.height, ann_bounds.topLeft);
+Background.prototype.alignImage = function(image) {
+  if (annotations.length > 0) {
+    var img_bounds = image.bounds;
+    var ann_bounds = annotations[0].raster.bounds;
+    image.translate(ann_bounds.topLeft - img_bounds.topLeft);
+    image.scale(ann_bounds.height / img_bounds.height, ann_bounds.topLeft);
+  } else {
+    image.position = this.viewCenter;
+  }
 }
 
 //
@@ -186,25 +199,23 @@ Background.prototype.decreaseBrightness = function() {
 //
 // Exports
 //
-var cache = {};
+var backgroundCache = {};
 function loadBackground(image_url, callback) {
-  background.image.remove();
-  // if (image_url in cache) {
-  //   background.image
-  // }
-  var raster = new Raster(image_url);
-  raster.position = background.viewCenter;
-  raster.sendToBack();
-  raster.onLoad = function() {
-    background.image.remove();
-    background.image = raster;
-    if (annotations.length > 0) {
-      background.alignSelf(annotations[0]);
-    }
-    background.resetFilter();
-
+  if (image_url in backgroundCache) {
+    var raster = backgroundCache[image_url];
+    background.setImage(raster);
     if (callback) {
       callback();
+    }
+  } else {
+    background.image.remove(); // onLoad can be slow
+    var raster = new Raster(image_url);
+    raster.onLoad = function() {
+      backgroundCache[image_url] = raster;
+      background.setImage(raster);
+      if (callback) {
+        callback();
+      }
     }
   }
 }
@@ -214,7 +225,7 @@ function clearBackground() {
 }
 
 function onResize(event) {
-  background.setFocusRect();
+  background.setViewParameters();
 }
 
 window.background = new Background();

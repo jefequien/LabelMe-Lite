@@ -5,9 +5,11 @@ function COCO(dataset) {
     this.anns = {};
     this.cats = {};
     this.imgs = {};
+
     this.imgToAnns = {};
     this.catToImgs = {};
     this.fnToImgId = {};
+
     if (dataset) {
         this.createIndex();
     }
@@ -55,17 +57,32 @@ COCO.prototype.createIndex = function () {
 
 COCO.prototype.getAnnIds = function (imgIds=[], catIds=[]) {
     var anns = [];
+
+    // Get anns
     if (imgIds.length != 0) {
         for (var i = 0; i < imgIds.length; i++) {
-            var a = this.imgToAnns[imgIds[i]]
-            if (a) {
-                anns = anns.concat(a);
+            var imgId = imgIds[i];
+            if (imgId in this.imgToAnns) {
+                anns = anns.concat(this.imgToAnns[imgId]);
             }
         }
+    } else {
+        anns = this.dataset.annotations;
     }
-    // if (catIds.length != 0) {
-    //     anns = anns.filter(ann => catIds.indexOf(ann["category_id"]) >= 0);
-    // }
+
+    // Filter categories
+    if (catIds.length != 0) {
+        var filtered = [];
+        for (var i = 0; i < anns.length; i++) {
+            var ann = anns[i];
+            if (catIds.indexOf(ann["category_id"]) >= 0) {
+                filtered.push(ann);
+            }
+        }
+        anns = filtered;
+    }
+
+    // Get annIds
     var ids = [];
     for (var i = 0; i < anns.length; i++) {
         ids.push(anns[i]["id"]);
@@ -73,15 +90,33 @@ COCO.prototype.getAnnIds = function (imgIds=[], catIds=[]) {
     return ids;
 }
 
+COCO.prototype.getCatIds = function (catNms=[], supNms=[], catIds=[]) {
+    return [];
+}
+COCO.prototype.getImgIds = function (imgIds=[], catIds=[]) {
+    return [];
+}
+
 COCO.prototype.loadAnns = function (ids=[]) {
-    if (typeof(ids) == "number") {
-        return [this.anns[ids]];
-    }
     var anns = [];
     for (var i = 0; i < ids.length; i++) {
         anns.push(this.anns[ids[i]]);
     }
     return anns;
+}
+COCO.prototype.loadImgs = function (ids=[]) {
+    var imgs = [];
+    for (var i = 0; i < ids.length; i++) {
+        imgs.push(this.imgs[ids[i]]);
+    }
+    return imgs;
+}
+COCO.prototype.loadCats = function (ids=[]) {
+    var cats = [];
+    for (var i = 0; i < ids.length; i++) {
+        cats.push(this.cats[ids[i]]);
+    }
+    return cats;
 }
 
 try {

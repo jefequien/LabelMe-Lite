@@ -49,51 +49,67 @@ Annotation.prototype.updateBoundary = function() {
 }
 Annotation.prototype.updateRaster = function(boundary) {
   var boundary = (boundary) ? boundary : this.boundary;
+
+  // Make raster
+  var boundary_raster = this.rasterize(boundary, this.color);
+  boundary_raster.remove();
+
+  // Clear raster
+  var cv = document.createElement('canvas');
+  var ctx = cv.getContext('2d');
+  var imageData = ctx.getImageData(0, 0, this.raster.width, this.raster.height);
+  this.raster.setImageData(imageData, new Point(0, 0));
+
+  // Set raster
+  if (boundary_raster.height != 0 && boundary_raster.width != 0) {
+    var imageData = boundary_raster.getImageData();
+    this.raster.setImageData(imageData, boundary_raster.bounds.topLeft);
+  }
+
+  this.rasterinvUpToDate = false;
+}
+Annotation.prototype.updateRasterInv = function(boundary) {
+  var boundary = (boundary) ? boundary : this.boundary;
   var boundaryinv = new CompoundPath({
     children: [new Path.Rectangle(this.raster.bounds), boundary.clone()],
     fillRule: "evenodd"
   });
   boundaryinv.remove();
 
-  var boundary_raster = this.rasterize(boundary, this.color);
+  // Make raster
   var boundaryinv_raster = this.rasterize(boundaryinv, this.colorinv);
-  boundary_raster.remove();
   boundaryinv_raster.remove();
 
-  // Clear rasters
+  // Clear raster
   var cv = document.createElement('canvas');
   var ctx = cv.getContext('2d');
   var imageData = ctx.getImageData(0, 0, this.raster.width, this.raster.height);
-  this.raster.setImageData(imageData, new Point(0, 0));
   this.rasterinv.setImageData(imageData, new Point(0, 0));
 
-  // Set rasters
-  if (boundary_raster.height != 0 && boundary_raster.width != 0) {
-    var imageData = boundary_raster.getImageData();
-    this.raster.setImageData(imageData, boundary_raster.bounds.topLeft);
-  }
+  // Set raster
   if (boundaryinv_raster.height != 0 && boundaryinv_raster.width != 0) {
     var imageData = boundaryinv_raster.getImageData();
     this.rasterinv.setImageData(imageData, boundaryinv_raster.bounds.topLeft);
   }
+
   this.rasterinvUpToDate = true;
 }
-Annotation.prototype.delete = function(noConfirm) {
-  var confirmed = true;
-  if ( ! noConfirm) {
-    confirmed = confirm('Are you sure you want to delete the annotation of ' + this.name +'?');
-  }
+Annotation.prototype.delete = function() {
+  this.boundary.remove();
+  this.raster.remove();
+  this.rasterinv.remove();
 
-  if (confirmed) {
-    this.raster.remove();
-    this.rasterinv.remove();
-    this.boundary.remove();
-    annotations.splice(annotations.indexOf(this), 1);
-    tree.deleteAnnotation(this);
-    this.deleted = true;
-    return true;
-  }
-  return false;
+  annotations.splice(annotations.indexOf(this), 1);
+  tree.deleteAnnotation(this);
+}
+Annotation.prototype.undelete = function() {
+  project.activeLayer.addChild(this.boundary);
+  project.activeLayer.addChild(this.raster);
+  project.activeLayer.addChild(this.rasterinv);
+
+  annotations.unshift(this);
+  tree.addAnnotation(this);
+  background.align(this);
 }
 Annotation.prototype.undo = function() {
   if (this.undoHistory.length > 1) {
@@ -378,13 +394,14 @@ Annotation.prototype.getRLE = function() {
 Annotation.prototype.getBbox = function() {
   var tl = this.getPixel(this.boundary.bounds.topLeft).round();
   var br = this.getPixel(this.boundary.bounds.bottomRight).round();
-  var bbox = [tl.x, tl.y, br.x - tl.x, br.y - tl.y];
+  var bbox = [tl.x, tl.y, br.x - tl.x + 1, br.y - tl.y + 1];
   return bbox;
 }
 
 //
 // Exports
 //
+var annotationCache = {};
 function loadAnnotations(coco) {
   console.time("Load");
   var img = coco.dataset.images[0];
@@ -395,11 +412,17 @@ function loadAnnotations(coco) {
     var ann = anns[i];
     var cat = coco.cats[ann["category_id"]]["name"];
     var rle = ann["segmentation"];
+    var key = JSON.stringify(ann);
 
     console.time(cat);
-    var annotation = new Annotation(cat);
-    annotation.loadRLE(rle);
-    annotation.updateBoundary();
+    if (key in annotationCache) {
+      annotationCache[key].undelete();
+    } else {
+      var annotation = new Annotation(cat);
+      annotation.loadRLE(rle);
+      annotation.updateBoundary();
+      annotationCache[key] = annotation;
+    }
     console.timeEnd(cat);
   }
   console.timeEnd("Load");
@@ -448,9 +471,8 @@ function sortAnnotations() {
 
 function clearAnnotations() {
   while (annotations.length > 0) {
-    annotations[0].delete(true);
+    annotations[0].delete();
   }
-  tree.removeMessage();
 }
 
 window.annotations = [];
