@@ -5,21 +5,36 @@ var base_url = parseBaseURL();
 //
 // Get Requests
 //
-function getAnnotations(params, callback) {
-    var endpoint = base_url + "/data/annotations?" + buildQuery(params);
+function getAnnotationFile(params, callback) {
+    var endpoint = base_url + "/data/" + params.dataset + "/" + params.ann_source + ".json";
     get_async(endpoint, callback);
 }
 function getBundle(params, callback) {
-    var endpoint = base_url + "/data/bundles/" + params.bundle_id + ".json";
+    var endpoint = base_url + "/bundles/tasks/" + params.bundle_id + ".json";
     get_async(endpoint, callback);
 }
+
+function getAnnotations(params, callback) {
+    var endpoint = base_url + "/api/annotations?" + buildQuery(params);
+    get_async(endpoint, callback);
+}
+function getDefinition(keyword, callback) {
+  var endpoint = base_url + "/api/definitions?" + buildQuery({"keyword": keyword});
+  get_async(endpoint, callback);
+}
 function getImageURL(img) {
-  var dataset = params.dataset;
+  var source_dir = base_url + "/data";
+  var dataset = img.dataset;
+
   if (dataset == null) {
-    dataset = inferImageDataset(img);
+    // Infer dataset from img.filename
+    if (img.file_name.includes("ADE")) {
+      dataset = "ade20k";
+    } else {
+      dataset = "places";
+    }
   }
 
-  var source_dir = base_url + "/data";
   if (dataset == "ade20k" || dataset == "coco" || dataset == "places") {
       // source_dir = "http://places.csail.mit.edu/scaleplaces/datasets";
       source_dir = "http://labelmelite.csail.mit.edu/data";
@@ -28,30 +43,19 @@ function getImageURL(img) {
   var endpoint = source_dir + "/" + dataset + "/images/" + img.file_name;
   return endpoint;
 }
-function inferImageDataset(img) {
-  if (img.file_name.includes("ADE")) {
-    return "ade20k";
-  }
-  var path_split = img.file_name.split("/");
-  if (path_split.length == 3) {
-    return "places";
-  }
-  return "coco";
-}
-function getDefinition(keyword, callback) {
-  var endpoint = base_url + "/data/definitions?" + buildQuery({"keyword": keyword});
-  get_async(endpoint, callback);
-}
-function getExamples(keyword, callback) {
-    var endpoint = base_url + "/data/ade20k/instances_val.json";
-    get_async(endpoint, callback);
-}
+
 
 //
 // Post Requests
 //
-function postAnnotations(params, json) {
-    var endpoint = base_url + "/data/annotations?" + buildQuery(params);
+function postYesNoBundle(params, json) {
+    params.bundle_type = "yesno";
+    var endpoint = base_url + "/api/bundles?" + buildQuery(params);
+    post(endpoint, json);
+}
+function postEditBundle(params, json) {
+    params.bundle_type = "edit";
+    var endpoint = base_url + "/api/bundles?" + buildQuery(params);
     post(endpoint, json);
 }
 

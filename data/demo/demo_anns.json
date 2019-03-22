@@ -1,18 +1,22 @@
 {
 	"images": [
 		{
+			"dataset": "demo",
 			"file_name": "dog.jpg",
 			"id": 1
 		},
 		{
+			"dataset": "demo",
 			"file_name": "kitchen.jpg",
 			"id": 2
 		},
 		{
+			"dataset": "demo",
 			"file_name": "dashcam.jpg",
 			"id": 3
 		},
 		{
+			"dataset": "demo",
 			"file_name": "pathology.jpg",
 			"id": 4
 		}

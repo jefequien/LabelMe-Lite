@@ -8,8 +8,8 @@
     <meta name="author" content="Jeffrey Hu">
     <title>YesNoInterface</title>
 
-    <link href="stylesheets/question.css" rel="stylesheet">
-    <link href="stylesheets/yesno.css" rel="stylesheet">
+    <link href="stylesheets/instructions.css" rel="stylesheet">
+    <link href="stylesheets/amt_yesno.css" rel="stylesheet">
 
 </head>
 <body>
@@ -18,7 +18,7 @@
         <div>
             <button onclick="toggleInstruction(); " type="button">Instruction</button>
             <span>Is this a <b style="color: #0B0;">near perfect</b> annotation of <b id="category">category</b>?</span>
-            <input type="submit" id="submitButton" value="Submit (? images left)" disabled onclick="return confirmSubmit()">
+            <input type="submit" id="submitButton" value="Submit (? images left)" disabled onclick="return submitResults()">
         </div>
         <div id="definitionDiv">
             <b>Definition: </b><span id="definition">Loading...</span>

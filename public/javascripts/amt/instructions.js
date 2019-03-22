@@ -9,7 +9,6 @@ function loadInstructions(coco, current_num) {
 
     $('#category').text(cat["name"]);
     $('#imageCount').text(coco.dataset.annotations.length);
-    updateSubmitButton(coco);
 
     // Update instructions
     if (keyword != cat["name"]) {
@@ -61,22 +60,4 @@ function updateCategory(entry) {
             }
         }
     });
-}
-
-function updateSubmitButton(coco) {
-    var anns = coco.dataset.annotations;
-    var images_left = 0;
-    for (var i = 0; i < anns.length; i++) {
-        if (anns[i]["answer"] == null) {
-            images_left += 1;
-        }
-    }
-
-    $("#submitButton").attr('value', "Submit (" + images_left + " images left)"); 
-    $("#submitButton").prop('disabled', true); 
-
-    if (images_left == 0) {
-        $("#submitButton").attr('value', "Submit"); 
-        $("#submitButton").prop('disabled', false); 
-    }
 }

@@ -26,6 +26,9 @@
 #bottombar {
     height: 70px;
 }
+#submitButton {
+    color: black;
+}
 
 
 .btn-slider {

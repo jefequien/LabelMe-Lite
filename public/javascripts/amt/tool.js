@@ -20,11 +20,6 @@ function loadTool(coco, current_num) {
     // Load image
     var image_url = getImageURL(img);
     loadBackground(image_url);
-    
-    // Interface
-    $('#category').text(cat["name"]);
-    $('#current').text(current_num + 1);
-    $('#total').text(coco.dataset.annotations.length);
 
     annotations.styleInverted = true;
     background.focus(annotations[0]);

@@ -412,16 +412,16 @@ function loadAnnotations(coco) {
     var ann = anns[i];
     var cat = coco.cats[ann["category_id"]]["name"];
     var rle = ann["segmentation"];
-    var key = JSON.stringify(ann);
 
     console.time(cat);
-    if (key in annotationCache) {
-      annotationCache[key].undelete();
+    var cacheKey = ann["id"];
+    if (cacheKey in annotationCache) {
+      annotationCache[cacheKey].undelete();
     } else {
       var annotation = new Annotation(cat);
       annotation.loadRLE(rle);
       annotation.updateBoundary();
-      annotationCache[key] = annotation;
+      annotationCache[cacheKey] = annotation;
     }
     console.timeEnd(cat);
   }

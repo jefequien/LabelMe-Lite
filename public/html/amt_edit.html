@@ -27,11 +27,11 @@
     <script src="components/fancytree/jquery.fancytree-all.min.js"></script>
 
     <!-- Custom CSS -->
-    <link href="stylesheets/buttons.css" rel="stylesheet">
     <link href="stylesheets/labelmelite.css" rel="stylesheet">
-    <link href="stylesheets/yesno.css" rel="stylesheet">
-    <link href="stylesheets/question.css" rel="stylesheet">
-    <link href="stylesheets/amt.css" rel="stylesheet">
+    <link href="stylesheets/buttons.css" rel="stylesheet">
+    <!-- <link href="stylesheets/instructions.css" rel="stylesheet"> -->
+    <link href="stylesheets/amt_yesno.css" rel="stylesheet">
+    <link href="stylesheets/amt_edit.css" rel="stylesheet">
 
 </head>
 <body>
@@ -80,7 +80,7 @@
         <button type="button" class="btn" id="prevImage"><i class="fa fa-large fa-arrow-circle-left"></i></button>
       </div>
       <div class="container-fluid">
-        <span id="current">0</span> / <span id="total">0</span> <span id="category">None</span>
+        <input type="submit" id="submitButton" value="Submit (? images left)" disabled onclick="return submitResults()">
       </div>
 
       <div class="right">
@@ -127,7 +127,7 @@
   <script type="text/javascript" src="javascripts/amt/buttons.js"></script>
   <script type="text/javascript" src="javascripts/amt/tool.js"></script>
   <script type="text/javascript" src="javascripts/amt/yesno.js"></script>
-  <script type="text/javascript" src="javascripts/amt/main.js"></script>
+  <script type="text/javascript" src="javascripts/amt/main_edit.js"></script>
 
 </body>
 

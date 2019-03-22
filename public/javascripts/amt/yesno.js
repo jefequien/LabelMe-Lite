@@ -16,10 +16,10 @@ function loadYNTool(coco, current_num, hideOri) {
 
         // Load style
         $(holderDiv).css('visibility', 'visible');
-        if (ann["answer"] == true) {
+        if (ann["accepted"] == true) {
             $(holderDiv).toggleClass("target", true);
             $(holderDiv).toggleClass("noise", false);
-        } else if (ann["answer"] == false) {
+        } else if (ann["accepted"] == false) {
             $(holderDiv).toggleClass("target", false);
             $(holderDiv).toggleClass("noise", true);
         } else {
