@@ -48,21 +48,32 @@ function getImageURL(img) {
 //
 // Post Requests
 //
-function postYesNoBundle(params, json) {
+function postYesNoBundle(params, coco) {
     params.bundle_type = "yesno";
     var endpoint = base_url + "/api/bundles?" + buildQuery(params);
-    post(endpoint, json);
+    post(endpoint, coco.dataset);
 }
-function postEditBundle(params, json) {
+function postEditBundle(params, coco) {
     params.bundle_type = "edit";
     var endpoint = base_url + "/api/bundles?" + buildQuery(params);
-    post(endpoint, json);
+    post(endpoint, coco.dataset);
+}
+
+//
+// Redirects
+//
+function redirectToYesNoBrowser() {
+  window.location.href = base_url + "/amt_yesno/browser";
+}
+function redirectToEditBrowser() {
+  window.location.href = base_url + "/amt_edit/browser";
 }
 
 //
 // XHR functions
 //
 function get_async(url, callback) {
+  console.log(url);
   var xhr = new XMLHttpRequest();
   xhr.onreadystatechange = function() { 
     if (xhr.readyState == 4){

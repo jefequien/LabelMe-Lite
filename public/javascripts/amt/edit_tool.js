@@ -1,6 +1,6 @@
 
 
-function loadTool(coco, current_num) {
+function loadEditTool(coco, current_num) {
     clearBackground();
     clearAnnotations();
     selectTool.switch();

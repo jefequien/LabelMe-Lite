@@ -11,15 +11,17 @@ var current_num = 0;
 
 window.onload = function() {
     selectTool.switch();
+
     getBundle(params, function(res) {
+        console.log("Bundle:", res);
         coco = new COCO(res);
         loadInterface(coco, current_num);
     });
 }
 
 function loadInterface(coco, current_num) {
-    loadYNTool(coco, current_num, true);
-    loadTool(coco, current_num);
+    loadEditTool(coco, current_num);
+    loadYNTool(coco, current_num, panels=1, showGt=false);
     updateSubmitButton(coco, current_num);
     startTimer(coco, current_num);
 }
@@ -41,10 +43,22 @@ function prevImage() {
     }
 }
 function submitResults() {
-    var confirmed = confirm("Are you sure you want to submit?");
-    if (confirmed) {
-        postEditBundle(params, coco.dataset);
+    endTimer(coco, current_num);
+
+    var results = evaluateEditBundle(coco);
+    if (results.passed) {
+        postEditBundle(params, coco);
+        var alertString = "Thank you for your submission! ";
+        alert(alertString);
+
+        redirectToEditBrowser();
+
+    } else {
+        var alertString = "You failed the hidden tests. ";
+        alert(alertString);
     }
+
+    startTimer(coco, current_num);
 }
 function updateSubmitButton(coco, current_num) {
     var anns = coco.dataset.annotations;

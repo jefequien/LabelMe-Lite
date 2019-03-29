@@ -20,14 +20,6 @@ canvas {
 .holderDiv {
   text-align: center;
 }
-.holderDiv b {
-  color: #00F;
-  font-size: 14pt;
-
-  position:absolute;
-  transform: translate(100px, 10px);
-}
-
 .target{
   color: #0D0;
 }
@@ -148,4 +140,16 @@ canvas {
 .focus3 p{ 
   display: none;  
   font-weight: normal; font-size: 6pt; 
+}
+
+.focus b {
+  position:absolute;
+  transform: translate(200px, 12px);
+  color: #00F; font-size: 18pt;
+  visibility: hidden;
+}
+.focus0 b {
+  position:absolute;
+  transform: translate(100px, 8px);
+  color: #00F; font-size: 14pt;
 }

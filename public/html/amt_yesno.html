@@ -16,7 +16,7 @@
 
     <div id="questionDiv">
         <div>
-            <button onclick="toggleInstruction(); " type="button">Instruction</button>
+            <button onclick="toggleInstruction(); " type="button">Instructions</button>
             <span>Is this a <b style="color: #0B0;">near perfect</b> annotation of <b id="category">category</b>?</span>
             <input type="submit" id="submitButton" value="Submit (? images left)" disabled onclick="return submitResults()">
         </div>
@@ -31,7 +31,7 @@
             <p>For each of the <b id="imageCount" style="color: #00F;">N</b> images, answer yes or no to the above question. Only answer <b style="color: #0B0;">Yes</b> to annotations that are <b style="color: #0B0;">near perfect</b> segmentations of the object. Answer <b style="color: #F00;">No</b> to annotations that are the <b style="color: #F00;">wrong category</b> or are of <b style="color: #F00;">low quality</b>. A <b style="color: #0B0;">near perfect</b> annotation covers the entirety of the object. It is only wrong along the boundary by a few pixels. </p>
 
 
-            <p>More precisely, a <b style="color: #0B0;">near perfect</b> annotation has <b style="color: #00F;">IoU > 0.9</b> with the ground truth. IoU or Intersection over Union is defined below. We will use this criteria to judge your accuracy. </p>
+            <p>More precisely, a <b style="color: #0B0;">near perfect</b> annotation has <b style="color: #00F;">IoU > 0.8</b> with the ground truth. IoU or Intersection over Union is defined below. We will use this criteria to judge your accuracy. </p>
 
             <img src="https://www.pyimagesearch.com/wp-content/uploads/2016/09/iou_equation.png" height="200">
         </ul>
@@ -73,7 +73,7 @@
         <div id="holderDiv-3" class="holderDiv focus3"><p>No</p><p>Yes</p><canvas></canvas></div>
         <div id="holderDiv-2" class="holderDiv focus2"><p>No</p><p>Yes</p><canvas></canvas></div>
         <div id="holderDiv-1" class="holderDiv focus1"><p>No</p><p>Yes</p><canvas></canvas></div>
-        <div id="holderDiv0" class="holderDiv focus"><p>No</p><p>Yes</p><canvas></canvas></div>
+        <div id="holderDiv0" class="holderDiv focus"><p>No</p><p>Yes</p><b>IoU=0.000</b><canvas></canvas></div>
         <div id="holderDiv1" class="holderDiv focus1"><p>No</p><p>Yes</p><canvas></canvas></div>
         <div id="holderDiv2" class="holderDiv focus2"><p>No</p><p>Yes</p><canvas></canvas></div>
         <div id="holderDiv3" class="holderDiv focus3"><p>No</p><p>Yes</p><canvas></canvas></div>
@@ -92,8 +92,9 @@
     <script type="text/javascript" src="javascripts/utils/endpoints.js"></script>
 
     <!-- Main Javascripts -->
+    <script src="javascripts/amt/yesno_tool.js"></script>
+    <script src="javascripts/amt/evaluation.js"></script>
     <script src="javascripts/amt/instructions.js"></script>
-    <script src="javascripts/amt/yesno.js"></script>
     <script src="javascripts/amt/main_yesno.js"></script>
 </body>
 

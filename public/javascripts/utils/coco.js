@@ -100,21 +100,27 @@ COCO.prototype.getImgIds = function (imgIds=[], catIds=[]) {
 COCO.prototype.loadAnns = function (ids=[]) {
     var anns = [];
     for (var i = 0; i < ids.length; i++) {
-        anns.push(this.anns[ids[i]]);
+        if (ids[i] in this.anns) {
+            anns.push(this.anns[ids[i]]);
+        }
     }
     return anns;
 }
 COCO.prototype.loadImgs = function (ids=[]) {
     var imgs = [];
     for (var i = 0; i < ids.length; i++) {
-        imgs.push(this.imgs[ids[i]]);
+        if (ids[i] in this.imgs) {
+            imgs.push(this.imgs[ids[i]]);
+        }
     }
     return imgs;
 }
 COCO.prototype.loadCats = function (ids=[]) {
     var cats = [];
     for (var i = 0; i < ids.length; i++) {
-        cats.push(this.cats[ids[i]]);
+        if (ids[i] in this.cats) {
+            cats.push(this.cats[ids[i]]);
+        }
     }
     return cats;
 }

@@ -9,6 +9,10 @@ if (Object.keys(params).length == 0) {
 var coco = new COCO();
 var current_num = 0;
 
+var iouThreshold = 0.8;
+var passingThreshold = 0.75;
+var trainingMode = params.training_mode == "true";
+
 window.onload = function() {
     getBundle(params, function(res) {
         console.log("Bundle:", res);
@@ -18,10 +22,11 @@ window.onload = function() {
 }
 
 function loadInterface(coco, current_num) {
-    setDefaultAnswer(coco, current_num);
-    loadYNTool(coco, current_num);
     loadInstructions(coco, current_num);
-    updateSubmitButton(coco, current_num)
+    setDefaultAnswer(coco, current_num);
+
+    loadYNTool(coco, current_num, panels=2, showGt=trainingMode);
+    updateSubmitButton(coco, current_num);
     startTimer(coco, current_num);
 }
 
@@ -41,10 +46,26 @@ function prevImage() {
     }
 }
 function submitResults() {
-    var confirmed = confirm("Are you sure you want to submit?");
-    if (confirmed) {
-        postYesNoBundle(params, coco.dataset);
+    endTimer(coco, current_num);
+
+    var results = evaluateYesNoBundle(coco, iouThreshold, passingThreshold);
+    if (results.passed) {
+        postYesNoBundle(params, coco);
+        var alertString = "Thank you for your submission! ";
+        alertString += "You passed " + results.numPassed + " / " + results.numTests + " hidden tests. ";
+        alert(alertString);
+
+        redirectToYesNoBrowser();
+
+    } else {
+        var alertString = "You passed " + results.numPassed + " / " + results.numTests + " hidden tests. ";
+        alertString += "Only answer Yes to annotations with IOU > " + results.iouThreshold + ". ";
+        alertString += "Please go back and improve your score. ";
+        alertString += "\n\nWe recommend the start from the beginning. For more information, click Instructions. ";
+        alert(alertString);
     }
+
+    startTimer(coco, current_num);
 }
 
 //
@@ -68,13 +89,17 @@ function setDefaultAnswer(coco, current_num) {
     if (ann["accepted"] == null) {
         ann["accepted"] = false;
     }
+
+    if (trainingMode) {
+        ann["accepted"] = ann.iou > iouThreshold;
+    }
 }
 
 function toggleAnswer() {
     var ann = coco.dataset.annotations[current_num];
     if (ann) {
         ann["accepted"] = !(ann["accepted"]);
-        loadYNTool(coco, current_num);
+        loadYNTool(coco, current_num, panels=2, showGt=trainingMode);
     }
 }
 
@@ -89,10 +114,13 @@ function updateSubmitButton(coco, current_num) {
 
     $("#submitButton").attr('value', "Submit (" + images_left + " images left)"); 
     $("#submitButton").prop('disabled', true); 
-
     if (images_left == 0) {
         $("#submitButton").attr('value', "Submit"); 
         $("#submitButton").prop('disabled', false); 
+    }
+    if (trainingMode) {
+        $("#submitButton").attr('value', "Training Mode (" + images_left + " images left)");
+        $("#submitButton").prop('disabled', true); 
     }
 }
 function toggleInstruction() {
