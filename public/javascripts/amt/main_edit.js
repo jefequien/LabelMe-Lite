@@ -49,12 +49,14 @@ function submitResults() {
     if (results.passed) {
         postEditBundle(params, coco);
         var alertString = "Thank you for your submission! ";
+        alertString += "\n\nYou spent on average " + results.averageTime.toFixed(3) + " seconds per annotation. ";
         alert(alertString);
 
         redirectToEditBrowser();
 
     } else {
         var alertString = "You failed the hidden tests. ";
+        alertString += "\n\nYou spent on average " + results.averageTime.toFixed(3) + " seconds per annotation. ";
         alert(alertString);
     }
 

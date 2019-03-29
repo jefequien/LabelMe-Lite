@@ -53,6 +53,7 @@ function submitResults() {
         postYesNoBundle(params, coco);
         var alertString = "Thank you for your submission! ";
         alertString += "You passed " + results.numPassed + " / " + results.numTests + " hidden tests. ";
+        alertString += "\n\nYou spent on average " + results.averageTime.toFixed(3) + " seconds per annotation. ";
         alert(alertString);
 
         redirectToYesNoBrowser();
@@ -62,6 +63,7 @@ function submitResults() {
         alertString += "Only answer Yes to annotations with IOU > " + results.iouThreshold + ". ";
         alertString += "Please go back and improve your score. ";
         alertString += "\n\nWe recommend the start from the beginning. For more information, click Instructions. ";
+        alertString += "\n\nYou spent on average " + results.averageTime.toFixed(3) + " seconds per annotation. ";
         alert(alertString);
     }
 

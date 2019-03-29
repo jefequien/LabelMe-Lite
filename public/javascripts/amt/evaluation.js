@@ -25,13 +25,22 @@ function evaluateYesNoBundle(coco, iouThreshold, passingThreshold) {
 		results.totalTime += ann.cumulativeTime;
 	}
 
-	results.passed = (results.numPassed / results.numTests > passingThreshold);
 	results.averageTime = results.totalTime / anns.length;
+	results.passed = (results.numPassed / results.numTests > passingThreshold);
 	return results;
 }
 
 function evaluateEditBundle(coco) {
 	var results = {};
+	results.totalTime = 0;
+
+	var anns = coco.dataset.annotations;
+	for (var i = 0; i < anns.length; i++) {
+		var ann = anns[i];
+		results.totalTime += ann.cumulativeTime;
+	}
+
+	results.averageTime = results.totalTime / anns.length;
 	results.passed = true;
 	return results;
 }
