@@ -9,6 +9,8 @@ if (Object.keys(params).length == 0) {
 var coco = new COCO();
 var current_num = 0;
 
+var iouThreshold = 0.8;
+var passingThreshold = 0.75;
 var trainingMode = params.training_mode == "true";
 
 window.onload = function() {
@@ -49,17 +51,23 @@ function prevImage() {
 function submitResults() {
     endTimer(coco, current_num);
 
-    var results = evaluateEditBundle(coco);
-    if (results.passed) {
+    var results = evaluateEditBundle(coco, iouThreshold);
+    var passed = results.averageIOU >= passingThreshold;
+
+    if (passed) {
         postEditBundle(params, coco);
         var alertString = "Thank you for your submission! ";
+        alertString += "You scored an average IOU of " + results.averageIOU.toFixed(3) + " on " + results.numTests + " hidden tests. ";
         alertString += "\n\nYou spent on average " + results.averageTime.toFixed(3) + " seconds per annotation. ";
         alert(alertString);
 
         redirectToEditBrowser();
 
     } else {
-        var alertString = "You failed the hidden tests. ";
+        var alertString = "You failed! ";
+        alertString += "You must score an average IOU of " + passingThreshold + " on the hidden tests in order to submit. ";
+        alertString += "You scored an average IOU of " + results.averageIOU + " on " + results.numTests  + " hidden tests. ";
+        alertString += "\n\nPlease go back and improve your annotations. We recommend the start from the beginning. For more information, click Instructions. ";
         alertString += "\n\nYou spent on average " + results.averageTime.toFixed(3) + " seconds per annotation. ";
         alert(alertString);
     }
@@ -83,12 +91,15 @@ function updateSubmitButton(coco, current_num) {
 }
 
 function saveCurrentAnnotation(coco, current_num) {
-    var ann = coco.dataset.annotations[current_num];
-
     var coco_ = saveAnnotations();
     var ann_ = coco_.dataset.annotations[0];
+
+    var ann = coco.dataset.annotations[current_num];
     ann["segmentation"] = ann_["segmentation"];
     ann["bbox"] = ann_["bbox"];
+    if (ann.hidden_test) {
+        ann.hidden_test.iou = computeIOU(ann["segmentation"], ann.hidden_test["segmentation"]);
+    }
 }
 
 //

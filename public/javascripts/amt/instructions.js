@@ -51,11 +51,13 @@ function loadExamples(coco) {
     var noExamples = [];
     for (var i = 0; i < coco.dataset.annotations.length; i++) {
         var ann = coco.dataset.annotations[i];
-        if (ann.iou > 0.8) {
-            yesExamples.push(ann);
-        }
-        else if (ann.iou < 0.7) {
-            noExamples.push(ann);
+        if (ann.hidden_test) {
+            if (ann.hidden_test.iou > 0.8) {
+                yesExamples.push(ann);
+            }
+            else if (ann.hidden_test.iou < 0.7) {
+                noExamples.push(ann);
+            }
         }
     }
 

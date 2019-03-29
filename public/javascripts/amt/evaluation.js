@@ -1,46 +1,56 @@
 
 
 
-function evaluateYesNoBundle(coco, iouThreshold, passingThreshold) {
+function evaluateYesNoBundle(coco, iouThreshold) {
 	var results = {};
-	results.numPassed = 0;
-	results.numFailed = 0;
-	results.numTests = 0;
 	results.iouThreshold = iouThreshold;
-	results.passingThreshold = passingThreshold;
+	results.numPassed = 0;
+	results.numTests = 0;
 	results.totalTime = 0;
 
 	var anns = coco.dataset.annotations;
 	for (var i = 0; i < anns.length; i++) {
 		var ann = anns[i];
-		if (ann.gt_segmentation) {
+		if (ann.hidden_test) {
 			results.numTests += 1;
-			var shouldAccept = ann.iou > iouThreshold;
-			if (ann.accepted == shouldAccept) {
+
+			var iou = ann.hidden_test.iou;
+			if (ann.accepted == iou > iouThreshold) {
 				results.numPassed += 1;
-			} else {
-				results.numFailed += 1;
 			}
 		}
 		results.totalTime += ann.cumulativeTime;
 	}
 
 	results.averageTime = results.totalTime / anns.length;
-	results.passed = (results.numPassed / results.numTests > passingThreshold);
 	return results;
 }
 
-function evaluateEditBundle(coco) {
+function evaluateEditBundle(coco, iouThreshold) {
 	var results = {};
+	results.iouThreshold = iouThreshold;
+	results.numPassed = 0;
+	results.numTests = 0;
 	results.totalTime = 0;
+	
+	var totalIOU = 0;
 
 	var anns = coco.dataset.annotations;
 	for (var i = 0; i < anns.length; i++) {
 		var ann = anns[i];
+		if (ann.hidden_test) {
+			results.numTests += 1;
+			
+			var iou = ann.hidden_test.iou;
+			totalIOU += iou;
+			if (iou > iouThreshold) {
+				results.numPassed += 1;
+			}
+		}
 		results.totalTime += ann.cumulativeTime;
 	}
 
 	results.averageTime = results.totalTime / anns.length;
-	results.passed = true;
+	results.averageIOU = totalIOU / results.numTests;
 	return results;
 }

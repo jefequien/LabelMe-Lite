@@ -7,6 +7,7 @@ function loadYNTool(coco, current_num, panels=2, showGt=true) {
         var ann = coco.dataset.annotations[ann_num];
         if (ann == null) {
             $(holderDiv).css('visibility','hidden');
+            $(holderDiv + " b").css('visibility', 'hidden');
             continue;
         }
 
@@ -33,8 +34,12 @@ var holderDivCache = {};
 function drawHolderDiv(holderDiv, img, ann, panels=2, showGt=true) {
     var cv = $(holderDiv + " canvas")[0];
     var ctx = cv.getContext('2d');
+
     if (showGt) {
-        var iou = ann.iou || 0;
+        var iou = 0;
+        if (ann.hidden_test) {
+            iou = ann.hidden_test.iou;
+        }
         $(holderDiv + " b").css('visibility', 'visible');
         $(holderDiv + " b").html("IoU=" + iou.toFixed(3));
     }
@@ -51,7 +56,7 @@ function drawHolderDiv(holderDiv, img, ann, panels=2, showGt=true) {
 
     var bbox = getSquareBbox(ann);
     var segm = ann["segmentation"];
-    var segmGt = showGt ? ann["gt_segmentation"] : null;
+    var segmGt = showGt && ann.hidden_test ? ann.hidden_test["segmentation"] : null;
     var segmCrop = getSegmCrop(holderDiv, segm, bbox);
     var segmGtCrop = getSegmCrop(holderDiv, segmGt, bbox);
 

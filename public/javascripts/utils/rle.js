@@ -1,4 +1,38 @@
 
+
+function computeIOU(rle0, rle1) {
+  var height = rle0["size"][0];
+  var width = rle0["size"][1];
+  var cnts0 = rleFrString(rle0["counts"]);
+  var cnts1 = rleFrString(rle1["counts"]);
+
+  var union = 0;
+  var intersection = 0;
+
+  var sum0 = 0;
+  var bit0 = 1;
+  var sum1 = 0;
+  var bit1 = 1;
+  for (var p = 0; p < height * width; p++) {
+    if (p == sum0) {
+      sum0 += cnts0.shift();
+      bit0 = (bit0 == 1) ? 0 : 1;
+    }
+    if (p == sum1) {
+      sum1 += cnts1.shift();
+      bit1 = (bit1 == 1) ? 0 : 1;
+    }
+
+    if (bit0 == 1 || bit1 == 1) {
+      union += 1;
+      if (bit0 == 1 && bit1 == 1) {
+        intersection += 1;
+      }
+    }
+  }
+  return intersection / union;
+}
+
 function loadRLE(rle, color) {
   var height = rle["size"][0];
   var width = rle["size"][1];

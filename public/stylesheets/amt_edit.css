@@ -1,8 +1,7 @@
 
 .focus canvas{
-  height: 0px;
+    display: none;
 }
-
 
 #toolDiv {
     position: absolute;
@@ -13,7 +12,6 @@
     transform: translate(-50%, -50%);
     z-index: 100;
 }
-
 
 #toolCanvas {
     height: calc(100% - 140px);
