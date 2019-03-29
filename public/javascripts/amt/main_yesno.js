@@ -22,11 +22,11 @@ window.onload = function() {
 }
 
 function loadInterface(coco, current_num) {
-    loadInstructions(coco, current_num);
+    loadInstructions(coco, current_num, trainingMode);
     setDefaultAnswer(coco, current_num);
+    updateSubmitButton(coco, current_num);
 
     loadYNTool(coco, current_num, panels=2, showGt=trainingMode);
-    updateSubmitButton(coco, current_num);
     startTimer(coco, current_num);
 }
 
@@ -59,15 +59,54 @@ function submitResults() {
         redirectToYesNoBrowser();
 
     } else {
-        var alertString = "You passed " + results.numPassed + " / " + results.numTests + " hidden tests. ";
-        alertString += "Only answer Yes to annotations with IOU > " + results.iouThreshold + ". ";
+        var alertString = "You failed! ";
+        alertString += "You must pass " + results.passingThreshold * 100 + "% hidden tests in order to submit. ";
+        alertString += "You passed " + results.numPassed + " / " + results.numTests  + " hidden tests. ";
+        alertString += "\n\nOnly answer Yes to annotations with IOU > " + results.iouThreshold + ". ";
         alertString += "Please go back and improve your score. ";
-        alertString += "\n\nWe recommend the start from the beginning. For more information, click Instructions. ";
+        alertString += "We recommend the start from the beginning. For more information, click Instructions. ";
         alertString += "\n\nYou spent on average " + results.averageTime.toFixed(3) + " seconds per annotation. ";
         alert(alertString);
     }
 
     startTimer(coco, current_num);
+}
+function updateSubmitButton(coco, current_num) {
+    var anns = coco.dataset.annotations;
+    var images_left = 0;
+    for (var i = 0; i < anns.length; i++) {
+        if (anns[i]["accepted"] == null) {
+            images_left += 1;
+        }
+    }
+
+    $("#submitButton").html("Submit (" + images_left + " images left)"); 
+    $("#submitButton").prop('disabled', true); 
+    if (images_left == 0) {
+        $("#submitButton").html("Submit"); 
+        $("#submitButton").prop('disabled', false); 
+    }
+    if (trainingMode) {
+        $("#submitButton").html("Training Mode (" + images_left + " images left)");
+        $("#submitButton").prop('disabled', true); 
+    }
+}
+function setDefaultAnswer(coco, current_num) {
+    var ann = coco.dataset.annotations[current_num];
+    if (ann["accepted"] == null) {
+        ann["accepted"] = false;
+    }
+
+    if (trainingMode) {
+        ann["accepted"] = ann.iou > iouThreshold;
+    }
+}
+function toggleAnswer() {
+    var ann = coco.dataset.annotations[current_num];
+    if (ann) {
+        ann["accepted"] = !(ann["accepted"]);
+        loadYNTool(coco, current_num, panels=2, showGt=trainingMode);
+    }
 }
 
 //
@@ -85,49 +124,12 @@ function endTimer(coco, current_num) {
     var ann = coco.dataset.annotations[current_num];
     ann.cumulativeTime += (new Date() - timer) / 1000;
 }
-
-function setDefaultAnswer(coco, current_num) {
-    var ann = coco.dataset.annotations[current_num];
-    if (ann["accepted"] == null) {
-        ann["accepted"] = false;
-    }
-
-    if (trainingMode) {
-        ann["accepted"] = ann.iou > iouThreshold;
-    }
-}
-
-function toggleAnswer() {
-    var ann = coco.dataset.annotations[current_num];
-    if (ann) {
-        ann["accepted"] = !(ann["accepted"]);
-        loadYNTool(coco, current_num, panels=2, showGt=trainingMode);
-    }
-}
-
-function updateSubmitButton(coco, current_num) {
-    var anns = coco.dataset.annotations;
-    var images_left = 0;
-    for (var i = 0; i < anns.length; i++) {
-        if (anns[i]["accepted"] == null) {
-            images_left += 1;
-        }
-    }
-
-    $("#submitButton").attr('value', "Submit (" + images_left + " images left)"); 
-    $("#submitButton").prop('disabled', true); 
-    if (images_left == 0) {
-        $("#submitButton").attr('value', "Submit"); 
-        $("#submitButton").prop('disabled', false); 
-    }
-    if (trainingMode) {
-        $("#submitButton").attr('value', "Training Mode (" + images_left + " images left)");
-        $("#submitButton").prop('disabled', true); 
-    }
-}
 function toggleInstruction() {
     $("#instructionDiv").toggle();
     $("#yesnoDiv").toggle();
+    if (trainingMode) {
+        $("#trainingDiv").toggle();
+    }
 }
 
 

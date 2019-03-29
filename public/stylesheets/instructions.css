@@ -1,37 +1,32 @@
 
 
 #questionDiv {
-    height: 30px;
-    padding: 50px;
+    margin-top: 50px;
     text-align: center;
-    margin-left: auto;
-    margin-right: auto;
-
     font-size: 30px;
+
     font: "Lucida Grande", Helvetica, Arial, sans-serif;
 }
 
 #definitionDiv {
-  height: 30px;
-  margin-top: 15px;
-  margin-left: auto;
-  margin-right: auto;
-
+  padding-top: 15px;
   font-size: 20px;
-  text-align: center;
 }
 
-#submitButton {
-  display: inline-block;
+#trainingDiv {
+  padding-top: 30px;
+  margin: auto;
+
+  width: 1000px;
+  text-align: left; 
+  font-size: 20px;
 }
 
 #instructionDiv {
-  width: 60%;
-  margin-top: 15px;
-  margin-left: auto;
-  margin-right: auto;
+  padding-top: 30px;
+  margin: auto;
 
-  z-index: 10px;
+  width: 1000px;
   text-align: left; 
   display: none;
 }

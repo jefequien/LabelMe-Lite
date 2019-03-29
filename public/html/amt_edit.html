@@ -29,38 +29,87 @@
     <!-- Custom CSS -->
     <link href="stylesheets/labelmelite.css" rel="stylesheet">
     <link href="stylesheets/buttons.css" rel="stylesheet">
-    <!-- <link href="stylesheets/instructions.css" rel="stylesheet"> -->
+    <link href="stylesheets/instructions.css" rel="stylesheet">
     <link href="stylesheets/amt_yesno.css" rel="stylesheet">
     <link href="stylesheets/amt_edit.css" rel="stylesheet">
 
 </head>
 <body>
 
-  <!-- TOOL -->
-  <div id="toolDiv">
+    <div id="questionDiv">
+        <div>
+            <button type="button" class="btn btn-primary btn-sm" onclick="toggleInstruction(); ">Instructions</button>
+            <span>Please refine a <b style="color: #0B0;">near perfect</b> annotation of <b id="category">category</b>.</span>
+            <button type="button" class="btn btn-primary btn-sm" id="submitButton" onclick="return submitResults()" disabled>Submit (? images left)</button>
+        </div>
+        <div id="definitionDiv">
+            <b>Definition: </b><span id="definition">Loading...</span>
+        </div>
+        <div id="trainingDiv" style="display: none"></div>
+    </div>
 
+    <div id="instructionDiv">
+        <h3>Task</h3>
+        <ul>
+            <p>For each of the <b id="imageCount" style="color: #00F;">N</b> images, refine the annotation such that it becomes a <b style="color: #0B0;">near perfect</b> segmentation of the object. A <b style="color: #0B0;">near perfect</b> annotation covers the entirety of the object and is only wrong along the boundary by a few pixels. </p>
+
+            <p>More precisely, a <b style="color: #0B0;">near perfect</b> annotation has <b style="color: #00F;">IoU > 0.8</b> with the ground truth. IoU or Intersection over Union is defined below. We will use this criteria to judge your accuracy. </p>
+            <img src="https://www.pyimagesearch.com/wp-content/uploads/2016/09/iou_equation.png" height="200">
+        </ul>
+
+        <h3>Examples</h3>
+
+        <div id="exampleDiv">
+            <div>
+                <div id="exampleYes0" class="holderDiv focus0 target"><p>No</p><p>Yes</p><b>IoU=0.000</b><canvas></canvas></div>
+                <div id="exampleNo0" class="holderDiv focus0 noise"><p>No</p><p>Yes</p><b>IoU=0.000</b><canvas></canvas></div>
+            </div>
+            <div>
+                <div id="exampleYes1" class="holderDiv focus0 target"><p>No</p><p>Yes</p><b>IoU=0.000</b><canvas></canvas></div>
+                <div id="exampleNo1" class="holderDiv focus0 noise"><p>No</p><p>Yes</p><b>IoU=0.000</b><canvas></canvas></div>
+            </div>
+            <div>
+                <div id="exampleYes2" class="holderDiv focus0 target"><p>No</p><p>Yes</p><b>IoU=0.000</b><canvas></canvas></div>
+                <div id="exampleNo2" class="holderDiv focus0 noise"><p>No</p><p>Yes</p><b>IoU=0.000</b><canvas></canvas></div>
+            </div>
+        </div>
+
+
+        <h3>Usage</h3>
+        <ul>
+            <li>Keep the right arrow [&rarr;] key pressed down to move continuously from an image to the next. Release the key when you see an image for which the answer should be YES.</li>
+            <li>Use [space] key to toggle the answer to YES. The default answer is NO.</li>
+            <li>Use the left arrow [&larr;] key to go back to the previously seen images, if you skipped an image accidentaly.</li>
+        </ul>
+        <h3>Submit</h3>
+        <ul>
+            <li>After you answer all the images, the [submit] button will be enabled.</li>
+            <li><b style="color: #00F;">If your accuracy is too low, it won't allow you to submit. You will have to improve your answers first.</b></li>
+        </ul>   
+
+        <p style="font-size: 8pt; color: #999;">By making judgments about these images, you are participating in a study being performed by XXX. If you have questions about this research, please contact XXX at XXX. Your participation in this research is voluntary. You may decline further participation, at any time, without adverse consequences. Your anonymity is assured; the researchers who have requested your participation will not receive any personal information about you.</p>
+    </div>
+
+  <!-- Edit Tool -->
+  <div id="toolDiv">
     <nav class="navbar">
       <a class="navbar-brand" href="/">LabelMe</a>
       <!-- Top left buttons -->
       <div id="viewButtons">
-        <button type="button" class="btn btn-small" id="decreaseBrightness">
+        <button type="button" class="btn toolBtn toolBtn-small" id="decreaseBrightness">
           <i class="fa material-icons">brightness_low</i>
         </button>
-        <button type="button" class="btn btn-small" id="increaseBrightness">
+        <button type="button" class="btn toolBtn toolBtn-small" id="increaseBrightness">
           <i class="fa material-icons">brightness_4</i>
         </button>
-        <button type="button" class="btn btn-small" id="hide"><i class="fa fa-eye-slash"></i></button>
         <div class="btn btn-slider">
           <input type="range" min="3" max="15" step="0.5" id="toolSlider">
         </div>
       </div>
       <!-- Top right buttons -->
       <div id="navButtons">
-        <button type="button" class="btn btn-small" id="undo"><i class="fa material-icons">undo</i></button>
-        <button type="button" class="btn btn-small" id="redo"><i class="fa material-icons">redo</i></button>
-        <button type="button" class="btn btn-small" id="info" data-toggle="modal" data-target="#exampleModalLong">
-          <i class="fa fa-info-circle"></i>
-        </button>
+        <button type="button" class="btn toolBtn toolBtn-small" id="undo"><i class="fa material-icons">undo</i></button>
+        <button type="button" class="btn toolBtn toolBtn-small" id="redo"><i class="fa material-icons">redo</i></button>
       </div>
     </nav>
 
@@ -76,20 +125,14 @@
     </div>
 
     <div id="bottombar" class="sidebar">
-      <div class="left">
-        <button type="button" class="btn" id="prevImage"><i class="fa fa-large fa-arrow-circle-left"></i></button>
-      </div>
-      <div class="container-fluid">
-        <input type="submit" id="submitButton" value="Submit (? images left)" disabled onclick="return submitResults()">
-      </div>
-
-      <div class="right">
-        <button type="button" class="btn" id="nextImage"><i class="fa fa-large fa-arrow-circle-right"></i></button>
+      <div class="center">
+        <button type="button" class="btn toolBtn" id="zoomIn"><i class="fa fa-search-plus"></i></i></button>
+        <button type="button" class="btn toolBtn" id="zoomOut"><i class="fa fa-search-minus"></i></button>
+        <button type="button" class="btn toolBtn" id="focus"><i class="fa fi-arrows-out"></i></button>
+        <button type="button" class="btn toolBtn" id="hide"><i class="fa fa-eye-slash"></i></button>
       </div>
     </div>
-
   </div>
-
 
 
   <div id="yesnoDiv">
@@ -128,6 +171,7 @@
   <script type="text/javascript" src="javascripts/amt/edit_tool.js"></script>
   <script type="text/javascript" src="javascripts/amt/edit_tool_buttons.js"></script>
   <script type="text/javascript" src="javascripts/amt/evaluation.js"></script>
+  <script type="text/javascript" src="javascripts/amt/instructions.js"></script>
   <script type="text/javascript" src="javascripts/amt/main_edit.js"></script>
 
 </body>

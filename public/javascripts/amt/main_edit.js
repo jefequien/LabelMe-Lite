@@ -9,6 +9,8 @@ if (Object.keys(params).length == 0) {
 var coco = new COCO();
 var current_num = 0;
 
+var trainingMode = params.training_mode == "true";
+
 window.onload = function() {
     selectTool.switch();
 
@@ -20,9 +22,11 @@ window.onload = function() {
 }
 
 function loadInterface(coco, current_num) {
-    loadEditTool(coco, current_num);
-    loadYNTool(coco, current_num, panels=1, showGt=false);
+    loadInstructions(coco, current_num, trainingMode);
     updateSubmitButton(coco, current_num);
+
+    loadYNTool(coco, current_num, panels=2, showGt=trainingMode);
+    loadEditTool(coco, current_num);
     startTimer(coco, current_num);
 }
 
@@ -65,14 +69,26 @@ function submitResults() {
 function updateSubmitButton(coco, current_num) {
     var anns = coco.dataset.annotations;
     var images_left = anns.length - current_num - 1;
-    var cat = coco.cats[anns[current_num]["category_id"]];
 
-    $("#submitButton").attr('value', cat["name"] + " (" + images_left + " images left)"); 
+    $("#submitButton").html("Submit (" + images_left + " images left)"); 
     $("#submitButton").prop('disabled', true); 
     if (images_left == 0) {
-        $("#submitButton").attr('value', "Submit"); 
+        $("#submitButton").html("Submit"); 
         $("#submitButton").prop('disabled', false); 
     }
+    if (trainingMode) {
+        $("#submitButton").html("Training Mode (" + images_left + " images left)");
+        $("#submitButton").prop('disabled', true); 
+    }
+}
+
+function saveCurrentAnnotation(coco, current_num) {
+    var ann = coco.dataset.annotations[current_num];
+
+    var coco_ = saveAnnotations();
+    var ann_ = coco_.dataset.annotations[0];
+    ann["segmentation"] = ann_["segmentation"];
+    ann["bbox"] = ann_["bbox"];
 }
 
 //
@@ -91,23 +107,18 @@ function endTimer(coco, current_num) {
     ann.cumulativeTime += (new Date() - timer) / 1000;
 }
 
-function saveCurrentAnnotation(coco, current_num) {
-    var ann = coco.dataset.annotations[current_num];
-
-    var coco_ = saveAnnotations();
-    var ann_ = coco_.dataset.annotations[0];
-    ann["segmentation"] = ann_["segmentation"];
-    ann["bbox"] = ann_["bbox"];
+function toggleInstruction() {
+    $("#instructionDiv").toggle();
+    $("#yesnoDiv").toggle();
+    $("#toolDiv").toggle();
+    if (trainingMode) {
+        $("#trainingDiv").toggle();
+    }
 }
 
 //
 // Event Handlers
 //
-var prevButton = document.getElementById('prevImage');
-prevButton.onclick = prevImage;
-var nextButton = document.getElementById('nextImage');
-nextButton.onclick = nextImage;
-
 var keyIsDown = false;
 var timerHandle;
 $(window).keydown(function(e) {

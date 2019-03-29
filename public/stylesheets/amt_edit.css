@@ -1,4 +1,9 @@
 
+.focus canvas{
+  height: 0px;
+}
+
+
 #toolDiv {
     position: absolute;
     height: 550px;
@@ -25,25 +30,27 @@
 }
 #bottombar {
     height: 70px;
+    padding: 0px;
 }
-#submitButton {
-    color: black;
-}
-
-
 .btn-slider {
     display: none;
 }
 
+.center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
 .left {
     position: absolute;
-    left: 10px;
     top: 50%;
+    left: 10px;
     transform: translateY(-50%);
 }
 .right {
     position: absolute;
-    right: 10px;
     top: 50%;
+    right: 10px;
     transform: translateY(-50%);
 }

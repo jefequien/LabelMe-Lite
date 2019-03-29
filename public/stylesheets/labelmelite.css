@@ -41,7 +41,9 @@ html, body {
     padding: 10px;
 }
 
-
+#navButtons {
+  margin-left: auto;
+}
 .navbar {
     height: 70px;
 

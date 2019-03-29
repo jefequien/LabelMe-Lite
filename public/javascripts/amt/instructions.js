@@ -3,13 +3,18 @@
 var keyword = "";
 var numExamples = 3;
 
-function loadInstructions(coco, current_num) {
+function loadInstructions(coco, current_num, trainingMode) {
     var ann = coco.dataset.annotations[current_num];
     var img = coco.imgs[ann["image_id"]];
     var cat = coco.cats[ann["category_id"]];
 
     $('#category').text(cat["name"]);
     $('#imageCount').text(coco.dataset.annotations.length);
+    if (trainingMode) {
+        $("#trainingDiv").show();
+    } else {
+        $("#trainingDiv").hide();
+    }
 
     // Update instructions
     if (keyword != cat["name"]) {

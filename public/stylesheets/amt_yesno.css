@@ -12,14 +12,14 @@
   font-size: 13pt;
 }
 
-canvas {
+.holderDiv {
+  text-align: center;
+}
+.holderDiv canvas {
   background: black;
   border: solid lightgray;
 }
 
-.holderDiv {
-  text-align: center;
-}
 .target{
   color: #0D0;
 }
@@ -88,7 +88,7 @@ canvas {
   border-width: 12px;
 }
 .focus0 canvas{
-  height: 200px;
+  height: 250px;
   display: block;
   margin-left: auto;
   margin-right: auto;
@@ -96,7 +96,7 @@ canvas {
   border-width: 9px; 
 }
 .focus1 canvas{ 
-  width: 150px;
+  width: 220px;
   display: block;
   margin-left: auto;
   margin-right: auto;
@@ -104,7 +104,7 @@ canvas {
   border-width: 6px; 
 }
 .focus2 canvas{
-  width: 60px;
+  width: 70px;
   display: block;
   margin-left: auto;
   margin-right: auto;
@@ -144,7 +144,7 @@ canvas {
 
 .focus b {
   position:absolute;
-  transform: translate(200px, 12px);
+  transform: translate(150px, 12px);
   color: #00F; font-size: 18pt;
   visibility: hidden;
 }

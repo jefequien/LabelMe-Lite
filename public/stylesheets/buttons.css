@@ -2,8 +2,35 @@
 * Button Styles
 */
 
-#navButtons {
-  margin-left: auto;
+.toolBtn-slider {
+  height:30px;
+  width:120px;
+  padding-left:0px;
+  padding-right:0px;
+}
+.toolBtn-slider input {
+  width:100%;
+}
+.toolBtn {
+  height: 50px;
+  width: 50px;
+
+  background: none;
+  color:white;
+  padding: 0px;
+  font-size: 12px;
+}
+.toolBtn-small {
+  height: 30px;
+  width: 30px;
+}
+.toolBtn:hover, .active {
+  background-color: #4a4a4a;
+  color:white;
+}
+.toolBtn:focus {
+  color:white;
+  outline:0 !important;
 }
 
 
@@ -24,37 +51,8 @@ hr {
 .fa-large{
   font-size: 30px;
 }
-.btn {
-  height: 50px;
-  width: 50px;
-  background: none;
-  color:white;
-  font-size: 12px;
-}
-.btn-small {
-   width: 30px;
-   height: 30px;
-   padding:0px;
-}
-.btn-slider {
-  height:30px;
-  width:120px;
-  padding-left:0px;
-  padding-right:0px;
-}
-.btn-slider input {
-  width:100%;
-}
 .btn-group-vertical {
   width:100%;
-}
-.btn:hover, .active {
-  background-color: #4a4a4a;
-  color:white;
-}
-.btn:focus {
-  color:white;
-  outline:0 !important;
 }
 .btn-matrix > .btn:nth-child(2n+3) {
   clear: left;
