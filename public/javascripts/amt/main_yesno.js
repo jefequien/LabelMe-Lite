@@ -49,7 +49,10 @@ function submitResults() {
     endTimer(coco, current_num);
 
     var results = evaluateYesNoBundle(coco, iouThreshold);
-    var passed = results.numPassed / results.numTests >= passingThreshold;
+    var passed = true;
+    if (results.numTests > 0) {
+        passed = results.numPassed / results.numTests >= passingThreshold;
+    }
 
     if (passed) {
         postYesNoBundle(params, coco);
@@ -65,7 +68,7 @@ function submitResults() {
         alertString += "You must pass " + passingThreshold * 100 + "% hidden tests in order to submit. ";
         alertString += "You passed " + results.numPassed + " / " + results.numTests  + " hidden tests. ";
         alertString += "\n\nOnly answer Yes to annotations with IOU > " + results.iouThreshold + ". ";
-        alertString += "\n\nPlease go back and improve your score. We recommend the start from the beginning. For more information, click Instructions. ";
+        alertString += "Please go back and improve your score. We recommend the start from the beginning. For more information, click Instructions. ";
         alertString += "\n\nYou spent on average " + results.averageTime.toFixed(3) + " seconds per annotation. ";
         alert(alertString);
     }

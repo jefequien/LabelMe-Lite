@@ -20,7 +20,7 @@ router.get('/annotations', function(req, res) {
 
     // Get COCO
     var datasetDir = path.join(DATA_DIR, datasetName);
-    var ann_fn = path.join(datasetDir, annSource + ".json");
+    var ann_fn = path.join(datasetDir, "annotations/" + annSource + ".json");
     var coco = loadCOCO(ann_fn);
     if (coco == null) {
         res.status(404).send('Annotation file not found');

@@ -27,6 +27,11 @@ router.get('/amt_edit/browser', function(req, res) {
 	var BUNDLES_DIR = path.join(__dirname, "../bundles");
     var task_dir = path.join(BUNDLES_DIR, "tasks");
     fs.readdir(task_dir, function(err, items) {
+        if (items == null) {
+            res.send("No files found.");
+            return;
+        }
+
         var html = "";
         for (var i = 0; i < items.length; i++) {
             var bundle_id = items[i].replace(".json", "");
@@ -45,6 +50,11 @@ router.get('/amt_yesno/browser', function(req, res) {
 	var BUNDLES_DIR = path.join(__dirname, "../bundles");
     var task_dir = path.join(BUNDLES_DIR, "tasks");
     fs.readdir(task_dir, function(err, items) {
+        if (items == null) {
+            res.send("No files found.");
+            return;
+        }
+
         var html = "";
         for (var i = 0; i < items.length; i++) {
             var bundle_id = items[i].replace(".json", "");
