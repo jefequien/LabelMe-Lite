@@ -5,6 +5,9 @@ var uuidv4 = require('uuid/v4');
 var router = express.Router();
 
 var BUNDLES_DIR = path.join(__dirname, "../bundles");
+if (! fs.existsSync(BUNDLES_DIR)){
+    fs.mkdirSync(BUNDLES_DIR);
+}
 
 router.post('/bundles', function(req, res) {
     var bundle = req.body;
@@ -13,7 +16,7 @@ router.post('/bundles', function(req, res) {
     // Make output directory
     var outputDir = path.join(BUNDLES_DIR, bundleType);
     if (! fs.existsSync(outputDir)){
-        fs.mkdirSync(outputDir, { recursive: true });
+        fs.mkdirSync(outputDir);
     }
 
     // Bundle info
