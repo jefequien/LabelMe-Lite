@@ -1,9 +1,8 @@
 
 var params = parseURLParams();
 if (Object.keys(params).length == 0) {
-    // Default params
-    params.bundle_id = "0202ba55407e420fa40964c2812edfbb";
-    setURLParams(params);
+    // No bundle_id
+    redirectToAmtBrowser();
 }
 
 var coco = new COCO();
@@ -61,7 +60,7 @@ function submitResults() {
         alertString += "\n\nYou spent on average " + results.averageTime.toFixed(3) + " seconds per annotation. ";
         alert(alertString);
 
-        redirectToYesNoBrowser();
+        redirectToAmtBrowser();
 
     } else {
         var alertString = "You failed! ";
@@ -101,8 +100,8 @@ function setDefaultAnswer(coco, current_num) {
         ann["accepted"] = false;
     }
 
-    if (trainingMode) {
-        ann["accepted"] = ann.iou > iouThreshold;
+    if (trainingMode && ann.hidden_test) {
+        ann["accepted"] = ann.hidden_test.iou > iouThreshold;
     }
 }
 function toggleAnswer() {

@@ -13,6 +13,10 @@ function getBundle(params, callback) {
     var endpoint = base_url + "/bundles/tasks/" + params.bundle_id + ".json";
     get_async(endpoint, callback);
 }
+function getBundlesList(callback) {
+    var endpoint = base_url + "/api/bundles_list";
+    get_async(endpoint, callback);
+}
 
 function getAnnotations(params, callback) {
     var endpoint = base_url + "/api/annotations?" + buildQuery(params);
@@ -37,7 +41,7 @@ function getImageURL(img) {
 
   if (dataset == "ade20k" || dataset == "coco" || dataset == "places") {
       // source_dir = "http://places.csail.mit.edu/scaleplaces/datasets";
-      source_dir = "http://labelmelite.csail.mit.edu/data";
+      source_dir = "https://labelmelite.csail.mit.edu/data";
   }
 
   var endpoint = source_dir + "/" + dataset + "/images/" + img.file_name;
@@ -62,11 +66,8 @@ function postEditBundle(params, coco) {
 //
 // Redirects
 //
-function redirectToYesNoBrowser() {
-  window.location.href = base_url + "/amt_yesno/browser";
-}
-function redirectToEditBrowser() {
-  window.location.href = base_url + "/amt_edit/browser";
+function redirectToAmtBrowser() {
+  window.location.href = base_url + "/amt_browser";
 }
 
 //

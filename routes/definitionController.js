@@ -1,7 +1,7 @@
 var express = require('express');
 var path = require('path');
 var fs = require('fs');
-var dictapi = require('./dictionary');
+var dictapi = require('../public/javascripts/utils/dictionary');
 var router = express.Router();
 
 var info_fn = "./public/assets/openvoc_release/info.json";
