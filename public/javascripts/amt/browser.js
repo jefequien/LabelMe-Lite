@@ -17,9 +17,13 @@ window.onload = function() {
 function addBundle(bundleId) {
 	var yesnoLink = yesnoUrl + "?" + buildQuery({"bundle_id": bundleId});
     var yesnoHref = "<a href=\"" + yesnoLink + "\" target=\"_blank\">YesNo</a>";
+
 	var editLink = editUrl + "?" + buildQuery({"bundle_id": bundleId});
     var editHref = "<a href=\"" + editLink + "\" target=\"_blank\">Edit</a>";
 
-	var html = bundleId + " " + yesnoHref + " " + editHref + " <br>";
+    var rawLink = base_url + "/bundles/tasks/" + bundleId + ".json";
+    var rawHref = "<a href=\"" + rawLink + "\" target=\"_blank\">Raw</a>";
+
+	var html = bundleId + " " + yesnoHref + " " + editHref + " " + rawHref + " <br>";
 	document.body.innerHTML += html;
 }
