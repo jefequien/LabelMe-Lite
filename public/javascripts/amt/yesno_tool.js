@@ -123,7 +123,7 @@ function getSquareBbox(ann) {
         yc = height / 2;
         s = Math.max(height, width);
     } else {
-        s = s * 1.25;
+        s = s * 1.5;
         var minSideLength = 0.2 * Math.min(height, width);
         s = Math.max(s, minSideLength);
     }
