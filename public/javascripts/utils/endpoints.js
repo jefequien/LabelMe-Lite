@@ -27,25 +27,33 @@ function getDefinition(keyword, callback) {
   get_async(endpoint, callback);
 }
 function getImageURL(img) {
-  var source_dir = base_url + "/data";
   var dataset = img.dataset;
-
   if (dataset == null) {
     // Infer dataset from img.filename
     if (img.file_name.includes("ADE")) {
       dataset = "ade20k";
+    } else if (img.file_name.includes("challenge")) {
+      dataset = "scaleplaces";
     } else {
       dataset = "places";
     }
   }
 
-  if (dataset == "ade20k" || dataset == "coco" || dataset == "places") {
-      // source_dir = "http://places.csail.mit.edu/scaleplaces/datasets";
-      source_dir = "https://labelmelite.csail.mit.edu/data";
+  if (dataset == "scaleplaces") {
+    var data_dir = "https://labelmelite.csail.mit.edu/data";
+    var endpoint = data_dir + "/scaleplaces/" + img.file_name;
+    return endpoint;
   }
-
-  var endpoint = source_dir + "/" + dataset + "/images/" + img.file_name;
-  return endpoint;
+  else if (dataset == "ade20k" || dataset == "coco" || dataset == "places") {
+    var data_dir = "https://labelmelite.csail.mit.edu/data";
+    var endpoint = data_dir + "/" + dataset + "/images/" + img.file_name;
+    return endpoint;
+  }
+  else {
+    var data_dir = base_url + "/data";
+    var endpoint = data_dir + "/" + dataset + "/images/" + img.file_name;
+    return endpoint;
+  }
 }
 
 
