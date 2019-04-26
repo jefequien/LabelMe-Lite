@@ -30,7 +30,7 @@
     <link href="stylesheets/labelmelite.css" rel="stylesheet">
     <link href="stylesheets/buttons.css" rel="stylesheet">
     <link href="stylesheets/instructions.css" rel="stylesheet">
-    <link href="stylesheets/amt_yesno.css" rel="stylesheet">
+    <link href="stylesheets/holders.css" rel="stylesheet">
     <link href="stylesheets/amt_edit.css" rel="stylesheet">
 
 </head>
@@ -39,8 +39,8 @@
     <div id="questionDiv">
         <div>
             <button type="button" class="btn btn-primary btn-sm" onclick="toggleInstruction(); ">Instructions</button>
-            <span>Please refine a <b style="color: #0B0;">near perfect</b> annotation of <b id="category">category</b>.</span>
-            <button type="button" class="btn btn-primary btn-sm" id="submitButton" onclick="return submitResults()" disabled>Submit (? images left)</button>
+            <span>Please annotate <b id="category">category</b>.</span>
+            <button type="button" class="btn btn-primary btn-sm" id="submitButton" onclick="return submit()" disabled>Submit (? images left)</button>
         </div>
         <div id="definitionDiv">
             <b>Definition: </b><span id="definition">Loading...</span>
@@ -61,16 +61,16 @@
 
         <div id="exampleDiv">
             <div>
-                <div id="exampleYes0" class="holderDiv focus0 target"><p>No</p><p>Yes</p><b>IoU=0.000</b><canvas></canvas></div>
-                <div id="exampleNo0" class="holderDiv focus0 noise"><p>No</p><p>Yes</p><b>IoU=0.000</b><canvas></canvas></div>
+                <div id="exampleYes0" class="holderDiv focus0"><p>No</p><p>Yes</p><b>IoU=0.000</b><canvas></canvas></div>
+                <div id="exampleNo0" class="holderDiv focus0"><p>No</p><p>Yes</p><b>IoU=0.000</b><canvas></canvas></div>
             </div>
             <div>
-                <div id="exampleYes1" class="holderDiv focus0 target"><p>No</p><p>Yes</p><b>IoU=0.000</b><canvas></canvas></div>
-                <div id="exampleNo1" class="holderDiv focus0 noise"><p>No</p><p>Yes</p><b>IoU=0.000</b><canvas></canvas></div>
+                <div id="exampleYes1" class="holderDiv focus0"><p>No</p><p>Yes</p><b>IoU=0.000</b><canvas></canvas></div>
+                <div id="exampleNo1" class="holderDiv focus0"><p>No</p><p>Yes</p><b>IoU=0.000</b><canvas></canvas></div>
             </div>
             <div>
-                <div id="exampleYes2" class="holderDiv focus0 target"><p>No</p><p>Yes</p><b>IoU=0.000</b><canvas></canvas></div>
-                <div id="exampleNo2" class="holderDiv focus0 noise"><p>No</p><p>Yes</p><b>IoU=0.000</b><canvas></canvas></div>
+                <div id="exampleYes2" class="holderDiv focus0"><p>No</p><p>Yes</p><b>IoU=0.000</b><canvas></canvas></div>
+                <div id="exampleNo2" class="holderDiv focus0"><p>No</p><p>Yes</p><b>IoU=0.000</b><canvas></canvas></div>
             </div>
         </div>
 
@@ -127,23 +127,21 @@
 
     <div id="bottombar" class="sidebar">
       <div class="center">
-        <button type="button" class="btn toolBtn" id="zoomIn"><i class="fa fa-search-plus"></i></i></button>
-        <button type="button" class="btn toolBtn" id="zoomOut"><i class="fa fa-search-minus"></i></button>
-        <button type="button" class="btn toolBtn" id="focus"><i class="fa fi-arrows-out"></i></button>
-        <button type="button" class="btn toolBtn" id="hide"><i class="fa fa-eye-slash"></i></button>
+        <button type="button" class="btn toolBtn toolBtn-medium" id="zoomIn"><i class="fa fa-search-plus"></i></i></button>
+        <button type="button" class="btn toolBtn toolBtn-medium" id="zoomOut"><i class="fa fa-search-minus"></i></button>
+        <button type="button" class="btn toolBtn toolBtn-medium" id="focus"><i class="fa fi-arrows-out"></i></button>
+        <button type="button" class="btn toolBtn toolBtn-medium" id="hide"><i class="fa fa-eye-slash"></i></button>
       </div>
     </div>
   </div>
 
 
   <div id="yesnoDiv">
-      <div id="holderDiv-3" class="holderDiv focus3"><p>No</p><p>Yes</p><canvas></canvas></div>
       <div id="holderDiv-2" class="holderDiv focus2"><p>No</p><p>Yes</p><canvas></canvas></div>
       <div id="holderDiv-1" class="holderDiv focus1"><p>No</p><p>Yes</p><b></b><canvas></canvas></div>
-      <div id="holderDiv0" class="holderDiv focus"><p>No</p><p>Yes</p><b></b><canvas height="100" width="100"></canvas></div> 
+      <div id="holderDiv0" class="holderDiv focus"><p>No</p><p>Yes</p><b></b><canvas></canvas></div> 
       <div id="holderDiv1" class="holderDiv focus1"><p>No</p><p>Yes</p><b></b><canvas></canvas></div>
       <div id="holderDiv2" class="holderDiv focus2"><p>No</p><p>Yes</p><canvas></canvas></div>
-      <div id="holderDiv3" class="holderDiv focus3"><p>No</p><p>Yes</p><canvas></canvas></div>
   </div>
   
   <!-- Fancy tools 
@@ -153,6 +151,7 @@
   <!-- Util Javascripts -->
   <script type="text/javascript" src="javascripts/utils/coco.js"></script>
   <script type="text/javascript" src="javascripts/utils/opencv.js"></script>
+  <script type="text/javascript" src="javascripts/utils/opencv_utils.js"></script>
   <script type="text/javascript" src="javascripts/utils/rle.js"></script>
   <script type="text/javascript" src="javascripts/utils/endpoints.js"></script>
   
@@ -168,7 +167,7 @@
   <script type="text/paperscript" src="javascripts/tool/keys.js" canvas="toolCanvas"></script>
 
   <!-- Main Javascripts -->
-  <script type="text/javascript" src="javascripts/amt/yesno_tool.js"></script>
+  <script type="text/javascript" src="javascripts/amt/holders.js"></script>
   <script type="text/javascript" src="javascripts/amt/edit_tool.js"></script>
   <script type="text/javascript" src="javascripts/amt/edit_tool_buttons.js"></script>
   <script type="text/javascript" src="javascripts/amt/evaluation.js"></script>

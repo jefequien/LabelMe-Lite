@@ -20,6 +20,10 @@
   padding: 0px;
   font-size: 12px;
 }
+.toolBtn-medium {
+  height: 40px;
+  width: 40px;
+}
 .toolBtn-small {
   height: 30px;
   width: 30px;

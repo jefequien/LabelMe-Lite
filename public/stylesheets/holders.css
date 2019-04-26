@@ -17,14 +17,14 @@
 }
 .holderDiv canvas {
   background: black;
-  border: solid lightgray;
+  outline: solid lightgray;
 }
 
 .target{
   color: #0D0;
 }
 .target canvas{
-  border: 3px solid #0D0;
+  outline: 3px solid #0D0;
 }
 .target p:first-child{
   display: none;
@@ -40,7 +40,7 @@
   color: #F00;
 }
 .noise canvas{
-  border: 3px solid #F00;
+  outline: 3px solid #F00;
 }
 .noise p:first-child{
   display: inline;
@@ -56,44 +56,44 @@
 .focus { 
   display: table-cell;
     vertical-align: middle; 
-    padding-left: 12px;
-    padding-right: 12px;
+    padding-left: 24px;
+    padding-right: 24px;
     padding-top: 0px;
     padding-bottom: 0px;
-  width: 500px; height: 100%;
+  width: 800px; height: 100%;
 } 
 .focus0{ 
   display: table-cell;
     vertical-align: middle; 
-    padding: 9px;   
-  width: 400px; height: 100%;
+    padding: 18px;   
+  width: 500px; height: 100%;
 } 
 .focus1{ 
   display: table-cell;
     vertical-align: middle; 
-    padding: 6px;   
+    padding: 12px;   
   width: 150px; height: 100%;
 } 
 .focus2{ 
   display: table-cell;
     vertical-align: middle; 
-    padding: 4px;   
+    padding: 8px;   
   width: 50px;  height: 100%; 
 } 
 .focus3{ 
   display: table-cell;
     vertical-align: middle; 
-    padding: 2px;   
+    padding: 4px;   
   width: 25px;  height: 100%; 
 } 
 
 .focus canvas{
-  height: 350px;
+  height: 400px;
   display: block;
   margin-left: auto;
   margin-right: auto;
   margin-bottom: 0px;   
-  border-width: 12px;
+  outline-width: 12px;
 }
 .focus0 canvas{
   height: 250px;
@@ -101,23 +101,23 @@
   margin-left: auto;
   margin-right: auto;
   margin-bottom: 0px;
-  border-width: 9px; 
+  outline-width: 9px; 
 }
 .focus1 canvas{ 
-  width: 220px;
+  height: 100px;
   display: block;
   margin-left: auto;
   margin-right: auto;
   margin-bottom: 0px;
-  border-width: 6px; 
+  outline-width: 6px; 
 }
 .focus2 canvas{
-  width: 70px;
+  height: 35px;
   display: block;
   margin-left: auto;
   margin-right: auto;
   margin-bottom: 0px;
-  border-width: 4px; 
+  outline-width: 4px; 
 } 
 .focus3 canvas{ 
   max-width: 21px;
@@ -126,12 +126,12 @@
   margin-left: auto;
   margin-right: auto;
   margin-bottom: 0px;
-  border-width: 2px; 
+  outline-width: 2px; 
 } 
 
 .focus p{ 
   display: none;
-  font-weight: bolder; font-size: 28pt; 
+  font-weight: bolder; font-size: 34pt; 
 }
 .focus0 p{ 
   display: none;

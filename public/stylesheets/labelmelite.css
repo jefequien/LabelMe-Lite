@@ -10,8 +10,6 @@ html, body {
     left:80px;
     z-index: 0;
 
-    border: none;
-    border-top: 6px solid lightgray;
     background-image: url(/assets/black_grid.jpg);
     background-size: 300px;
 }
@@ -25,17 +23,16 @@ html, body {
 #rightbar {
     width: 200px;
     right: 0;
+    text-align: left;
 
     border-top: 6px solid lightgray;
     border-left: 6px solid lightgray;
-    text-align: left;
 }
 #bottombar {
     height: 50px;
     width: 100%;
     bottom: 0;
 
-    border-top: 6px solid lightgray;
     background: black;
     font-size: 24px;
     padding: 10px;
@@ -46,9 +43,11 @@ html, body {
 }
 .navbar {
     height: 70px;
+    z-index: 2;
 
     background-color: #2e2e2e;
     border-bottom: 7px solid yellow;
+    box-shadow: 0px 6px 0px 0px lightgray;
 }
 .navbar-brand {
     color: white;

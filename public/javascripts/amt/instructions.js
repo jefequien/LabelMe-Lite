@@ -1,7 +1,6 @@
 
 
 var keyword = "";
-var numExamples = 3;
 
 function loadInstructions(coco, current_num, trainingMode) {
     var ann = coco.dataset.annotations[current_num];
@@ -15,14 +14,15 @@ function loadInstructions(coco, current_num, trainingMode) {
     } else {
         $("#trainingDiv").hide();
     }
+    updateSubmitButton(coco, current_num, trainingMode)
 
     // Update instructions
     if (keyword != cat["name"]) {
         keyword = cat["name"];
-        getDefinition(keyword, function(res) {
-            console.log("Definitions: ", res);
-            if (res) {
-                entry = res[0];
+        getDefinition(keyword, function(response) {
+            console.log("Definitions: ", response);
+            if (response) {
+                entry = response[0];
                 updateCategory(entry);
             }
         });
@@ -42,42 +42,27 @@ function updateCategory(entry) {
     getAnnotations(query, function(res) {
         console.log("Examples: ", res);
         var coco_examples = new COCO(res);
-        loadExamples(coco_examples);
+        loadExampleHolders(coco_examples);
     });
 }
 
-function loadExamples(coco) {
-    var yesExamples = [];
-    var noExamples = [];
-    for (var i = 0; i < coco.dataset.annotations.length; i++) {
-        var ann = coco.dataset.annotations[i];
-        if (ann.hidden_test) {
-            if (ann.hidden_test.iou > 0.8) {
-                yesExamples.push(ann);
-            }
-            else if (ann.hidden_test.iou < 0.7) {
-                noExamples.push(ann);
-            }
+function updateSubmitButton(coco, current_num, trainingMode) {
+    var anns = coco.dataset.annotations;
+    var images_left = 0;
+    for (var i = 0; i < anns.length; i++) {
+        if (anns[i].current_task == null) {
+            images_left += 1;
         }
     }
 
-    for (var i = 0; i < numExamples; i++) {
-        var holderDiv = "#exampleYes" + i.toString();
-        clearHolderDiv(holderDiv);
-        $(holderDiv + " b").html("IoU=None");
-        if (i < yesExamples.length) {
-            var ann = yesExamples[i];
-            var img = coco.imgs[ann["image_id"]];
-            drawHolderDiv(holderDiv, img, ann, panels=2, showGt=true);
-        }
-
-        var holderDiv = "#exampleNo" + i.toString();
-        clearHolderDiv(holderDiv);
-        $(holderDiv + " b").html("IoU=None");
-        if (i < noExamples.length) {
-            var ann = noExamples[i];
-            var img = coco.imgs[ann["image_id"]];
-            drawHolderDiv(holderDiv, img, ann, panels=2, showGt=true);
-        }
+    $("#submitButton").html("Submit (" + images_left + " images left)"); 
+    $("#submitButton").prop('disabled', true); 
+    if (images_left == 0) {
+        $("#submitButton").html("Submit"); 
+        $("#submitButton").prop('disabled', false); 
+    }
+    if (trainingMode) {
+        $("#submitButton").html("Training Mode (" + images_left + " images left)");
+        $("#submitButton").prop('disabled', true); 
     }
 }

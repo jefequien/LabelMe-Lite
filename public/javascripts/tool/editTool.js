@@ -257,10 +257,10 @@ editTool.snapCurser = function() {
   }
 }
 editTool.enforceStyles = function() {
-  var pointHeight = this.toolSize * 1.5;
-  var lineWidth = this.toolSize * 0.8;
+  var pointHeight = this.toolSize * 2;
+  var lineWidth = this.toolSize * 0.5;
   var color0 = "white";
-  var color1 = "gray";
+  var color1 = "blue";
 
   // this.annotation styles
   if (this.annotation) {
@@ -295,7 +295,7 @@ editTool.enforceStyles = function() {
   this.editedBoundary.strokeColor = color0;
   this.selectedArea.strokeColor = color1;
   this.selectedArea.fillColor = color1;
-  this.selectedArea.fillColor.alpha = 0.2;
+  this.selectedArea.fillColor.alpha = 0.7;
 
   this.trace.strokeWidth = lineWidth;
   this.closestBoundary.strokeWidth = lineWidth;
