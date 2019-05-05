@@ -6,11 +6,15 @@ var editUrl = base_url + "/amt_edit";
 window.onload = function() {
     document.body.innerHTML = "Loading...";
     getBundlesList(function(res) {
-        document.body.innerHTML = "";
-    	for (var i = 0; i < res.length; i++) {
-    		var bundleId = res[i];
-    		addBundle(bundleId);
-    	}
+        if (res.length == 0) {
+            document.body.innerHTML = "Nothing found.";
+        } else {
+            document.body.innerHTML = "";
+            for (var i = 0; i < res.length; i++) {
+                var bundleId = res[i];
+                addBundle(bundleId);
+            }
+        }
     });
 }
 

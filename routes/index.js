@@ -5,7 +5,7 @@ var router = express.Router();
 
 /* GET home page. */
 router.get('/tool', function(req, res, next) {
-  res.render('full', { title: 'LabelMe-Lite' });
+  res.render('interface', { title: 'LabelMe-Lite' });
 });
 
 router.get('/', function(req, res, next) {

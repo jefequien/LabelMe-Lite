@@ -32,7 +32,7 @@
 		    }
 		  },
 		  {
-		    "category_id": 1,
+		    "category_id": 2,
 		    "image_id": 2,
 		    "id": 2,
 		    "segmentation": {
@@ -48,7 +48,7 @@
 	    },
 	    {
 	      "id": 2,
-	      "name": "windowpane"
+	      "name": "random"
 	    },
 	    {
 	      "id": 3,

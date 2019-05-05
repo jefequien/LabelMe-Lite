@@ -160,18 +160,36 @@ newTool.restore = function(checkpoint) {
 
   for (var i = 0; i < checkpoint.length; i++) {
     var point = this.curser.clone();
-    point.position = background.getPoint(checkpoint[i]);
+    point.position = this.getPoint(checkpoint[i]);
     this.points.push(point);
   }
 }
 newTool.save = function() {
   var checkpoint = [];
   for (var i = 0; i < this.points.length; i++) {
-    var pixel = background.getPixel(this.points[i].position);
+    var pixel = this.getPixel(this.points[i].position);
     checkpoint.push(pixel);
   }
   this.undoHistory.push(checkpoint);
   this.redoHistory = [];
+}
+newTool.getPixel = function(point) {
+  var bounds = background.image.bounds;
+  var size = background.image.size;
+  var tl = bounds.topLeft;
+
+  var x = (point.x - tl.x) * (size.height/ bounds.height) - 0.5;
+  var y = (point.y - tl.y) * (size.height/ bounds.height) - 0.5;
+  return new Point(x, y);
+}
+newTool.getPoint = function(pixel) {
+  var bounds = background.image.bounds;
+  var size = background.image.size;
+  var tl = bounds.topLeft;
+
+  var x = (pixel.x + 0.5) * (bounds.height / size.height) + tl.x;
+  var y = (pixel.y + 0.5) * (bounds.height / size.height) + tl.y;
+  return new Point(x, y);
 }
 
 // 

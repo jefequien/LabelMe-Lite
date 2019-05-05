@@ -2,7 +2,6 @@
 
 
 function loadMainHolders(coco, current_num, showGt=false) {
-
     // Load the 5 holders on the main page
     for (var i = -2; i <= 2; i++) {
         var holder = "#holderDiv" + i.toString();
@@ -14,30 +13,26 @@ function loadMainHolders(coco, current_num, showGt=false) {
             state = ann.current_task["accepted"] ? "yes" : "no";
         }
 
-        if (ann && ann.hidden_test) {
-            ann.hidden_test["iou"] = computeIOU(ann["segmentation"], ann.hidden_test["segmentation"]);
-        }
-
         loadHolder(holder, coco, ann, showGt);
-        loadHolderStyle(holder, ann, showGt, state);
+        loadHolderStyle(holder, ann, showIou=showGt, state);
     }
 }
 
 function loadExampleHolders(coco, numExamples=3) {
-
     // Load the example holders on the instructions page
     var yesExamples = [];
     var noExamples = [];
     for (var i = 0; i < coco.dataset.annotations.length; i++) {
         var ann = coco.dataset.annotations[i];
-        if (ann.hidden_test) {
-            ann.hidden_test["iou"] = computeIOU(ann["segmentation"], ann.hidden_test["segmentation"]);
+        if ( ! ann.hidden_test) {
+            continue;
+        }
 
-            if (ann.hidden_test["iou"] > 0.8) {
-                yesExamples.push(ann);
-            } else if (ann.hidden_test["iou"] < 0.7) {
-                noExamples.push(ann);
-            }
+        var iou = computeIOU(ann["segmentation"], ann.hidden_test["segmentation"]);
+        if (iou > 0.8) {
+            yesExamples.push(ann);
+        } else if (iou < 0.6) {
+            noExamples.push(ann);
         }
         if (yesExamples.length == numExamples && noExamples.length == numExamples) {
             break;
@@ -48,28 +43,30 @@ function loadExampleHolders(coco, numExamples=3) {
         var holder = "#exampleYes" + i.toString();
         var ann = yesExamples[i];
         loadHolder(holder, coco, ann, showGt=true);
-        loadHolderStyle(holder, ann, showGt=true, state="yes");
+        loadHolderStyle(holder, ann, showIou=false, state="yes");
 
         var holder = "#exampleNo" + i.toString();
         var ann = noExamples[i];
         loadHolder(holder, coco, ann, showGt=true);
-        loadHolderStyle(holder, ann, showGt=true, state="no");
+        loadHolderStyle(holder, ann, showIou=false, state="no");
     }
 }
 
 
 var holderCache = {};
 function loadHolder(holder, coco, ann, showGt=false, showSegm=true, showBbox=false) {
-    var cv = $(holder + " canvas")[0];
-    var ctx = cv.getContext('2d');
-    ctx.clearRect(0, 0, cv.width, cv.height);
     if (ann == null) {
+        var cv = $(holder + " canvas")[0];
+        var ctx = cv.getContext('2d');
+        ctx.clearRect(0, 0, cv.width, cv.height);
         return;
     }
 
     // Load from cache
     var key = ann["id"] + JSON.stringify(ann["segmentation"]);
     if (key in holderCache) {
+        var cv = $(holder + " canvas")[0];
+        var ctx = cv.getContext('2d');
         var imageData = holderCache[key];
         cv.width = imageData.width;
         cv.height = imageData.height;
@@ -82,30 +79,42 @@ function loadHolder(holder, coco, ann, showGt=false, showSegm=true, showBbox=fal
     var segmGt = (showGt && showSegm && ann.hidden_test) ? ann.hidden_test["segmentation"] : null;
     var bboxGt = (showGt && showBbox && ann.hidden_test) ? ann.hidden_test["bbox"] : null;
 
-    // Square crop bbox
+    // Prepare crop bbox
     var cropBbox = getCropBbox(ann);
     var x = cropBbox[0];
     var y = cropBbox[1];
     var w = cropBbox[2];
     var h = cropBbox[3];
     
-    // Draw annotation
+    // Prepare panels
     var leftPanel = drawPanel(holder, segm, bbox, cropBbox);
     var rightPanel = drawPanel(holder, segmGt, bboxGt, cropBbox);
-    var panelSpacing = 0.05 * w;
+    var panelSpacing = 0.01 * w;
 
+    // Draw panels
+    var cv = $(holder + " canvas")[0];
+    var ctx = cv.getContext('2d');
     cv.width = w + panelSpacing + w;
     cv.height = h;
     ctx.putImageData(leftPanel, 0, 0);
     ctx.putImageData(rightPanel, w + panelSpacing, 0);
-    holderCache[key] = ctx.getImageData(0, 0, cv.width, cv.height);
+    // holderCache[key] = ctx.getImageData(0, 0, cv.width, cv.height);
 
-    // Insert image under annotation
+    // Handle with image
     var img = coco.imgs[ann["image_id"]];
     var image = new Image();
     image.crossOrigin = "Anonymous";
     image.src = getImageURL(img);
     image.onload = function () {
+        // Draw panels
+        var cv = $(holder + " canvas")[0];
+        var ctx = cv.getContext('2d');
+        cv.width = w + panelSpacing + w;
+        cv.height = h;
+        ctx.putImageData(leftPanel, 0, 0);
+        ctx.putImageData(rightPanel, w + panelSpacing, 0);
+
+        // Draw panels with image
         ctx.globalCompositeOperation = "destination-over";
         ctx.drawImage(image, x, y, w, h, 0, 0, w, h);
         ctx.drawImage(image, x, y, w, h, w + panelSpacing, 0, w, h);
@@ -113,7 +122,7 @@ function loadHolder(holder, coco, ann, showGt=false, showSegm=true, showBbox=fal
     };
 }
 
-function loadHolderStyle(holder, ann, showGt=false, state=null) {
+function loadHolderStyle(holder, ann, showIou=false, state=null) {
     if (ann == null) {
         $(holder).css('visibility','hidden');
         $(holder + " b").css('visibility', 'hidden');
@@ -132,8 +141,11 @@ function loadHolderStyle(holder, ann, showGt=false, state=null) {
         $(holder).toggleClass("noise", false);
     }
 
-    if (showGt) {
-        var iou = ann.hidden_test ? ann.hidden_test["iou"] : 0;
+    if (showIou) {
+        var iou = 0;
+        if (ann.hidden_test) {
+            iou = computeIOU(ann["segmentation"], ann.hidden_test["segmentation"]);
+        }
         $(holder + " b").html("IoU=" + iou.toFixed(3));
         $(holder + " b").css('visibility', 'visible');
     } else {
@@ -181,23 +193,25 @@ function drawPanel(holder, segm, bbox, cropBbox) {
     return crop;
 }
 
-function getCropBbox(ann, margin=2, maxZoom=5) {
+function getCropBbox(ann, margin=2, maxZoom=5, minZoom=1) {
     var h = ann["segmentation"]["size"][0];
     var w = ann["segmentation"]["size"][1];
     var min_s = Math.max(h, w) / maxZoom;
-    var max_s = Math.max(h, w);
+    var max_s = Math.max(h, w) / minZoom;
 
     var bbox = ann["bbox"];
     var xc = bbox[0] + bbox[2]/2;
     var yc = bbox[1] + bbox[3]/2;
     var s = Math.max(bbox[2], bbox[3]);
-    if (s <= 1) {
+    if (s > 1) {
+        s = s * margin
+        s = Math.min(Math.max(s, min_s), max_s);
+    } else {
         // Bounding box is too small
-        return [0, 0, w, h];
+        xc = w / 2;
+        yc = h / 2;
+        s = max_s;
     }
-
-    s = s * margin
-    s = Math.min(Math.max(s, min_s), max_s);
     var x = xc - s/2;
     var y = yc - s/2;
     var square_bbox = [x, y, s, s];

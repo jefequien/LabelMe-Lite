@@ -22,10 +22,7 @@ function getAnnotations(params, callback) {
     var endpoint = base_url + "/api/annotations?" + buildQuery(params);
     get_async(endpoint, callback);
 }
-function getDefinition(keyword, callback) {
-  var endpoint = base_url + "/api/definitions?" + buildQuery({"keyword": keyword});
-  get_async(endpoint, callback);
-}
+
 function getImageURL(img) {
   var dataset = img.dataset;
   if (dataset == null) {
@@ -54,6 +51,18 @@ function getImageURL(img) {
     var endpoint = data_dir + "/" + dataset + "/images/" + img.file_name;
     return endpoint;
   }
+}
+
+function getDefinition(cat, callback) {
+  var keyword = cat["name"];
+  var endpoint = base_url + "/api/definitions?" + buildQuery({"keyword": keyword});
+  get_async(endpoint, function(res) {
+    if (res && res.length != 0) {
+      callback(res[0])
+    } else {
+      callback();
+    }
+  });
 }
 
 

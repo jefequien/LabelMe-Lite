@@ -8,10 +8,49 @@ html, body {
     height:calc(100% - 70px);
     width:calc(100% - 280px);
     left:80px;
-    z-index: 0;
+    z-index: 10;
 
     background-image: url(/assets/black_grid.jpg);
     background-size: 300px;
+}
+
+
+.navbar {
+    height: 70px;
+    z-index: 20;
+
+    background-color: #2e2e2e;
+    border-bottom: 7px solid yellow;
+    box-shadow: 0px 6px 0px 0px lightgray;
+}
+.navbar-brand {
+    color: white;
+    font-size: 36px;
+    font-weight: lighter;
+}
+.navbar-brand:hover {
+    color: gray;
+}
+.navbar-text{
+    color: white;
+    font-size: 14px;
+    margin-left: 10px;
+}
+#navButtons {
+  margin-left: auto;
+}
+
+
+.sidebar {
+    position: absolute;
+    height: calc(100% - 70px);
+    width: 50px;
+    z-index: 0;
+
+    color: white;
+    background-color: #6b6b6b;
+    overflow-y: scroll;
+    text-align: center;
 }
 #leftbar {
     width: 80px;
@@ -33,46 +72,9 @@ html, body {
     width: 100%;
     bottom: 0;
 
-    background: black;
-    font-size: 24px;
-    padding: 10px;
+    border-top: 6px solid lightgray;
 }
 
-#navButtons {
-  margin-left: auto;
-}
-.navbar {
-    height: 70px;
-    z-index: 2;
-
-    background-color: #2e2e2e;
-    border-bottom: 7px solid yellow;
-    box-shadow: 0px 6px 0px 0px lightgray;
-}
-.navbar-brand {
-    color: white;
-    font-size: 36px;
-    font-weight: lighter;
-}
-.navbar-brand:hover {
-    color: gray;
-}
-.navbar-text{
-    color: white;
-    font-size: 14px;
-    margin-left: 10px;
-}
-.sidebar {
-    position: absolute;
-    height: calc(100% - 70px);
-    width: 50px;
-    z-index: 1;
-
-    color: white;
-    background-color: #6b6b6b;
-    overflow-y: scroll;
-    text-align: center;
-}
 
 /* For annotation*/
 ul.fancytree-container {

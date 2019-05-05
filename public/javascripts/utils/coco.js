@@ -1,7 +1,6 @@
 
 
 function COCO(dataset) {
-    this.dataset = dataset;
     this.anns = {};
     this.cats = {};
     this.imgs = {};
@@ -10,9 +9,15 @@ function COCO(dataset) {
     this.catToImgs = {};
     this.fnToImgId = {};
 
-    if (dataset) {
-        this.createIndex();
+    this.dataset = dataset;
+    if ( ! this.dataset) {
+        this.dataset = {}
+        this.dataset.images = [];
+        this.dataset.annotations = [];
+        this.dataset.categories = [];
     }
+
+    this.createIndex();
 }
 
 COCO.prototype.createIndex = function () {

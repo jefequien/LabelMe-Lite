@@ -5,48 +5,51 @@ selectTool.onMouseMove = function(event) {
   this.curser.position = event.point;
 
   this.annotation = this.getAnnotationAt(this.curser.position);
-
   this.enforceStyles();
 }
-selectTool.onMouseClick = function(event) {
-  this.onMouseMove(event);
-  if (this.annotation) {
-    if (background.lastFocus != this.annotation) {
-      background.focus(this.annotation);
-    }
-    editTool.switch();
-  }
+selectTool.onMouseDrag = function(event) {
+  this.curser.position = event.point;
+
+  background.move(event.delta);
+  this.dragDelta += event.delta.length;
+  this.enforceStyles();
 }
 selectTool.onMouseDown = function(event) {
+  this.curser.position = event.point;
+
   this.dragDelta = 0;
 }
-selectTool.onMouseDrag = function(event) {
-  this.dragDelta += event.delta.length;
-  background.move(event.delta);
-  this.onMouseMove(event);
-}
 selectTool.onMouseUp = function(event) {
+  this.curser.position = event.point;
+
   if (this.dragDelta < 15) {
-    this.onMouseClick(event);
+    this.annotation = this.getAnnotationAt(this.curser.position);
+    if (this.annotation) {
+      if (this.annotation != background.lastFocusedAnnotation) {
+        background.focus(this.annotation);
+      }
+      editTool.switch();
+    }
   }
 }
 selectTool.onKeyDown = function(event) {
   if (event.key == 'u') {
-    alert("Please select an annotation first.");
+    this.annotation.undo();
+    this.refreshTool();
+    flashButton("undo");
   }
-  if (event.key == 'y') {
-    alert("Please select an annotation first.");
+  else if (event.key == 'y') {
+    this.annotation.redo();
+    this.refreshTool();
+    flashButton("redo");
   }
-  if (event.key == 'backspace') {
-    alert("Please select an annotation first.");
+  if (event.key == 'escape') {
+    background.focus();
   }
+
   if (event.key == 'i') {
     annotations.styleInverted = ( ! annotations.styleInverted);
     this.refreshTool();
-  }
-  
-  if (event.key == 'escape') {
-    background.focus();
   }
   onKeyDownShared(event);
 }
@@ -62,7 +65,7 @@ selectTool.deactivate = function() {
 selectTool.switch = function() {
   var lastAnnotation = paper.tool.annotation;
   var lastCurserPosition = (paper.tool.curser) ? paper.tool.curser.position : background.viewCenter;
-  var lastToolSize = parseInt(toolSlider.value);
+  var lastToolSize = (paper.tool.toolSize) ? paper.tool.toolSize : parseInt(buttons["slider"].value);
   
   this.toolName = "selectTool";
   console.log("Switching to", this.toolName);
@@ -86,13 +89,17 @@ selectTool.getAnnotationAt = function(point) {
   return null;
 }
 selectTool.getNearestAnnotation = function(point) {
+  var nearestAnnotation = this.getAnnotationAt(point);
+  if (nearestAnnotation) {
+    return nearestAnnotation;
+  }
+
   var minDist = null;
-  var nearestAnnotation = null;
   for (var i = 0; i < annotations.length; i++) {
     var dist = point.getDistance(annotations[i].boundary.getNearestPoint(point));
     if (minDist == null || dist < minDist) {
-      minDist = dist;
       nearestAnnotation = annotations[i];
+      minDist = dist;
     }
   }
   return nearestAnnotation;
@@ -104,10 +111,10 @@ selectTool.getNearestAnnotation = function(point) {
 selectTool.enforceStyles = function() {
   // Annotation styles
   for (var i = 0; i < annotations.length; i++) {
-    if (annotations[i] != this.annotation) {
-      annotations[i].unhighlight();
+    if (annotations[i] == this.annotation) {
+      annotations[i].highlight();
     } else {
-      this.annotation.highlight();
+      annotations[i].unhighlight();
     }
   }
 }

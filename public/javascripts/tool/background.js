@@ -3,41 +3,27 @@
  */
 
 function Background() {
+  this.maxZoom = 12;
+  this.minZoom = 0.75;
+  this.focusMargin = 2;
+  this.focusMaxZoom = 5;
+  this.focusMinZoom = 1;
+
+  this.viewPercentage = 0.8;
   this.setViewParameters();
   this.addMouseListeners();
 
-  this.maxScale = 12;
-  this.minScale = 0.75;
-  this.focusMaxScale = 5;
-
   this.image = new Path();
   this.filter = new Path();
-
-  var raster = new Path.Rectangle(this.viewRect).rasterize(paper.view.resolution / window.devicePixelRatio);
-  this.setImage(raster);
+  this.canny = new Path();
+  this.setBlankImage();
 }
-Background.prototype.setViewParameters = function() {
-  var h = paper.view.size.height;
-  var w = paper.view.size.width;
-  this.viewCenter = new Point(0.5 * w, 0.5 * h);
-
-  var tl = this.viewCenter - new Point(0.4 * w, 0.4 * h);
-  var br = this.viewCenter + new Point(0.4 * w, 0.4 * h);
-  this.viewRect = new Rectangle(tl, br);
-}
-Background.prototype.setImage = function(image) {
-  this.image.remove();
-  this.image = image;
-
-  this.alignImage(this.image);
-  this.image.insertAbove(this.filter);
-
-  // Setup this.filter
-  this.image.blendMode = 'hard-light';
-  var bounds = this.image.bounds;
-  this.filter.segments = [bounds.topLeft, bounds.topRight, bounds.bottomRight, bounds.bottomLeft];
-  this.filter.fillColor = new Color(0.5);
-  this.filter.sendToBack();
+Background.prototype.setViewParameters = function(viewPercentage) {
+  if (viewPercentage) {
+    this.viewPercentage = viewPercentage;
+  }
+  this.viewCenter = new Point(paper.view.size) / 2;
+  this.viewSize = paper.view.size * this.viewPercentage;
 }
 Background.prototype.addMouseListeners = function() {
   var canvas = document.getElementById('toolCanvas');
@@ -46,13 +32,51 @@ Background.prototype.addMouseListeners = function() {
     if (e.ctrlKey) {
       deltaY *= 2;
     }
-    var scale = Math.abs(1 - 0.005 * deltaY);
+    var delta = Math.abs(1 - 0.005 * deltaY);
     var center = new Point(e.offsetX, e.offsetY);
-    background.scale(scale, center);
+    background.scale(delta, center);
     paper.tool.curser.position = center;
     paper.tool.refreshTool();
     e.preventDefault();
   });
+}
+
+//
+// Set Image
+//
+Background.prototype.setImage = function(image) {
+  this.image.remove();
+  this.image = image;
+  this.image.sendToBack();
+
+  if (annotations.length == 0) {
+    this.image.position = this.viewCenter;
+  } else {
+    // Align with first annotation
+    var ann_bounds = annotations[0].raster.bounds;
+    var img_bounds = this.image.bounds;
+    this.image.translate(ann_bounds.topLeft - img_bounds.topLeft);
+    this.image.scale(ann_bounds.height / img_bounds.height, ann_bounds.topLeft);
+  }
+  this.setFilter();
+  this.setCanny();
+}
+Background.prototype.setBlankImage = function(size) {
+  if ( ! size || size.width == 0 || size.height == 0) {
+    size = this.viewSize;
+  }
+  var rect = new Path.Rectangle(size);
+  var image = rect.rasterize(paper.view.resolution / window.devicePixelRatio);
+  rect.remove();
+  this.setImage(image);
+}
+Background.prototype.setFilter = function() {
+  // Setup filter for adjusting image brightness
+  this.image.blendMode = 'hard-light';
+  var bounds = this.image.bounds;
+  this.filter.segments = [bounds.topLeft, bounds.topRight, bounds.bottomRight, bounds.bottomLeft];
+  this.filter.fillColor = new Color(0.5);
+  this.filter.sendToBack();
 }
 
 //
@@ -67,22 +91,17 @@ Background.prototype.moveTo = function(center) {
     var dy = this.viewCenter.y - center.y;
     this.move(new Point(dx,dy));
 }
-Background.prototype.scale = function(deltaScale, center) {
+Background.prototype.scale = function(delta, center) {
   if ( ! center) {
     center = this.viewCenter;
   }
-  paper.project.activeLayer.scale(deltaScale, center);
-  this.snapScale(center);
+  paper.project.activeLayer.scale(delta, center);
+  this.snapZoom(center);
   this.snapBounds();
 }
-Background.prototype.scaleTo = function(scale) {
-  var currentScale = this.getCurrentScale();
-  this.scale(scale / currentScale);
-}
-Background.prototype.getCurrentScale = function() {
-  // Defines what scale means
-  var scale = Math.max(this.image.bounds.height / this.viewRect.height, this.image.bounds.width / this.viewRect.width);
-  return scale;
+Background.prototype.scaleTo = function(zoom, center) {
+  var currentZoom = Math.max(this.image.bounds.height / this.viewSize.height, this.image.bounds.width / this.viewSize.width);
+  this.scale(zoom / currentZoom, center);
 }
 Background.prototype.snapBounds = function() {
   var tl = this.image.bounds.topLeft;
@@ -102,29 +121,40 @@ Background.prototype.snapBounds = function() {
   }
   paper.project.activeLayer.translate(delta);
 }
-Background.prototype.snapScale = function(center) {
-  var currentScale = this.getCurrentScale();
-  if (currentScale > this.maxScale) {
-    paper.project.activeLayer.scale(this.maxScale / currentScale, center);
-  } else if (currentScale < this.minScale) {
-    paper.project.activeLayer.scale(this.minScale / currentScale, center);
+Background.prototype.snapZoom = function(center) {
+  var currentZoom = Math.max(this.image.bounds.height / this.viewSize.height, this.image.bounds.width / this.viewSize.width);
+  if (currentZoom > this.maxZoom) {
+    paper.project.activeLayer.scale(this.maxZoom / currentZoom, center);
+  } else if (currentZoom < this.minZoom) {
+    paper.project.activeLayer.scale(this.minZoom / currentZoom, center);
   }
 }
 Background.prototype.focus = function(annotation) {
-  this.lastFocus = annotation;
-  var target = this.image.bounds;
-  if (annotation) {
-    target = annotation.boundary.bounds;
-    if (target.height == 0 && target.width == 0) {
-      target = this.image.bounds;
-    }
+  if ( ! annotation) {
+    this.focusImage();
+    return;
+  }
+  this.lastFocusedAnnotation = annotation;
+
+  var height = annotation.boundary.bounds.height;
+  var width = annotation.boundary.bounds.width;
+  var position = annotation.boundary.bounds.center;
+  if (height == 0 && width == 0) {
+    this.focusImage();
+    return;
   }
 
-  var scale = Math.min(this.image.bounds.height / target.height, this.image.bounds.width / target.width);
-  scale = Math.min(this.focusMaxScale, scale);
+  var zoom = Math.min(this.image.bounds.height / height, this.image.bounds.width / width);
+  zoom /= this.focusMargin;
+  zoom = Math.min(Math.max(zoom, this.focusMinZoom), this.focusMaxZoom);
   // Move before scaling
-  this.moveTo(target.center);
-  this.scaleTo(scale);
+  this.moveTo(position);
+  this.scaleTo(zoom);
+}
+Background.prototype.focusImage = function() {
+  this.lastFocusedAnnotation = null;
+  this.moveTo(this.image.position);
+  this.scaleTo(1);
 }
 Background.prototype.align = function(annotation) {
   var img_bounds = this.image.bounds;
@@ -132,96 +162,73 @@ Background.prototype.align = function(annotation) {
   annotation.translate(img_bounds.topLeft - ann_bounds.topLeft);
   annotation.scale(img_bounds.height / ann_bounds.height, img_bounds.topLeft);
 }
-Background.prototype.alignImage = function(image) {
-  if (annotations.length > 0) {
-    var img_bounds = image.bounds;
-    var ann_bounds = annotations[0].raster.bounds;
-    image.translate(ann_bounds.topLeft - img_bounds.topLeft);
-    image.scale(ann_bounds.height / img_bounds.height, ann_bounds.topLeft);
-  } else {
-    image.position = this.viewCenter;
-  }
-}
 
-//
-// Used by New tool
-// Delete soon
-Background.prototype.getPixel = function(point) {
-  var bounds = this.image.bounds;
-  var size = this.image.size;
-  var tl = bounds.topLeft;
-
-  var x = (point.x - tl.x) * (size.height/ bounds.height) - 0.5;
-  var y = (point.y - tl.y) * (size.height/ bounds.height) - 0.5;
-  return new Point(x, y);
-}
-Background.prototype.getPoint = function(pixel) {
-  var bounds = this.image.bounds;
-  var size = this.image.size;
-  var tl = bounds.topLeft;
-
-  var x = (pixel.x + 0.5) * (bounds.height / size.height) + tl.x;
-  var y = (pixel.y + 0.5) * (bounds.height / size.height) + tl.y;
-  return new Point(x, y);
-}
 //
 // Visualization
 //
 Background.prototype.setVisible = function(visible) {
   this.image.visible = visible;
   this.filter.visible = visible;
-}
-Background.prototype.setTempImage = function(imageData) {
-  if (this.tempImage) {
-    this.tempImage.remove();
-  }
-  this.tempImage = this.image.clone();
-  this.tempImage.blendMode = 'normal';
-  this.tempImage.setImageData(imageData, new Point(0,0));
-  this.tempImage.insertAbove(this.image);
-}
-Background.prototype.removeTempImage = function() {
-  this.tempImage.remove();
+  this.canny.visible = visible;
 }
 Background.prototype.increaseBrightness = function() {
-  background.filter.fillColor += 0.05;
-  if (background.filter.fillColor.gray > 1) {
-    background.filter.fillColor.gray = 1;
+  this.filter.fillColor += 0.05;
+  if (this.filter.fillColor.gray > 1) {
+    this.filter.fillColor.gray = 1;
   }
 }
 Background.prototype.decreaseBrightness = function() {
-  background.filter.fillColor -= 0.05;
-  if (background.filter.fillColor.gray < 0) {
-    background.filter.fillColor.gray = 0;
+  this.filter.fillColor -= 0.05;
+  if (this.filter.fillColor.gray < 0) {
+    this.filter.fillColor.gray = 0;
   }
+}
+
+//
+// Canny
+//
+var cannyCache = {};
+Background.prototype.setCanny = function() {
+  this.canny.remove();
+
+  var cannyData = cannyCache[this.image.source];
+  if ( ! cannyData) {
+    cannyData = getCannyOpenCV(this.image.getImageData());
+    cannyCache[this.image.source] = cannyData;
+  }
+  this.canny = this.image.clone();
+  this.canny.blendMode = 'normal';
+  this.canny.setImageData(cannyData, new Point(0,0));
+  this.canny.insertAbove(this.image);
+  this.canny.opacity = 0;
 }
 
 //
 // Exports
 //
 var backgroundCache = {};
-function loadBackground(image_url, callback) {
+function loadBackground(img) {
+  var image_url = getImageURL(img); // See endpoints.js
   if (image_url in backgroundCache) {
     var raster = backgroundCache[image_url];
+    project.activeLayer.addChild(raster);
+
     background.setImage(raster);
-    if (callback) {
-      callback();
-    }
   } else {
-    background.image.remove(); // onLoad can be slow
-    var raster = new Raster(image_url);
+    var raster = new Raster({
+        crossOrigin: 'anonymous',
+        source: image_url
+    });
     raster.onLoad = function() {
       backgroundCache[image_url] = raster;
       background.setImage(raster);
-      if (callback) {
-        callback();
-      }
     }
   }
 }
 
-function clearBackground() {
-  background.image.remove();
+function clearBackground(img) {
+  var size = (img) ? new Size(img.width, img.height) : null;
+  background.setBlankImage(size);
 }
 
 function onResize(event) {

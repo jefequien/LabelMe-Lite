@@ -46,7 +46,7 @@
       <button type="button" class="btn toolBtn toolBtn-small" id="color"><i class="fa material-icons">color_lens</i></button>
       <button type="button" class="btn toolBtn toolBtn-small" id="hide"><i class="fa fa-eye-slash"></i></button>
       <div class="btn btn-slider">
-        <input type="range" min="3" max="15" step="0.5" id="toolSlider">
+        <input type="range" id="slider">
       </div>
     </div>
 
@@ -232,19 +232,20 @@
   
   <!-- Tool Javascripts -->
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/paper.js/0.12.0/paper-full.min.js"></script>
-  <script type="text/paperscript" src="javascripts/tool/selectTool.js" canvas="toolCanvas"></script>
-  <script type="text/paperscript" src="javascripts/tool/brushTool.js" canvas="toolCanvas"></script>
-  <script type="text/paperscript" src="javascripts/tool/editTool.js" canvas="toolCanvas"></script>
-  <script type="text/paperscript" src="javascripts/tool/newTool.js" canvas="toolCanvas"></script>
+  <script type="text/paperscript" src="javascripts/tool/tool_select.js" canvas="toolCanvas"></script>
+  <script type="text/paperscript" src="javascripts/tool/tool_brush.js" canvas="toolCanvas"></script>
+  <script type="text/paperscript" src="javascripts/tool/tool_edit.js" canvas="toolCanvas"></script>
+  <script type="text/paperscript" src="javascripts/tool/tool_new.js" canvas="toolCanvas"></script>
   <script type="text/paperscript" src="javascripts/tool/annotations.js" canvas="toolCanvas"></script>
   <script type="text/paperscript" src="javascripts/tool/background.js" canvas="toolCanvas"></script>
   <script type="text/paperscript" src="javascripts/tool/tree.js" canvas="toolCanvas"></script>
   <script type="text/paperscript" src="javascripts/tool/keys.js" canvas="toolCanvas"></script>
+  <script type="text/javascript" src="javascripts/tool/buttons.js"></script>
+  <script type="text/javascript" src="javascripts/tool/load.js"></script>
 
   <!-- Main Javascripts -->
-  <script type="text/javascript" src="javascripts/full/buttons.js"></script>
-  <script type="text/javascript" src="javascripts/full/tool.js"></script>
-  <script type="text/javascript" src="javascripts/full/main.js"></script>
+  <script type="text/javascript" src="javascripts/interface/load_buttons.js"></script>
+  <script type="text/javascript" src="javascripts/interface/main.js"></script>
 
 </body>
 

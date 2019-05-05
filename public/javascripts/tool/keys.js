@@ -16,53 +16,48 @@ function toolKeys(event) {
 }
 
 function sliderKeys(event) {
+  var minValue = buttons["slider"].min;
+  var maxValue = buttons["slider"].max;
   if (event.key == '9') {
-    var toolSize = paper.tool.toolSize - 1;
-    toolSize = Math.max(toolSlider.min, Math.min(toolSlider.max, toolSize));
-
+    var toolSize = Math.max(Math.min(paper.tool.toolSize - 1, maxValue), minValue);
+    buttons["slider"].value = paper.tool.toolSize;
     paper.tool.toolSize = toolSize;
-    toolSlider.value = paper.tool.toolSize;
     paper.tool.refreshTool();
   }
   else if (event.key == '0') {
-    var toolSize = paper.tool.toolSize + 1;
-    toolSize = Math.max(toolSlider.min, Math.min(toolSlider.max, toolSize));
-
+    var toolSize = Math.max(Math.min(paper.tool.toolSize + 1, maxValue), minValue);
+    buttons["slider"].value = toolSize;
     paper.tool.toolSize = toolSize;
-    toolSlider.value = paper.tool.toolSize;
-    paper.tool.refreshTool();
-  }
-  else if (event.key == 'r') {
-    paper.tool.toolSize = parseInt(toolSlider.defaultValue);
-    toolSlider.value = parseInt(toolSlider.defaultValue);
     paper.tool.refreshTool();
   }
 }
 
 function viewKeys(event) {
   if (event.key == 'h') {
+    // Toggle hide everything
     var objects = paper.project.activeLayer.children;
     console.log("Number of objects: ", objects.length);
+
     if (objects.allHidden) {
+      objects.allHidden = false;
       for (var i = 0; i < objects.length; i++) {
         objects[i].visible = true;
       }
-      objects.allHidden = false;
     } else {
+      objects.allHidden = true;
       for (var i = 0; i < objects.length; i++) {
         objects[i].visible = false;
       }
-      background.setVisible(true);
-      objects.allHidden = true;
     }
+    background.setVisible(true);
     paper.tool.refreshTool();
-    flashButton("hide");
 
     if (objects.allHidden) {
       $('#hide').find('i').addClass('fa-eye').removeClass('fa-eye-slash');
     } else {
       $('#hide').find('i').addClass('fa-eye-slash').removeClass('fa-eye');
     }
+    flashButton("hide");
   }
   else if (event.key == 'c') {
     if (paper.tool.annotation) {

@@ -4,20 +4,17 @@ var fs = require('fs');
 var uuidv4 = require('uuid/v4');
 var router = express.Router();
 
-var BUNDLES_DIR = path.join(__dirname, "../bundles");
-if (! fs.existsSync(BUNDLES_DIR)){
-    fs.mkdirSync(BUNDLES_DIR);
-}
+var bundles_dir = path.join(__dirname, "../bundles");
 
 router.get('/bundles_list', function(req, res) {
     // Make output directory
-    var outputDir = path.join(BUNDLES_DIR, "tasks");
-    if (! fs.existsSync(outputDir)){
-        fs.mkdirSync(outputDir);
+    var out_dir = path.join(bundles_dir, "tasks");
+    if (! fs.existsSync(out_dir)){
+        fs.mkdirSync(out_dir, { recursive: true });
     }
 
     var bundles_list = [];
-    fs.readdir(outputDir, function(err, items) {
+    fs.readdir(out_dir, function(err, items) {
         for (var i = 0; i < items.length; i++) {
             var bundle_id = items[i].replace(".json", "");
             bundles_list.push(bundle_id);
@@ -31,9 +28,9 @@ router.post('/bundles', function(req, res) {
     var bundleType = req.query.bundle_type || "tasks";
 
     // Make output directory
-    var outputDir = path.join(BUNDLES_DIR, bundleType);
-    if (! fs.existsSync(outputDir)){
-        fs.mkdirSync(outputDir);
+    var out_dir = path.join(bundles_dir, bundleType);
+    if (! fs.existsSync(out_dir)){
+        fs.mkdirSync(out_dir, { recursive: true });
     }
 
     // Bundle info
@@ -43,7 +40,7 @@ router.post('/bundles', function(req, res) {
     }
     bundle.bundle_info.submit_date = new Date();
 
-    var fileName = path.join(outputDir, bundle.bundle_info.bundle_id + ".json");
+    var fileName = path.join(out_dir, bundle.bundle_info.bundle_id + ".json");
     var data = JSON.stringify(bundle, null, 2);
     fs.writeFile(fileName, data, function(err) {
         if (err) {

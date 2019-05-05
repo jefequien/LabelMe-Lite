@@ -5,14 +5,24 @@
 var iouThreshold = 0.8;
 var passingThreshold = 0.75;
 
-function submitYesNoBundle(coco) {
+function submitBundle(coco) {
+	var numTests = 0;
+	var numPassed = 0;
+	for (var i = 0; i < coco.dataset.annotations.length; i++) {
+		var ann = coco.dataset.annotations[i];
+		evaluateYesNoTask(ann);
+	}
 
-    var results = evaluateYesNoBundle(coco, iouThreshold);
-    var passed = true;
-    if (results.numTests > 0) {
-        passed = results.numPassed / results.numTests >= passingThreshold;
-    }
+	var passed = false;
+	return passed;
+}
 
+function evaluateYesNoTask(ann) {
+	console.log(ann);
+}
+
+
+function showMessage(results) {
     if (passed) {
         postYesNoBundle(params, coco);
         var alertString = "Thank you for your submission! ";

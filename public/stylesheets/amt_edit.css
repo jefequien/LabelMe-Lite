@@ -6,23 +6,16 @@
     width: 400px;
     top: 50%;
     left: 50%;
-    transform: translate(calc(-50% - 212px), -50%);
-    z-index: 100;
+    transform: translate(calc(-50% - 202px), -50%);
+    z-index: 10;
 }
-
 #toolCanvas {
     height: calc(100% - 140px);
     width: calc(100%);
     left: 0px;
-    z-index: 10;
+    z-index: 30;
     background-image: none;
     background-color: black;
-
-    box-shadow: 0px 12px 0px 0px lightgray,
-                0px -12px 0px 0px lightgray,
-                -12px 12px 0px 0px lightgray,
-                -12px -12px 0px 0px lightgray;
-
 }
 #leftbar {
     width: 0px;
@@ -31,30 +24,4 @@
 #rightbar {
     width: 0px;
     border-left: none;
-}
-#bottombar {
-    height: 70px;
-    padding: 0px;
-}
-.btn-slider {
-    display: none;
-}
-
-.center {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-}
-.left {
-    position: absolute;
-    top: 50%;
-    left: 10px;
-    transform: translateY(-50%);
-}
-.right {
-    position: absolute;
-    top: 50%;
-    right: 10px;
-    transform: translateY(-50%);
 }

@@ -7,16 +7,18 @@ if (Object.keys(params).length == 0) {
 
 var coco = new COCO();
 var current_num = 0;
+var num_tests = 0;
 var trainingMode = params.training_mode == "true";
 
 window.onload = function() {
 
     getBundle(params, function(response) {
-        console.log("Bundle:", response);
         coco = new COCO(response);
-
-        startCurrentTask();
-        loadInterface();
+        addHiddenTests(coco, num_tests, function() {
+            console.log("COCO", coco.dataset);
+            startTask();
+            loadInterface();
+        });
     });
 }
 function loadInterface() {
@@ -26,45 +28,45 @@ function loadInterface() {
 }
 function nextImage() {
     if (current_num < coco.dataset.annotations.length - 1) {
-        endCurrentTask();
+        endTask();
         current_num += 1;
-        startCurrentTask();
+        startTask();
         loadInterface();
     }
 }
 function prevImage() {
     if (current_num > 0) {
-        endCurrentTask();
+        endTask();
         current_num -= 1;
-        startCurrentTask();
+        startTask();
         loadInterface();
     }
 }
-function startCurrentTask() {
+function startTask() {
     startTimer();
     var ann = coco.dataset.annotations[current_num];
-    if ( ! ann.current_task) {
+    if (ann && ! ann.current_task) {
         ann.current_task = {};
         ann.current_task["type"] = "yesno";
         ann.current_task["annotationTime"] = 0;
         ann.current_task["accepted"] = false;
     }
 }
-function endCurrentTask() {
+function endTask() {
     endTimer();
 }
-function toggleCurrentAnswer() {
+function toggleAnswer() {
     var ann = coco.dataset.annotations[current_num];
     ann.current_task["accepted"] = ! (ann.current_task["accepted"]);
     loadMainHolders(coco, current_num, showGt=trainingMode);
 }
 function submit() {
-    endCurrentTask();
-    var success = submitYesNoBundle(coco);
+    endTask();
+    var success = submitBundle(coco);
     if (success) {
         redirectToAmtBrowser();
     } else {
-        startCurrentTask();
+        startTask();
     }
 }
 function toggleInstruction() {
@@ -120,7 +122,7 @@ $(window).keyup(function(e) {
         clearInterval(timerHandle);
     }
     else if (key == 32) { // Space
-        toggleCurrentAnswer();
+        toggleAnswer();
         e.preventDefault();
     }
 });
