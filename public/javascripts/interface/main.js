@@ -1,43 +1,43 @@
 
 
-var params = parseURLParams();
-if (Object.keys(params).length == 0) {
+var urlParams = parseURLParams();
+if (Object.keys(urlParams).length == 0) {
     // Default params
-    params.dataset = "demo";
-    params.ann_source = "demo_anns";
-    params.img_id = 1;
-    setURLParams(params);
+    urlParams.dataset = "demo";
+    urlParams.ann_source = "demo_anns";
+    urlParams.img_id = 1;
+    setURLParams(urlParams);
 }
 
 window.onload = function() {
     selectTool.switch();
-    getAnnotations(params, function(res) {
+    getAnnotations(urlParams, function(res) {
         var coco = new COCO(res);
         loadInterface(coco);
     });
 }
 
 function loadInterface(coco) {
-    loadTool(coco, params);
+    loadTool(coco);
 
-    $('#datasetName').text(params.dataset);
-    $('#annotationSource').text(params.ann_source);
+    $('#datasetName').text(urlParams.dataset);
+    $('#annotationSource').text(urlParams.ann_source);
     $('#imageFileName').text(coco.dataset.images[0].file_name);
 }
 
 function nextImage() {
-    params.img_id = parseInt(params.img_id) + 1;
-    setURLParams(params);
-    getAnnotations(params, function(res) {
+    urlParams.img_id = parseInt(urlParams.img_id) + 1;
+    setURLParams(urlParams);
+    getAnnotations(urlParams, function(res) {
         var coco = new COCO(res);
         loadTool(coco);
     });
 }
 function prevImage() {
-    params.img_id = parseInt(params.img_id) - 1;
-    params.img_id = Math.max(params.img_id, 1);
-    setURLParams(params);
-    getAnnotations(params, function(res) {
+    urlParams.img_id = parseInt(urlParams.img_id) - 1;
+    urlParams.img_id = Math.max(urlParams.img_id, 1);
+    setURLParams(urlParams);
+    getAnnotations(urlParams, function(res) {
         var coco = new COCO(res);
         loadTool(coco);
     });

@@ -7,10 +7,10 @@ editTool.onMouseMove = function(event) {
   this.snapCurser();
 
   this.annotation = selectTool.getNearestAnnotation(this.curser.position);
-  // Set this.trace
   if (this.trace.segments.length > 0) {
     this.trace.removeSegment(this.trace.segments.length-1);
   }
+
   this.trace.add(this.curser.position);
   this.drawEverything();
 }
@@ -18,7 +18,11 @@ editTool.onMouseDrag = function(event) {
   this.curser.position = event.point;
   this.snapCurser();
 
-  // Set this.trace
+  this.dragDelta += event.delta.length;
+  if (this.dragDelta > 10) {
+    this.dragging = true;
+  }
+
   this.trace.add(this.curser.position);
   this.drawEverything();
 }
@@ -26,7 +30,9 @@ editTool.onMouseDown = function(event) {
   this.curser.position = event.point;
   this.snapCurser();
 
-  // Set this.trace
+  this.dragDelta = 0;
+  this.numClicks = this.numClicks + 1 || 1;
+
   this.trace.add(this.curser.position);
   this.drawEverything();
 }
@@ -34,9 +40,13 @@ editTool.onMouseUp = function(event) {
   this.curser.position = event.point;
   this.snapCurser();
 
-  this.editAnnotation();
-  // Set this.trace
-  this.trace.removeSegments();
+  if (this.dragging || this.numClicks == 2) {
+    this.editAnnotation();
+    this.trace.removeSegments();
+    this.numClicks = 0;
+  }
+  this.dragging = false;
+
   this.trace.add(this.curser.position);
   this.drawEverything();
 }
@@ -62,6 +72,10 @@ editTool.onKeyDown = function(event) {
     background.canny.opacity = (background.canny.opacity == 0) ? 1 : 0
   }
   if (event.key == 'space') {
+    this.editAnnotation();
+    this.trace.removeSegments();
+    this.dragging = false;
+
     this.annealBoundary();
     this.refreshTool();
   }
@@ -138,36 +152,46 @@ editTool.annealBoundary = function() {
   if ( ! this.annotation) {
     return;
   }
-  
+  console.log("Annealing boundary");
   var cannyData = background.canny.getImageData();
   var h = cannyData.height;
-  var w = cannyData.height;
+  var w = cannyData.width;
 
-  this.annotation.toPixelSpace(this.annotation.boundary);
+  toPixelSpace(this.annotation.boundary, background.canny);
   for (var i = 0; i < this.annotation.boundary.children.length; i++) {
     var child = this.annotation.boundary.children[i];
     for (var j = 0; j < child.segments.length; j++) {
       var segment = child.segments[j];
       var point = segment.point.round();
 
-      var maxLightness = 0;
+      var maxValue = 0;
       var maxPoint = point;
-      for (var dx = -3; dx <= 3 ; dx++) {
-        for (var dy = -3; dy <= 3 ; dy++) {
-          var x = point.x + dx;
-          var y = point.y + dy;
-          var p = (y * w + x) * 4;
-          var c = cannyData.data[p];
-          if (c > maxLightness) {
-            maxLightness = c;
-            maxPoint = new Point(x, y);
+      var maxDist = 100;
+      for (var dx = -3; dx <= 3; dx++) {
+        for (var dy = -3; dy <= 3; dy++) {
+          var d = new Point(dx, dy);
+          var p = point + d;
+          var value;
+          if (p.x >= 0 && p.y >= 0 && p.x < w && p.y < h) {
+            var index = (p.y * w + p.x) * 4;
+            value = cannyData.data[index];
+          } else {
+            value = 256; // Anneal to image boundary
+          }
+          if (value > maxValue) {
+            maxPoint = p;
+            maxValue = value;
+            maxDist = d.length;
+          } else if (value == maxValue && d.length < maxDist) {
+            maxPoint = p;
+            maxDist = d.length;
           }
         }
       }
       segment.point = maxPoint;
     }
   }
-  this.annotation.toPointSpace(this.annotation.boundary);
+  toPointSpace(this.annotation.boundary, background.canny);
   this.annotation.updateRaster();
   this.annotation.updateBoundary();
 }
@@ -292,7 +316,7 @@ editTool.enforceStyles = function() {
   // Fill styles
   if (this.annotation && this.annotation.boundary.contains(this.curser.position)) {
     this.boundary.fillColor.alpha = 0;
-    this.boundaryInv.fillColor.alpha = 0.4;
+    this.boundaryInv.fillColor.alpha = 0;
   } else {
     this.boundary.fillColor.alpha = 0.7;
     this.boundaryInv.fillColor.alpha = 0;

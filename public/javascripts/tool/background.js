@@ -197,6 +197,7 @@ Background.prototype.setCanny = function() {
     cannyCache[this.image.source] = cannyData;
   }
   this.canny = this.image.clone();
+  this.canny.smoothing = false;
   this.canny.blendMode = 'normal';
   this.canny.setImageData(cannyData, new Point(0,0));
   this.canny.insertAbove(this.image);
@@ -217,7 +218,8 @@ function loadBackground(img) {
   } else {
     var raster = new Raster({
         crossOrigin: 'anonymous',
-        source: image_url
+        source: image_url,
+        smoothing: false
     });
     raster.onLoad = function() {
       backgroundCache[image_url] = raster;
@@ -238,5 +240,3 @@ function onResize(event) {
 window.background = new Background();
 window.loadBackground = loadBackground;
 window.clearBackground = clearBackground;
-
-paper.view._context.imageSmoothingEnabled = true; // Pixelates background

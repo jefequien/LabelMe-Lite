@@ -34,14 +34,18 @@ selectTool.onMouseUp = function(event) {
 }
 selectTool.onKeyDown = function(event) {
   if (event.key == 'u') {
-    this.annotation.undo();
-    this.refreshTool();
-    flashButton("undo");
+    if (this.annotation) {
+      this.annotation.undo();
+      this.refreshTool();
+      flashButton("undo");
+    }
   }
   else if (event.key == 'y') {
-    this.annotation.redo();
-    this.refreshTool();
-    flashButton("redo");
+    if (this.annotation) {
+      this.annotation.redo();
+      this.refreshTool();
+      flashButton("redo");
+    }
   }
   if (event.key == 'escape') {
     background.focus();

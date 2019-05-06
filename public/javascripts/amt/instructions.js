@@ -11,7 +11,8 @@ function updateCategory(coco, current_num) {
     var ann = coco.dataset.annotations[current_num];
     if ( ! ann) {
         lastCategory = "";
-        $('#category').text("category");
+        $('#categoryName0').text("category");
+        $('#categoryName1').text("category");
         $('#definition').text("None");
         return;
     }
@@ -19,22 +20,25 @@ function updateCategory(coco, current_num) {
     var cat = coco.cats[ann["category_id"]];
     if (lastCategory != cat["name"]) {
         lastCategory = cat["name"];
-        $('#category').text(cat["name"]);
+        $('#categoryName0').text(cat["name"]);
+        $('#categoryName1').text(cat["name"]);
+
+        // Load definition
         $('#definition').text("Loading...");
-        
-        getDefinition(cat, function(entry) {
-            var definition = entry ? entry.definition : "None";
-            $('#definition').text(definition);
+        getDefinition(cat, function(res) {
+            $('#definition').text((res) ? res.definition : "None");
         });
-        // Update examples
+        // Load examples
         getHiddenTests([cat], function(hidden_tests) {
+            console.log("Examples", hidden_tests);
             loadExampleHolders(hidden_tests);
         });
     }
 }
 
 function updateInstructions(coco, current_num, trainingMode) {
-    $('#imageCount').text(coco.dataset.annotations.length);
+    $('#bundleLength').text(coco.dataset.annotations.length);
+    
     if (trainingMode) {
         $("#trainingDiv").show();
     } else {

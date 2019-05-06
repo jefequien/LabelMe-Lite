@@ -23,7 +23,7 @@
     <div id="questionDiv">
         <div>
             <button type="button" class="btn btn-primary btn-sm" onclick="toggleInstruction(); ">Instructions</button>
-            <span>Is this a good annotation of <b id="category">category</b>?</span>
+            <span>Is this a good annotation of <b id="categoryName0">category</b>?</span>
             <button type="button" class="btn btn-primary btn-sm" id="submitButton" onclick="return submit()" disabled>Submit (? images left)</button>
         </div>
         <div id="definitionDiv">
@@ -38,18 +38,16 @@
 
         <h3>Task</h3>
         <ul>
-            <p>
-              For each of the <b id="imageCount" style="color: #00F;">N</b> images, refine the annotation segmentation of the object.
-              A good annotation covers the entirety of the object and nothing else.
-              It is only wrong along the boundary by a few pixels.
-            </p>
+            <li>For each of the <b id="bundleLength" style="color: #00F;">N</b> images, decide if this annotation is a good annotation of <b id="categoryName1">category</b>.
+            <li>A good annotation covers the entirety of the object and only the object. It is only wrong along the boundary by a few pixels.
+            <li>Examples of good and bad annotations are shown below.
         </ul>
 
         <h3>Usage</h3>
         <ul>
-            <li>Use the right arrow [&rarr;] key to got to the next image.</li>
-            <li>Use [space] key to toggle the answer to YES. The default answer is NO.</li>
-            <li>Use the left arrow [&larr;] key to go back to the previously seen images, if you skipped an image accidentaly.</li>
+            <li>Use the [&rarr;] key to go to the next image.</li>
+            <li>Use the [space] key to toggle the answer to YES. The default answer is NO.</li>
+            <li>Use the [&larr;] key to go back to the previous image, if you skipped an image accidentaly.</li>
         </ul>
 
         <h3>Submit</h3>

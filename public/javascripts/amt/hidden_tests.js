@@ -47,8 +47,8 @@ function getHiddenTests(cats, callback) {
 	for (var i = 0; i < cats.length; i++) {
 		catIds.push(cats[i]["id"]);
 	}
-    var query = {"dataset": "ade20k", "ann_source": "instances_val_test", "cat_id": catIds};
-    getAnnotations(query, function(res) {
+    var params = {"dataset": "ade20k", "ann_source": "instances_val_test", "cat_id": catIds};
+    getAnnotations(params, function(res) {
         var hidden_tests = new COCO(res);
         callback(hidden_tests);
     });

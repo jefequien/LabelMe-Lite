@@ -1,18 +1,17 @@
 
-var params = parseURLParams();
-if (Object.keys(params).length == 0) {
-    // No bundle_id
-    redirectToAmtBrowser();
+var urlParams = parseURLParams();
+console.log(urlParams);
+if ( ! urlParams.bundle_id) {
+    redirectToAmtBrowser(urlParams);
 }
 
 var coco = new COCO();
 var current_num = 0;
 var num_tests = 0;
-var trainingMode = params.training_mode == "true";
+var trainingMode = urlParams.training_mode == "true";
 
 window.onload = function() {
-    selectTool.switch();
-    getBundle(params, function(response) {
+    getBundle(urlParams, function(response) {
         coco = new COCO(response);
         addHiddenTests(coco, num_tests, function() {
             console.log("COCO", coco.dataset);
@@ -20,6 +19,7 @@ window.onload = function() {
             loadInterface();
         });
     });
+    selectTool.switch();
 }
 function loadInterface() {
     loadInstructions(coco, current_num, trainingMode);

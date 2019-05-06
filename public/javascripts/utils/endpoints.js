@@ -5,57 +5,26 @@ var base_url = parseBaseURL();
 //
 // Get Requests
 //
-function getAnnotationFile(params, callback) {
-    var endpoint = base_url + "/data/" + params.dataset + "/" + params.ann_source + ".json";
-    get_async(endpoint, callback);
-}
 function getBundle(params, callback) {
-    var endpoint = base_url + "/bundles/tasks/" + params.bundle_id + ".json";
-    get_async(endpoint, callback);
+  var query = {"job_id": params.job_id, "bundle_id": params.bundle_id};
+  var endpoint = base_url + "/api/bundle?" + buildQuery(query);
+  get_async(endpoint, callback);
 }
-function getBundlesList(callback) {
-    var endpoint = base_url + "/api/bundles_list";
-    get_async(endpoint, callback);
+function getBundles(params, callback) {
+  var query = {"job_id": params.job_id};
+  var endpoint = base_url + "/api/bundles?" + buildQuery(query);
+  get_async(endpoint, callback);
 }
-
 function getAnnotations(params, callback) {
-    var endpoint = base_url + "/api/annotations?" + buildQuery(params);
-    get_async(endpoint, callback);
+  var query = {"dataset": params.dataset, "ann_source": params.ann_source};
+  if (params.img_id) { query.img_id = params.img_id; }
+  if (params.cat_id) { query.cat_id = params.cat_id; }
+  var endpoint = base_url + "/api/annotations?" + buildQuery(query);
+  get_async(endpoint, callback);
 }
-
-function getImageURL(img) {
-  var dataset = img.dataset;
-  if (dataset == null) {
-    // Infer dataset from img.filename
-    if (img.file_name.includes("ADE")) {
-      dataset = "ade20k";
-    } else if (img.file_name.includes("challenge")) {
-      dataset = "scaleplaces";
-    } else {
-      dataset = "places";
-    }
-  }
-
-  if (dataset == "scaleplaces") {
-    var data_dir = "https://labelmelite.csail.mit.edu/data";
-    var endpoint = data_dir + "/scaleplaces/" + img.file_name;
-    return endpoint;
-  }
-  else if (dataset == "ade20k" || dataset == "coco" || dataset == "places") {
-    var data_dir = "https://labelmelite.csail.mit.edu/data";
-    var endpoint = data_dir + "/" + dataset + "/images/" + img.file_name;
-    return endpoint;
-  }
-  else {
-    var data_dir = base_url + "/data";
-    var endpoint = data_dir + "/" + dataset + "/images/" + img.file_name;
-    return endpoint;
-  }
-}
-
 function getDefinition(cat, callback) {
-  var keyword = cat["name"];
-  var endpoint = base_url + "/api/definitions?" + buildQuery({"keyword": keyword});
+  var query = {"keyword": cat["name"]};
+  var endpoint = base_url + "/api/definitions?" + buildQuery(query);
   get_async(endpoint, function(res) {
     if (res && res.length != 0) {
       callback(res[0])
@@ -63,6 +32,28 @@ function getDefinition(cat, callback) {
       callback();
     }
   });
+}
+
+function getImageURL(img) {
+  if (img.dataset) {
+    var endpoint = base_url + "/data/" + img.dataset + "/images/" + img.file_name;
+    return endpoint;
+  }
+
+  // Infer image dataset
+  var alternate_url = "https://labelmelite.csail.mit.edu";
+  var dataset = "";
+  if (img.file_name.includes("challenge")) {
+    dataset = "scaleplaces";
+    var endpoint = alternate_url + "/data/" + dataset + "/" + img.file_name;
+    return endpoint;
+  } else if (img.file_name.includes("ADE")) {
+    dataset = "ade20k";
+  } else {
+    dataset = "places";
+  }
+  var endpoint = alternate_url + "/data/" + dataset + "/images/" + img.file_name;
+  return endpoint;
 }
 
 
@@ -83,8 +74,9 @@ function postEditBundle(params, coco) {
 //
 // Redirects
 //
-function redirectToAmtBrowser() {
-  window.location.href = base_url + "/amt_browser";
+function redirectToAmtBrowser(params) {
+  var query = {"job_id": params.job_id};
+  window.location.href = base_url + "/amt_browser?" + buildQuery(query);
 }
 
 //

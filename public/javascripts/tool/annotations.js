@@ -5,7 +5,10 @@
 function Annotation(name){
   this.name = name;
   this.boundary = new CompoundPath({fillRule: "evenodd"});
-  this.raster = new Raster({size: background.image.size});
+  this.raster = new Raster({
+    size: background.image.size, 
+    smoothing: false
+  });
 
  // Add to data structures
   this.id = this.raster.id;
@@ -30,7 +33,7 @@ Annotation.prototype.updateBoundary = function() {
     children.push(new Path({closed: true, segments: boundaries[i]}));
   }
   this.boundary.children = children;
-  this.toPointSpace(this.boundary);
+  toPointSpace(this.boundary, this.raster);
 
   sortAnnotations();
   this.addToUndoHistory();
@@ -82,10 +85,11 @@ Annotation.prototype.rasterize = function(path, color) {
   var clone = path.clone();
   clone.strokeWidth = 0;
   clone.fillColor = color;
-  this.toPixelSpace(clone);
+  toPixelSpace(clone, this.raster);
   clone.translate(new Point(0.5, 0.5)); // Align for rasterize.
   var raster = clone.rasterize(paper.view.resolution / window.devicePixelRatio);
   clone.remove();
+  raster.smoothing = false;
   return raster;
 }
 
@@ -102,7 +106,7 @@ Annotation.prototype.undo = function() {
 
   var pathData = this.undoHistory[this.undoHistory.length-1];
   this.boundary.pathData = pathData;
-  this.toPointSpace(this.boundary);
+  toPointSpace(this.boundary, this.raster);
   this.updateRaster();
   return true;
 }
@@ -114,14 +118,14 @@ Annotation.prototype.redo = function() {
   this.undoHistory.push(pathData);
 
   this.boundary.pathData = pathData;
-  this.toPointSpace(this.boundary);
+  toPointSpace(this.boundary, this.raster);
   this.updateRaster();
   return true;
 }
 Annotation.prototype.addToUndoHistory = function() {
-  this.toPixelSpace(this.boundary);
+  toPixelSpace(this.boundary, this.raster);
   var pathData = this.boundary.pathData;
-  this.toPointSpace(this.boundary);
+  toPointSpace(this.boundary, this.raster);
 
   if (pathData != this.undoHistory[this.undoHistory.length-1]) {
     this.undoHistory.push(pathData);
@@ -160,53 +164,13 @@ Annotation.prototype.changeColor = function() {
   this.boundary.strokeColor = this.color;
   this.updateRaster();
 }
-
-//
-// Point to Pixel functions
-//
 Annotation.prototype.containsPixel = function(pixel) {
-  var c = this.raster.getPixel(pixel);
-  return c.alpha > 0.5;
+  var c = this.raster.getPixel(pixel.round());
+  return c.alpha != 0;
 }
 Annotation.prototype.containsPoint = function(point) {
-  var pixel = this.getPixel(point);
+  var pixel = getPixel(point, this.raster);
   return this.containsPixel(pixel);
-}
-Annotation.prototype.getPixel = function(point) {
-  var bounds = this.raster.bounds;
-  var size = this.raster.size;
-  var tl = bounds.topLeft;
-
-  var x = (point.x - tl.x) * (size.height / bounds.height) - 0.5;
-  var y = (point.y - tl.y) * (size.height / bounds.height) - 0.5;
-  return new Point(x, y);
-}
-Annotation.prototype.getPoint = function(pixel) {
-  var bounds = this.raster.bounds;
-  var size = this.raster.size;
-  var tl = bounds.topLeft;
-
-  var x = (pixel.x + 0.5) * (bounds.height / size.height) + tl.x;
-  var y = (pixel.y + 0.5) * (bounds.height / size.height) + tl.y;
-  return new Point(x, y);
-}
-Annotation.prototype.toPixelSpace = function(path) {
-  var bounds = this.raster.bounds;
-  var size = this.raster.size;
-  var tl = bounds.topLeft;
-
-  path.translate(-tl);
-  path.scale(size.height / bounds.height, new Point(0, 0));
-  path.translate(new Point(-0.5, -0.5));
-}
-Annotation.prototype.toPointSpace = function(path) {
-  var bounds = this.raster.bounds;
-  var size = this.raster.size;
-  var tl = bounds.topLeft;
-
-  path.translate(new Point(0.5, 0.5));
-  path.scale(bounds.height / size.height, new Point(0, 0));
-  path.translate(tl);
 }
 
 //
@@ -270,8 +234,8 @@ Annotation.prototype.getRLE = function() {
   return rle;
 }
 Annotation.prototype.getBbox = function() {
-  var tl = this.getPixel(this.boundary.bounds.topLeft).round();
-  var br = this.getPixel(this.boundary.bounds.bottomRight).round();
+  var tl = getPixel(this.boundary.bounds.topLeft, this.raster).round();
+  var br = getPixel(this.boundary.bounds.bottomRight, this.raster).round();
   var bbox = [tl.x, tl.y, br.x - tl.x, br.y - tl.y];
   return bbox;
 }
