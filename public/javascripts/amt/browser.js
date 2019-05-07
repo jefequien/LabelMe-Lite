@@ -16,7 +16,7 @@ window.onload = function() {
         }
 
         document.body.innerHTML = "";
-        for (var i = 0; i < res.length; i++) {
+        for (var i = 0; i < Math.min(res.length, 100); i++) {
             addBundle(jobId, res[i]);
         }
     });

@@ -11,36 +11,32 @@ function submitBundle(coco) {
 	var totalTime = 0;
 	for (var i = 0; i < coco.dataset.annotations.length; i++) {
 		var ann = coco.dataset.annotations[i];
-		var task = ann.current_task;
-
-		totalTime += task.annotationTime;
+		totalTime += ann.current_task.annotationTime;
 		if (ann.hidden_test) {
 			numTests += 1;
-			if (task.type == "yesno") {
+			if (ann.current_task.type == "yesno") {
 				if (evaluateYesNoTask(ann)) {
 					numPassed += 1;
 				}
-			} else if (task.type == "edit") {
+			} else if (ann.current_task.type == "edit") {
 				if (evaluateEditTask(ann)) {
 					numPassed += 1;
 				}
 			}
 		}
 	}
-	var passed = true;
-	if (numTests > 0) {
-		passed = (numPassed / numTests) > passingThreshold;
-	}
 
 	var results = {};
-	results.passed = passed;
+	results.passed = (numTests != 0) ? (numPassed / numTests) >= passingThreshold : true;
 	results.numPassed = numPassed;
 	results.numTests = numTests;
 	results.totalTime = totalTime;
 	results.averageTime = totalTime / coco.dataset.annotations.length;
+
+	// Post results
 	if (results.passed) {
-		var urlParams = parseURLParams();
-		postResults(urlParams, coco);
+		var bundle = removeHiddenTests(coco);
+		postResults(urlParams, bundle);
 	}
 	showMessage(results);
 }
@@ -53,6 +49,32 @@ function evaluateYesNoTask(ann) {
 function evaluateEditTask(ann) {
     var iou = computeIOU(ann["segmentation"], ann.hidden_test["segmentation"]);
 	return iou > iouThreshold;
+}
+
+function removeHiddenTests(coco) {
+	var bundle = {};
+	bundle.images = [];
+	bundle.annotations = [];
+	bundle.categories = [];
+	bundle.bundle_info = coco.dataset.bundle_info;
+
+	var imgIds = new Set();
+	var catIds = new Set();
+	for (var i = 0; i < coco.dataset.annotations.length; i++) {
+		var ann = coco.dataset.annotations[i];
+		if ( ! ann.hidden_test) {
+			imgIds.add(ann["image_id"]);
+			catIds.add(ann["category_id"]);
+			bundle.annotations.push(ann);
+		}
+	}
+	for (var i of imgIds) {
+		bundle.images.push(coco.imgs[i]);
+	}
+	for (var i of catIds) {
+		bundle.categories.push(coco.cats[i]);
+	}
+	return bundle;
 }
 
 

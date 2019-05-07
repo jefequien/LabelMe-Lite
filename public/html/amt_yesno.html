@@ -1,102 +1,111 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Amazon Mechnical Turk Yes/No Interface">
-    <meta name="author" content="Jeffrey Hu">
-    <title>YesNoInterface</title>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Amazon Mechnical Turk Yes/No Interface">
+  <meta name="author" content="Jeffrey Hu">
+  <title>YesNoInterface</title>
 
-    <!-- jQuery -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-    <!-- Bootstrap -->
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+  <!-- jQuery -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <!-- Bootstrap -->
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
 
-    <link href="stylesheets/instructions.css" rel="stylesheet">
-    <link href="stylesheets/holders.css" rel="stylesheet">
+  <link href="stylesheets/instructions.css" rel="stylesheet">
+  <link href="stylesheets/holders.css" rel="stylesheet">
 
 </head>
 <body>
 
-    <div id="questionDiv">
-        <div>
-            <button type="button" class="btn btn-primary btn-sm" onclick="toggleInstruction(); ">Instructions</button>
-            <span>Is this a good annotation of <b id="categoryName0">category</b>?</span>
-            <button type="button" class="btn btn-primary btn-sm" id="submitButton" onclick="return submit()" disabled>Submit (? images left)</button>
-        </div>
-        <div id="definitionDiv">
-            <b>Definition: </b><span id="definition">None</span>
-        </div>
-        <div id="trainingDiv" style="display: none">
-          <b>Welcome to Training Mode!</b> Use your left and right keys to browse the images. The prediction is on the left while the ground truth is on the right. The interface will automatically mark yes for good predictions.
-        </div>
+  <div id="questionDiv">
+    <div>
+      <button type="button" class="btn btn-primary btn-sm" onclick="toggleInstruction(); ">Instructions</button>
+      <span>Is this a good annotation of <b id="categoryName0">category</b>?</span>
+      <button type="button" class="btn btn-primary btn-sm" id="submitButton" onclick="return submit()" disabled>Submit (? images left)</button>
+    </div>
+    <div id="definitionDiv">
+      <b>Definition: </b><span id="definition">None</span>
+    </div>
+    <div id="trainingDiv" style="display: none">
+     <b>Welcome to Training Mode!</b> Use your left and right keys to browse the images. The prediction is on the left while the ground truth is on the right. The interface will automatically mark yes for good predictions.
+    </div>
+  </div>
+
+  <div id="instructionDiv">
+
+    <h3>Task</h3>
+    <ul>
+      <li>For each of the <b id="bundleLength" style="color: #00F;">N</b> images, decide if this annotation is a good annotation of <b id="categoryName1">category</b>.
+      <li>A good annotation covers the entirety of the object and only the object. It is only wrong along the boundary by a few pixels.
+      <li>Examples of good and bad annotations are shown below.
+    </ul>
+
+    <h3>Usage</h3>
+    <ul>
+      <li>Use the [&rarr;] key to go to the next image.</li>
+      <li>Use the [space] key to toggle the answer to YES. The default answer is NO.</li>
+      <li>Use the [&larr;] key to go back to the previous image, if you skipped an image accidentaly.</li>
+    </ul>
+
+    <h3>Submit</h3>
+    <ul>
+      <li>After you answer all the images, the [submit] button will be enabled.</li>
+      <li><b style="color: #00F;">If your accuracy is too low, it won't allow you to submit. You will have to improve your answers first.</b></li>
+    </ul>
+
+    <h3>Examples</h3>
+
+    <div id="exampleDiv">
+      <div>
+        <div id="exampleYes0" class="holderDiv focus0"><p>No</p><p>Yes</p><b>IoU=None</b><canvas></canvas></div>
+        <div id="exampleNo0" class="holderDiv focus0"><p>No</p><p>Yes</p><b>IoU=None</b><canvas></canvas></div>
+      </div>
+      <div>
+        <div id="exampleYes1" class="holderDiv focus0"><p>No</p><p>Yes</p><b>IoU=None</b><canvas></canvas></div>
+        <div id="exampleNo1" class="holderDiv focus0"><p>No</p><p>Yes</p><b>IoU=None</b><canvas></canvas></div>
+      </div>
+      <div>
+        <div id="exampleYes2" class="holderDiv focus0"><p>No</p><p>Yes</p><b>IoU=None</b><canvas></canvas></div>
+        <div id="exampleNo2" class="holderDiv focus0"><p>No</p><p>Yes</p><b>IoU=None</b><canvas></canvas></div>
+      </div>
     </div>
 
-    <div id="instructionDiv">
+    <p style="font-size: 8pt; color: #999;">By making judgments about these images, you are participating in a study being performed by XXX. If you have questions about this research, please contact XXX at XXX. Your participation in this research is voluntary. You may decline further participation, at any time, without adverse consequences. Your anonymity is assured; the researchers who have requested your participation will not receive any personal information about you.</p>
+  </div>
 
-        <h3>Task</h3>
-        <ul>
-            <li>For each of the <b id="bundleLength" style="color: #00F;">N</b> images, decide if this annotation is a good annotation of <b id="categoryName1">category</b>.
-            <li>A good annotation covers the entirety of the object and only the object. It is only wrong along the boundary by a few pixels.
-            <li>Examples of good and bad annotations are shown below.
-        </ul>
+  <!-- Yes/No Holders -->
+  <div id="yesnoDiv">
+    <div id="holderDiv-2" class="holderDiv focus2"><p>No</p><p>Yes</p><canvas></canvas></div>
+    <div id="holderDiv-1" class="holderDiv focus1"><p>No</p><p>Yes</p><b>IoU=None</b><canvas></canvas></div>
+    <div id="holderDiv0" class="holderDiv focus"><p>No</p><p>Yes</p><b>IoU=None</b><canvas></canvas></div>
+    <div id="holderDiv1" class="holderDiv focus1"><p>No</p><p>Yes</p><b>IoU=None</b><canvas></canvas></div>
+    <div id="holderDiv2" class="holderDiv focus2"><p>No</p><p>Yes</p><canvas></canvas></div>
+  </div>
 
-        <h3>Usage</h3>
-        <ul>
-            <li>Use the [&rarr;] key to go to the next image.</li>
-            <li>Use the [space] key to toggle the answer to YES. The default answer is NO.</li>
-            <li>Use the [&larr;] key to go back to the previous image, if you skipped an image accidentaly.</li>
-        </ul>
+  <!-- AMT Submit Form -->
+  <form id = "amtForm" action="" method="POST">
+    <input type="hidden" id="user-input" value="" name="user-input"/>
+    <input type="hidden" id="assignmentId" value="" name="assignmentId"/>
+    <input type="hidden" id="workerId" value="" name="workerId"/>
+    <input type="hidden" id="hitId" value="" name="hitId"/>
+  </form>
 
-        <h3>Submit</h3>
-        <ul>
-            <li>After you answer all the images, the [submit] button will be enabled.</li>
-            <li><b style="color: #00F;">If your accuracy is too low, it won't allow you to submit. You will have to improve your answers first.</b></li>
-        </ul>
+  <!-- Util Javascripts -->
+  <script type="text/javascript" src="javascripts/utils/coco.js"></script>
+  <script type="text/javascript" src="javascripts/utils/opencv.js"></script>
+  <script type="text/javascript" src="javascripts/utils/opencv_utils.js"></script>
+  <script type="text/javascript" src="javascripts/utils/rle.js"></script>
+  <script type="text/javascript" src="javascripts/utils/endpoints.js"></script>
 
-        <h3>Examples</h3>
-
-        <div id="exampleDiv">
-            <div>
-                <div id="exampleYes0" class="holderDiv focus0"><p>No</p><p>Yes</p><b>IoU=None</b><canvas></canvas></div>
-                <div id="exampleNo0" class="holderDiv focus0"><p>No</p><p>Yes</p><b>IoU=None</b><canvas></canvas></div>
-            </div>
-            <div>
-                <div id="exampleYes1" class="holderDiv focus0"><p>No</p><p>Yes</p><b>IoU=None</b><canvas></canvas></div>
-                <div id="exampleNo1" class="holderDiv focus0"><p>No</p><p>Yes</p><b>IoU=None</b><canvas></canvas></div>
-            </div>
-            <div>
-                <div id="exampleYes2" class="holderDiv focus0"><p>No</p><p>Yes</p><b>IoU=None</b><canvas></canvas></div>
-                <div id="exampleNo2" class="holderDiv focus0"><p>No</p><p>Yes</p><b>IoU=None</b><canvas></canvas></div>
-            </div>
-        </div>
-
-        <p style="font-size: 8pt; color: #999;">By making judgments about these images, you are participating in a study being performed by XXX. If you have questions about this research, please contact XXX at XXX. Your participation in this research is voluntary. You may decline further participation, at any time, without adverse consequences. Your anonymity is assured; the researchers who have requested your participation will not receive any personal information about you.</p>
-    </div>
-
-    <div id="yesnoDiv">
-        <div id="holderDiv-2" class="holderDiv focus2"><p>No</p><p>Yes</p><canvas></canvas></div>
-        <div id="holderDiv-1" class="holderDiv focus1"><p>No</p><p>Yes</p><b>IoU=None</b><canvas></canvas></div>
-        <div id="holderDiv0" class="holderDiv focus"><p>No</p><p>Yes</p><b>IoU=None</b><canvas></canvas></div>
-        <div id="holderDiv1" class="holderDiv focus1"><p>No</p><p>Yes</p><b>IoU=None</b><canvas></canvas></div>
-        <div id="holderDiv2" class="holderDiv focus2"><p>No</p><p>Yes</p><canvas></canvas></div>
-    </div>
-
-    <!-- Util Javascripts -->
-    <script type="text/javascript" src="javascripts/utils/coco.js"></script>
-    <script type="text/javascript" src="javascripts/utils/opencv.js"></script>
-    <script type="text/javascript" src="javascripts/utils/opencv_utils.js"></script>
-    <script type="text/javascript" src="javascripts/utils/rle.js"></script>
-    <script type="text/javascript" src="javascripts/utils/endpoints.js"></script>
-
-    <!-- Main Javascripts -->
-    <script type="text/javascript" src="javascripts/amt/instructions.js"></script>
-    <script type="text/javascript" src="javascripts/amt/evaluation.js"></script>
-    <script type="text/javascript" src="javascripts/amt/hidden_tests.js"></script>
-    <script type="text/javascript" src="javascripts/amt/holders.js"></script>
-    <script type="text/javascript" src="javascripts/amt/main_yesno.js"></script>
+  <!-- Main Javascripts -->
+  <script type="text/javascript" src="javascripts/amt/instructions.js"></script>
+  <script type="text/javascript" src="javascripts/amt/evaluation.js"></script>
+  <script type="text/javascript" src="javascripts/amt/hidden_tests.js"></script>
+  <script type="text/javascript" src="javascripts/amt/holders.js"></script>
+  <script type="text/javascript" src="javascripts/amt/main_yesno.js"></script>
 </body>
 
 </html>

@@ -58,19 +58,24 @@ function getImageURL(img) {
 //
 // Post Requests
 //
-function postResults(params, coco) {
-  if (params.host) {
-    postAmtResults(params, coco);
-    return;
-  }
+function postResults(params, bundle) {
   var query = {"job_id": params.job_id};
   var endpoint = base_url + "/api/results?" + buildQuery(query);
-  post(endpoint, coco.dataset);
+  if (params.workerId) {
+    bundle.bundle_info.worker_id = params.workerId;
+    postAmtResults(params);
+  }
+  console.log("Results", bundle);
+  post(endpoint, bundle);
 }
-function postAmtResults(params, coco) {
-  var query = {"assigmentId": params.assigmentId, "hitId": params.hitId};
-  var endpoint = params.host + "?" + buildQuery(query);
-  post(endpoint, coco.dataset);
+function postAmtResults(params) {
+  $("#amtForm").attr("action", params.host);
+  $('#assignmentId').val(params.assignmentId);
+  $('#workerId').val(params.workerId);
+  $('#hitId').val(params.hitId);
+  $('#user-input').val("success");
+  $("#amtForm").submit();
+  console.log("Posted to AMT.");
 }
 
 //
@@ -104,8 +109,8 @@ function get_async(url, callback) {
 function post(url, json) {
   xhr = new XMLHttpRequest();
   xhr.open("POST", url, true);
-  xhr.setRequestHeader("Access-Control-Allow-Origin", "*");
   xhr.setRequestHeader("Content-type", "application/json");
+  xhr.setRequestHeader("Access-Control-Allow-Origin", "*");
   xhr.onreadystatechange = function () { 
     if (xhr.readyState == 4 && xhr.status == 200) {
       console.log(xhr.responseText);
