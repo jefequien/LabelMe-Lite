@@ -17,10 +17,7 @@ build
 
 node_modules
 
-bundles
 data/*
 !data/demo
-
-public/components/*
-!public/components/fancytree
-!public/components/google-closure-library-compiler
+bundles
+results
