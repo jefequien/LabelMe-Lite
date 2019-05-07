@@ -104,6 +104,7 @@ function get_async(url, callback) {
 function post(url, json) {
   xhr = new XMLHttpRequest();
   xhr.open("POST", url, true);
+  xhr.setRequestHeader("Access-Control-Allow-Origin", "*");
   xhr.setRequestHeader("Content-type", "application/json");
   xhr.onreadystatechange = function () { 
     if (xhr.readyState == 4 && xhr.status == 200) {
