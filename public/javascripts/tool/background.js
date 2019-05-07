@@ -11,11 +11,12 @@ function Background() {
 
   this.viewPercentage = 0.8;
   this.setViewParameters();
-  this.addMouseListeners();
+  this.addListeners();
 
   this.image = new Path();
   this.filter = new Path();
   this.canny = new Path();
+  this.cannyCache = {};
   this.setBlankImage();
 }
 Background.prototype.setViewParameters = function(viewPercentage) {
@@ -25,7 +26,7 @@ Background.prototype.setViewParameters = function(viewPercentage) {
   this.viewCenter = new Point(paper.view.size) / 2;
   this.viewSize = paper.view.size * this.viewPercentage;
 }
-Background.prototype.addMouseListeners = function() {
+Background.prototype.addListeners = function() {
   var canvas = document.getElementById('toolCanvas');
   canvas.addEventListener('wheel', function(e) {
     var deltaY = e.deltaY;
@@ -39,6 +40,11 @@ Background.prototype.addMouseListeners = function() {
     paper.tool.refreshTool();
     e.preventDefault();
   });
+  document.addEventListener('keydown', function(event) {
+    if (event.key == "v") {
+      background.canny.opacity = (background.canny.opacity == 0) ? 1 : 0;
+    }
+  }, false);
 }
 
 //
@@ -71,12 +77,25 @@ Background.prototype.setBlankImage = function(size) {
   this.setImage(image);
 }
 Background.prototype.setFilter = function() {
-  // Setup filter for adjusting image brightness
+  // Filter for adjusting image brightness
   this.image.blendMode = 'hard-light';
   var bounds = this.image.bounds;
   this.filter.segments = [bounds.topLeft, bounds.topRight, bounds.bottomRight, bounds.bottomLeft];
   this.filter.fillColor = new Color(0.5);
   this.filter.sendToBack();
+}
+Background.prototype.setCanny = function() {
+  this.canny.remove();
+  this.canny = this.image.clone();
+  this.canny.smoothing = false;
+  this.canny.blendMode = 'normal';
+  this.canny.insertAbove(this.image);
+  this.canny.opacity = 0;
+
+  if ( ! this.cannyCache[this.image.source]) {
+    this.cannyCache[this.image.source] = getCannyOpenCV(this.image.getImageData());
+  }
+  this.canny.setImageData(this.cannyCache[this.image.source], new Point(0,0));
 }
 
 //
@@ -182,26 +201,6 @@ Background.prototype.decreaseBrightness = function() {
   if (this.filter.fillColor.gray < 0) {
     this.filter.fillColor.gray = 0;
   }
-}
-
-//
-// Canny
-//
-var cannyCache = {};
-Background.prototype.setCanny = function() {
-  this.canny.remove();
-
-  var cannyData = cannyCache[this.image.source];
-  if ( ! cannyData) {
-    cannyData = getCannyOpenCV(this.image.getImageData());
-    cannyCache[this.image.source] = cannyData;
-  }
-  this.canny = this.image.clone();
-  this.canny.smoothing = false;
-  this.canny.blendMode = 'normal';
-  this.canny.setImageData(cannyData, new Point(0,0));
-  this.canny.insertAbove(this.image);
-  this.canny.opacity = 0;
 }
 
 //

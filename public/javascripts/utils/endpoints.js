@@ -58,15 +58,15 @@ function getImageURL(img) {
 //
 // Post Requests
 //
-function postResults(params, bundle) {
+function postResults(params, coco_results) {
   var query = {"job_id": params.job_id};
   var endpoint = base_url + "/api/results?" + buildQuery(query);
   if (params.workerId) {
-    bundle.bundle_info.worker_id = params.workerId;
+    coco_results.dataset.bundle_info.worker_id = params.workerId;
     postAmtResults(params);
   }
-  console.log("Results", bundle);
-  post(endpoint, bundle);
+  console.log("Results", coco_results.dataset);
+  post(endpoint, coco_results.dataset);
 }
 function postAmtResults(params) {
   $("#amtForm").attr("action", params.host);
@@ -90,7 +90,7 @@ function redirectToAmtBrowser(params) {
 // XHR functions
 //
 function get_async(url, callback) {
-  console.log(url);
+  console.log("GET", url);
   var xhr = new XMLHttpRequest();
   xhr.onreadystatechange = function() { 
     if (xhr.readyState == 4){
@@ -107,10 +107,10 @@ function get_async(url, callback) {
 }
 
 function post(url, json) {
+  console.log("POST", url);
   xhr = new XMLHttpRequest();
   xhr.open("POST", url, true);
   xhr.setRequestHeader("Content-type", "application/json");
-  xhr.setRequestHeader("Access-Control-Allow-Origin", "*");
   xhr.onreadystatechange = function () { 
     if (xhr.readyState == 4 && xhr.status == 200) {
       console.log(xhr.responseText);

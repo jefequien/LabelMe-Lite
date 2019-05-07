@@ -68,9 +68,6 @@ editTool.onKeyDown = function(event) {
     this.deleteNearestBoundary();
     this.refreshTool();
   }
-  if (event.key == 'v') {
-    background.canny.opacity = (background.canny.opacity == 0) ? 1 : 0
-  }
   if (event.key == 'space') {
     this.editAnnotation();
     this.trace.removeSegments();

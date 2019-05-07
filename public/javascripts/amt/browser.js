@@ -1,5 +1,9 @@
 
 var urlParams = parseURLParams();
+if (Object.keys(urlParams).length == 0) {
+    urlParams.job_id = "flag_job";
+    setURLParams(urlParams);
+}
 console.log(urlParams);
 
 var yesnoUrl = base_url + "/amt_yesno";

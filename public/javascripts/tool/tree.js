@@ -40,9 +40,9 @@ $("#tree").fancytree({
       },
       toggleEffect: { effect: "drop", options: {direction: "left"}, duration: 400 },
       wide: {
-        iconWidth: "0.4em",     // Adjust this if @fancy-icon-width != "16px"
-        iconSpacing: "0.3em", // Adjust this if @fancy-icon-spacing != "3px"
-        levelOfs: "1.5em"     // Adjust this if ul padding != "16px"
+        iconWidth: "16px",     // Adjust this if @fancy-icon-width != "16px"
+        iconSpacing: "3px", // Adjust this if @fancy-icon-spacing != "3px"
+        levelOfs: "16px"     // Adjust this if ul padding != "16px"
       },
       click: function(event, data) {
         var node = data.node;

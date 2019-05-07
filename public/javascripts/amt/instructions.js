@@ -1,51 +1,52 @@
 
 
-function loadInstructions(coco, current_num, trainingMode) {
-    updateInstructions(coco, current_num, trainingMode);
-    updateSubmitButton(coco, current_num, trainingMode);
-    updateCategory(coco, current_num);
+var lastCategory = "";
+function updateInstructions(coco, current_num) {
+    $('#bundleLength').text(coco.dataset.annotations.length);
+    updateSubmitButton(coco, current_num);
+
+    var ann = coco.dataset.annotations[current_num];
+    var cat = (ann) ? coco.cats[ann["category_id"]] : null;
+    var category = (cat) ? cat["name"] : "";
+    if (category != lastCategory) {
+        updateCategory(cat);
+        updateDefinition(cat);
+        updateExamples(cat);
+        lastCategory = category;
+    }
 }
 
-var lastCategory = "";
-function updateCategory(coco, current_num) {
-    var ann = coco.dataset.annotations[current_num];
-    if ( ! ann) {
-        lastCategory = "";
+function updateCategory(cat) {
+    if ( ! cat) {
         $('#categoryName0').text("category");
         $('#categoryName1').text("category");
+        return;
+    }
+    $('#categoryName0').text(cat["name"]);
+    $('#categoryName1').text(cat["name"]);
+}
+
+function updateExamples(cat) {
+    if ( ! cat) {
+        return;
+    }
+    getHiddenTests([cat], function(examples) {
+        loadExamples(examples);
+    });
+}
+
+function updateDefinition(cat) {
+    if ( ! cat) {
         $('#definition').text("None");
         return;
     }
-
-    var cat = coco.cats[ann["category_id"]];
-    if (lastCategory != cat["name"]) {
-        lastCategory = cat["name"];
-        $('#categoryName0').text(cat["name"]);
-        $('#categoryName1').text(cat["name"]);
-
-        // Load definition
-        $('#definition').text("Loading...");
-        getDefinition(cat, function(res) {
-            $('#definition').text((res) ? res.definition : "None");
-        });
-        // Load examples
-        getHiddenTests([cat], function(hidden_tests) {
-            console.log("Examples", hidden_tests);
-            loadExampleHolders(hidden_tests);
-        });
-    }
+    $('#definition').text("Loading...");
+    getDefinition(cat, function(res) {
+        $('#definition').text((res) ? res.definition : "None");
+    });
 }
 
-function updateInstructions(coco, current_num, trainingMode) {
-    $('#bundleLength').text(coco.dataset.annotations.length);
-    
-    if (trainingMode) {
-        $("#trainingDiv").show();
-    } else {
-        $("#trainingDiv").hide();
-    }
-}
-function updateSubmitButton(coco, current_num, trainingMode) {
+function updateSubmitButton(coco, current_num) {
     var anns = coco.dataset.annotations;
     var images_left = 0;
     for (var i = 0; i < anns.length; i++) {
@@ -59,9 +60,5 @@ function updateSubmitButton(coco, current_num, trainingMode) {
     if (images_left == 0) {
         $("#submitButton").html("Submit"); 
         $("#submitButton").prop('disabled', false); 
-    }
-    if (trainingMode) {
-        $("#submitButton").html("Training Mode (" + images_left + " images left)");
-        $("#submitButton").prop('disabled', true); 
     }
 }

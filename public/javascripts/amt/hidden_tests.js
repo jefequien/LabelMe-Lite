@@ -37,6 +37,32 @@ function addHiddenTests(coco, num_tests, callback) {
 	});
 }
 
+function removeHiddenTests(coco) {
+	var dataset = {};
+	dataset.images = [];
+	dataset.annotations = [];
+	dataset.categories = [];
+	dataset.bundle_info = coco.dataset.bundle_info;
+
+	var imgIds = new Set();
+	var catIds = new Set();
+	for (var i = 0; i < coco.dataset.annotations.length; i++) {
+		var ann = coco.dataset.annotations[i];
+		if ( ! ann.hidden_test) {
+			imgIds.add(ann["image_id"]);
+			catIds.add(ann["category_id"]);
+			dataset.annotations.push(ann);
+		}
+	}
+	for (var i of imgIds) {
+		dataset.images.push(coco.imgs[i]);
+	}
+	for (var i of catIds) {
+		dataset.categories.push(coco.cats[i]);
+	}
+	return new COCO(dataset);
+}
+
 function getHiddenTests(cats, callback) {
 	if (cats.length == 0) {
 		callback();
@@ -47,7 +73,7 @@ function getHiddenTests(cats, callback) {
 	for (var i = 0; i < cats.length; i++) {
 		catIds.push(cats[i]["id"]);
 	}
-    var params = {"dataset": "ade20k", "ann_source": "instances_val_test", "cat_id": catIds};
+    var params = {"dataset": "ade20k", "ann_source": "instances_val_with_hidden_tests", "cat_id": catIds};
     getAnnotations(params, function(res) {
         var hidden_tests = new COCO(res);
         callback(hidden_tests);

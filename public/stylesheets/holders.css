@@ -65,15 +65,15 @@
 .focus0{ 
   display: table-cell;
     vertical-align: middle; 
-    padding: 18px;   
+    padding: 10px;   
   width: 500px; height: 100%;
 } 
 .focus1{ 
   display: table-cell;
     vertical-align: middle; 
-    padding: 12px;   
+    padding: 10px;   
   width: 150px; height: 100%;
-} 
+}
 .focus2{ 
   display: table-cell;
     vertical-align: middle; 
@@ -135,7 +135,7 @@
 }
 .focus0 p{ 
   display: none;
-  font-weight: normal; font-size: 20pt; 
+  font-weight: bolder; font-size: 28pt; 
 }
 .focus1 p{ 
   display: none;

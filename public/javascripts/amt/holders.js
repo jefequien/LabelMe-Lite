@@ -1,7 +1,7 @@
 
 
 
-function loadMainHolders(coco, current_num, showGt=false) {
+function loadMainHolders(coco, current_num) {
     // Load the 5 holders on the main page
     for (var i = -2; i <= 2; i++) {
         var holder = "#holderDiv" + i.toString();
@@ -13,45 +13,10 @@ function loadMainHolders(coco, current_num, showGt=false) {
             state = ann.current_task["accepted"] ? "yes" : "no";
         }
 
-        loadHolder(holder, coco, ann, showGt);
-        loadHolderStyle(holder, ann, showIou=showGt, state);
+        loadHolder(holder, coco, ann);
+        loadHolderStyle(holder, ann, state);
     }
 }
-
-function loadExampleHolders(coco, numExamples=3) {
-    // Load the example holders on the instructions page
-    var yesExamples = [];
-    var noExamples = [];
-    for (var i = 0; i < coco.dataset.annotations.length; i++) {
-        var ann = coco.dataset.annotations[i];
-        if ( ! ann.hidden_test) {
-            continue;
-        }
-
-        var iou = computeIOU(ann["segmentation"], ann.hidden_test["segmentation"]);
-        if (iou > 0.8) {
-            yesExamples.push(ann);
-        } else if (iou < 0.6) {
-            noExamples.push(ann);
-        }
-        if (yesExamples.length == numExamples && noExamples.length == numExamples) {
-            break;
-        }
-    }
-
-    for (var i = 0; i < numExamples; i++) {
-        var holder = "#exampleYes" + i.toString();
-        var ann = yesExamples[i];
-        loadHolder(holder, coco, ann, showGt=true);
-        loadHolderStyle(holder, ann, showIou=false, state="yes");
-
-        var holder = "#exampleNo" + i.toString();
-        var ann = noExamples[i];
-        loadHolder(holder, coco, ann, showGt=true);
-        loadHolderStyle(holder, ann, showIou=false, state="no");
-    }
-}
-
 
 var holderCache = {};
 function loadHolder(holder, coco, ann, showGt=false, showSegm=true, showBbox=false) {
@@ -60,6 +25,11 @@ function loadHolder(holder, coco, ann, showGt=false, showSegm=true, showBbox=fal
         var ctx = cv.getContext('2d');
         ctx.clearRect(0, 0, cv.width, cv.height);
         return;
+    }
+    if (urlParams.debugMode) {
+        showGt = true;
+        showSegm=true
+        showBbox = true;
     }
 
     // Load from cache
@@ -122,14 +92,17 @@ function loadHolder(holder, coco, ann, showGt=false, showSegm=true, showBbox=fal
     };
 }
 
-function loadHolderStyle(holder, ann, showIou=false, state=null) {
+function loadHolderStyle(holder, ann, state=null, showIou=false) {
     if (ann == null) {
         $(holder).css('visibility','hidden');
         $(holder + " b").css('visibility', 'hidden');
         return;
     }
-    $(holder).css('visibility', 'visible');
+    if (urlParams.debugMode) {
+        showIou = true;
+    }
 
+    $(holder).css('visibility', 'visible');
     if (state == "yes") {
         $(holder).toggleClass("target", true);
         $(holder).toggleClass("noise", false);
@@ -142,12 +115,13 @@ function loadHolderStyle(holder, ann, showIou=false, state=null) {
     }
 
     if (showIou) {
-        var iou = 0;
-        if (ann.hidden_test) {
-            iou = computeIOU(ann["segmentation"], ann.hidden_test["segmentation"]);
-        }
-        $(holder + " b").html("IoU=" + iou.toFixed(3));
         $(holder + " b").css('visibility', 'visible');
+        if (ann.hidden_test) {
+            var iou = computeIOU(ann["segmentation"], ann.hidden_test["segmentation"]);
+            $(holder + " b").html("IoU=" + iou.toFixed(3));
+        } else {
+            $(holder + " b").html("IoU=None");
+        }
     } else {
         $(holder + " b").css('visibility', 'hidden');
     }

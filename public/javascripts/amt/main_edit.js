@@ -1,18 +1,15 @@
 
 var urlParams = parseURLParams();
-console.log(urlParams);
-if ( ! urlParams.bundle_id) {
-    redirectToAmtBrowser(urlParams);
-}
+console.log("URL Params", urlParams);
 
 var coco = new COCO();
 var current_num = 0;
 var num_tests = 0;
-var trainingMode = urlParams.training_mode == "true";
 
 window.onload = function() {
     getBundle(urlParams, function(response) {
         coco = new COCO(response);
+        console.log("Bundle", coco.dataset);
         addHiddenTests(coco, num_tests, function() {
             console.log("COCO", coco.dataset);
             startTask();
@@ -22,8 +19,8 @@ window.onload = function() {
     selectTool.switch();
 }
 function loadInterface() {
-    loadInstructions(coco, current_num, trainingMode);
-    loadMainHolders(coco, current_num, showGt=trainingMode);
+    updateInstructions(coco, current_num);
+    loadMainHolders(coco, current_num);
     loadAMTTool(coco, current_num);
 }
 function nextImage() {
@@ -65,8 +62,14 @@ function saveAnswer() {
     ann["bbox"] = ann_["bbox"];
 }
 function submit() {
+    console.log("Submitting results...");
     endTask();
-    submitBundle(coco);
+    var results = evaluateBundle(coco);
+    if (results.passed) {
+        var coco_results = removeHiddenTests(coco);
+        postResults(urlParams, coco_results);
+        showResults(results);
+    }
     startTask();
 }
 
@@ -74,9 +77,6 @@ function toggleInstruction() {
     $("#instructionDiv").toggle();
     $("#yesnoDiv").toggle();
     $("#toolDiv").toggle();
-    if (trainingMode) {
-        $("#trainingDiv").toggle();
-    }
 }
 
 //

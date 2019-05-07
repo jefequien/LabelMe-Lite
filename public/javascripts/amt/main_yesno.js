@@ -1,18 +1,15 @@
 
 var urlParams = parseURLParams();
-console.log(urlParams);
-if ( ! urlParams.bundle_id) {
-    redirectToAmtBrowser(urlParams);
-}
+console.log("URL Params", urlParams);
 
 var coco = new COCO();
 var current_num = 0;
 var num_tests = 0;
-var trainingMode = urlParams.training_mode == "true";
 
 window.onload = function() {
     getBundle(urlParams, function(response) {
         coco = new COCO(response);
+        console.log("Bundle", coco.dataset);
         addHiddenTests(coco, num_tests, function() {
             console.log("COCO", coco.dataset);
             startTask();
@@ -21,8 +18,8 @@ window.onload = function() {
     });
 }
 function loadInterface() {
-    loadInstructions(coco, current_num, trainingMode);
-    loadMainHolders(coco, current_num, showGt=trainingMode);
+    updateInstructions(coco, current_num);
+    loadMainHolders(coco, current_num);
 
 }
 function nextImage() {
@@ -57,19 +54,22 @@ function endTask() {
 function toggleAnswer() {
     var ann = coco.dataset.annotations[current_num];
     ann.current_task["accepted"] = ! (ann.current_task["accepted"]);
-    loadMainHolders(coco, current_num, showGt=trainingMode);
+    loadMainHolders(coco, current_num);
 }
 function submit() {
+    console.log("Submitting results...");
     endTask();
-    submitBundle(coco);
+    var results = evaluateBundle(coco);
+    if (results.passed) {
+        var coco_results = removeHiddenTests(coco);
+        postResults(urlParams, coco_results);
+    }
+    showResults(results);
     startTask();
 }
 function toggleInstruction() {
     $("#instructionDiv").toggle();
     $("#yesnoDiv").toggle();
-    if (trainingMode) {
-        $("#trainingDiv").toggle();
-    }
 }
 
 //
