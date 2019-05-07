@@ -10,12 +10,11 @@ Extensively uses [Paper.js](http://paperjs.org/)
 Make sure you have [Node.js](http://nodejs.org/) installed.
 
 ```sh
-Uses nodejs, bower
+Uses nodejs
 
 git clone https://github.com/hujh14/LabelMe-Lite.git # or clone your own fork
 cd LabelMe-Lite
 npm install
-bower install
 npm start
 ```
 

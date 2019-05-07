@@ -61,12 +61,8 @@ function toggleAnswer() {
 }
 function submit() {
     endTask();
-    var success = submitBundle(coco);
-    if (success) {
-        redirectToAmtBrowser();
-    } else {
-        startTask();
-    }
+    submitBundle(coco);
+    startTask();
 }
 function toggleInstruction() {
     $("#instructionDiv").toggle();

@@ -6,8 +6,7 @@ var base_url = parseBaseURL();
 // Get Requests
 //
 function getBundle(params, callback) {
-  var query = {"job_id": params.job_id, "bundle_id": params.bundle_id};
-  var endpoint = base_url + "/api/bundle?" + buildQuery(query);
+  var endpoint = base_url + "/bundles/" + params.job_id + "/" + params.bundle_id + ".json";
   get_async(endpoint, callback);
 }
 function getBundles(params, callback) {
@@ -33,7 +32,6 @@ function getDefinition(cat, callback) {
     }
   });
 }
-
 function getImageURL(img) {
   if (img.dataset) {
     var endpoint = base_url + "/data/" + img.dataset + "/images/" + img.file_name;
@@ -60,15 +58,19 @@ function getImageURL(img) {
 //
 // Post Requests
 //
-function postYesNoBundle(params, coco) {
-    params.bundle_type = "yesno";
-    var endpoint = base_url + "/api/bundles?" + buildQuery(params);
-    post(endpoint, coco.dataset);
+function postResults(params, coco) {
+  if (params.host) {
+    postAmtResults(params, coco);
+    return;
+  }
+  var query = {"job_id": params.job_id};
+  var endpoint = base_url + "/api/results?" + buildQuery(query);
+  post(endpoint, coco.dataset);
 }
-function postEditBundle(params, coco) {
-    params.bundle_type = "edit";
-    var endpoint = base_url + "/api/bundles?" + buildQuery(params);
-    post(endpoint, coco.dataset);
+function postAmtResults(params, coco) {
+  var query = {"assigmentId": params.assigmentId, "hitId": params.hitId};
+  var endpoint = params.host + "?" + buildQuery(query);
+  post(endpoint, coco.dataset);
 }
 
 //

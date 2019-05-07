@@ -66,13 +66,8 @@ function saveAnswer() {
 }
 function submit() {
     endTask();
-    var success = submitBundle(coco);
-    if (success) {
-        redirectToAmtBrowser();
-        return;
-    } else {
-        startTask();
-    }
+    submitBundle(coco);
+    startTask();
 }
 
 function toggleInstruction() {
