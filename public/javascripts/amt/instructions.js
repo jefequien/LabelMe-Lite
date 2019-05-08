@@ -61,4 +61,8 @@ function updateSubmitButton(coco, current_num) {
         $("#submitButton").html("Submit"); 
         $("#submitButton").prop('disabled', false); 
     }
+    if (urlParams.assignmentId == "ASSIGNMENT_ID_NOT_AVAILABLE") {
+        $("#submitButton").html("Submit (Accept hit to submit)"); 
+        $("#submitButton").prop('disabled', true);
+    }
 }
