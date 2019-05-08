@@ -29,6 +29,7 @@ app.use(cors());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/data', express.static(path.join(__dirname, 'data')));
 app.use('/bundles', express.static(path.join(__dirname, 'bundles')));
+app.use('/results', express.static(path.join(__dirname, 'results')));
 app.use('/api', annotationController);
 app.use('/api', bundleController);
 app.use('/api', definitionController);

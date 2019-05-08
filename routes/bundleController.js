@@ -49,6 +49,24 @@ router.post('/bundles', function(req, res) {
     });
 });
 
+router.get('/results', function(req, res) {
+    var jobId = req.query.job_id;
+    var jobDir = path.join(resultsDir, jobId);
+    if (! fs.existsSync(jobDir)){
+        res.status(404).send('Job id not found: ' + jobId);
+        return;
+    }
+
+    var bundleIds = [];
+    fs.readdir(jobDir, function(err, items) {
+        for (var i = 0; i < items.length; i++) {
+            var bundleId = items[i].replace(".json", "");
+            bundleIds.push(bundleId);
+        }
+        res.json(bundleIds);
+    });
+});
+
 router.post('/results', function(req, res) {
     var jobId = req.query.job_id;
     var jobDir = path.join(resultsDir, jobId);
@@ -60,7 +78,7 @@ router.post('/results', function(req, res) {
     var bundleInfo = bundle.bundle_info;
     bundleInfo.submit_date = new Date();
 
-    var fileName = path.join(jobDir, bundleInfo.bundle_id + "_" + bundleInfo.submit_date + ".json");
+    var fileName = path.join(jobDir, bundleInfo.bundle_id + "_" + bundleInfo.submit_date.toISOString() + ".json");
     var data = JSON.stringify(bundle, null, 2);
     fs.writeFile(fileName, data, function(err) {
         if (err) {
